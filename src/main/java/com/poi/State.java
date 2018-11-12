@@ -1,6 +1,5 @@
 package com.poi;
 
-import java.util.Date;
 import com.pojo.BikeArea;
 
 public class State {

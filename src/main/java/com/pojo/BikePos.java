@@ -1,9 +1,16 @@
 package com.pojo;
 
+import java.io.Serializable;
+
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class BikePos {
+public class BikePos implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1569613479862884059L;
+	
 	private String bikeID;
 	private double lng;
 	private double lat;

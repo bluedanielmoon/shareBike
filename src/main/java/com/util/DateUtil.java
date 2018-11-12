@@ -6,23 +6,25 @@ import java.util.Date;
 
 import org.springframework.stereotype.Component;
 
+/**
+ * dateformat是非线程安全的，不能写static类型的变量来解析
+ * @author daniel
+ *
+ */
 @Component
 public class DateUtil {		
-	//2018-11-16 03:00
-	private static SimpleDateFormat parseFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm");
-	private static SimpleDateFormat bikeFormat=new SimpleDateFormat("yyyy_MM_dd");
-	private static SimpleDateFormat fileFormat=new SimpleDateFormat("yyyy_M_d/H");
-	private static SimpleDateFormat durationFormat=new SimpleDateFormat("yyyy_M_d H");
 
 	/**
 	 * 解析yyyy-MM-dd HH:mm格式的时间
 	 * @param time
 	 * @return
 	 */
-	public static Date parseTime(String time){
+	public static Date parseToMinute(String time){
 		Date date=null;
+		SimpleDateFormat parse=new SimpleDateFormat("yyyy-MM-dd HH:mm");
+		
 		try {
-			date=parseFormat.parse(time);
+			date=parse.parse(time);
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
@@ -33,11 +35,12 @@ public class DateUtil {
 	 * @param fileName
 	 * @return
 	 */
-	public static Date parseFile(String fileName){
+	public static Date parseToDay(String fileName){
 		
 		Date date=null;
+		SimpleDateFormat parse=new SimpleDateFormat("yyyy_MM_dd");
 		try {
-			date=bikeFormat.parse(fileName);
+			date=parse.parse(fileName);
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
@@ -49,16 +52,21 @@ public class DateUtil {
 	 * @param time
 	 * @return
 	 */
-	public static String timeToPath(String time){
-		
-		return fileFormat.format(parseTime(time));
+	public static String parseTimeToFile(String time){
+		SimpleDateFormat parse=new SimpleDateFormat("yyyy_M_d/H");
+		Date date=parseToMinute(time);
+		return parse.format(date);
 		
 	}
 
-	
+	/**
+	 * 将时间转化为yyyy_M_d/H格式的字符串
+	 * @param time
+	 * @return
+	 */
 	public static String timeToPath(Date time){
-		
-		return fileFormat.format(time);
+		SimpleDateFormat parse=new SimpleDateFormat("yyyy_M_d/H");
+		return parse.format(time);
 		
 	}
 	
@@ -67,18 +75,14 @@ public class DateUtil {
 	 * @param time
 	 * @return
 	 */
-	public static Date pareFileTime(String time){
+	public static Date pareToHour(String time){
 		Date date=null;
+		SimpleDateFormat parse=new SimpleDateFormat("yyyy_MM_dd HH");
 		try {
-			date=durationFormat.parse(time);
+			date=parse.parse(time);
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
 		return date;
 	}
-	
-	public static void printTime(Date time){
-		System.out.println(parseFormat.format(time));
-	}
-	
 }

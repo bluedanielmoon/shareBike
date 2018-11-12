@@ -1,8 +1,6 @@
 package com.execute;
 
-import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -11,15 +9,12 @@ import java.util.Set;
 
 import org.springframework.stereotype.Component;
 
-import com.pojo.Bike;
 import com.pojo.BikeArea;
 import com.pojo.BikeHeader;
 import com.pojo.BikePos;
-import com.pojo.ClusterPt;
+import com.pojo.MapSize;
 import com.pojo.Point;
 import com.util.CoordsUtil;
-import com.util.DateUtil;
-import com.util.FilesUtil;
 
 /**
  * @author Administrator
@@ -47,86 +42,66 @@ public class MapHelper {
 
 	}
 
-	public static void main(String[] args) {
-		 String start = "2018_11_1 3";
-		 String end = "2018_11_1 3";
-		 Date st = DateUtil.pareFileTime(start);
-		 Date en = DateUtil.pareFileTime(end);
-		 List<Map<String, Object>> maps = FilesUtil.readFilesToBikeMap(st,
-		 en);
-		BikeArea area = State.getArea();
-		
-		area.setStartLat(34.286231);
-		area.setStartLng(108.903407);
-		area.setEndLng(108.906916);
-		area.setEndLat(34.284764);
-		// getDurationBikesInArea(maps, area);
-
-//		Map<String, Map<String, Object>> result=getDurationBikesInMultiAreas(maps, area, 1, 2);
-//		int count=0;
-//		for(String s:result.keySet()){
-//			List<BikePos> ls=(List<BikePos>) result.get(s).get("bikes");
-//			BikeArea bkarea=(BikeArea) result.get(s).get("area");
-//			
-//			System.out.println(bkarea+"  "+ls.size()+"  "+count++);
-//		}
-//		System.out.println(result.size());
-		
-	}
-	
 	/**
 	 * 对于划分成若干行和列的区域网格， 得到网格内的一段时间的单车分布
+	 * 
 	 * @param files
 	 * @param divideAreas
 	 */
-	public  Map<String, Map<String, Object>> getDurationBikesInMultiAreas(List<Map<String, Object>> files,BikeArea area,int rows,int cols){
-		
-		Map<String, Map<String, Object>> divideAreas=divideMapToGrid(area, rows, cols);
-		
-		double startLng=area.getStartLng();
-		double startlat=area.getStartLat();
-		double endLng=area.getEndLng();
-		double endLat=area.getEndLat();
-		double colDist=Math.round((endLng-startLng)/cols*1000000)/1000000.0;
-		double rowDist=Math.round((startlat-endLat)/rows*1000000)/1000000.0;
+	public Map<String, Map<String, Object>> getDurationBikesInMultiAreas(List<Map<String, Object>> files, BikeArea area,
+			int rows, int cols) {
 
+		Map<String, Map<String, Object>> divideAreas = divideMapToGrid(area, rows, cols);
+
+		double startLng = area.getStartLng();
+		double startlat = area.getStartLat();
+		double endLng = area.getEndLng();
+		double endLat = area.getEndLat();
+		double colDist = Math.round((endLng - startLng) / cols * 1000000) / 1000000.0;
+		double rowDist = Math.round((startlat - endLat) / rows * 1000000) / 1000000.0;
+
+		int totalCount = 0, totalTemp = 0;
 		for (Map<String, Object> file : files) {
 			BikeHeader header = (BikeHeader) file.get("header");
-			@SuppressWarnings("unchecked")
+			totalCount += header.getBikeCount();
+			totalTemp += header.getWeather().getTempature();
+
 			List<BikePos> bikes = (List<BikePos>) file.get("bikes");
 
-			for(BikePos bike:bikes){
-				double lng=bike.getLng();
-				double lat=bike.getLat();
-				if(CoordsUtil.isInArea(area, lng, lat)){
-					
-					int col=(int) Math.floor((lng-startLng)/colDist);
-					int row=(int) Math.floor((startlat-lat)/rowDist);
-					String id=row+"_"+col;
-					
-					if(divideAreas.containsKey(id)){
-						@SuppressWarnings("unchecked")
-						List<BikePos> ls=(List<BikePos>) divideAreas.get(id).get("bikes");
-						
-						ls.add(bike);
-						
+			for (BikePos bike : bikes) {
+				double lng = bike.getLng();
+				double lat = bike.getLat();
+				if (CoordsUtil.isInArea(area, lng, lat)) {
+
+					int col = (int) Math.floor((lng - startLng) / colDist);
+					int row = (int) Math.floor((startlat - lat) / rowDist);
+					String id = row + "_" + col;
+
+					if (divideAreas.containsKey(id)) {
+						List<Point> ls = (List<Point>) divideAreas.get(id).get("bikes");
+						Point point = new Point(new double[] { lng, lat }, bike.getBikeID(), 1);
+						ls.add(point);
+
 					}
-				}	
+				}
 			}
 		}
+
+		Map<String, Object> header = new HashMap<>();
+		header.put("bikesCount", totalCount);
+		header.put("temperature", (totalTemp / files.size()));
+		header.put("bikeRec", area);
+		divideAreas.put("header", header);
 		return divideAreas;
 	}
 
 	/**
-	 * 获取某一时间范围内,某一区域内的单车分布数据
-	 * 每个map中包含("header":BikeHeader,"bikes":List<BikePos>);
+	 * 获取某一时间范围内,某一区域内的单车分布数据 每个map中包含("header":BikeHeader,"bikes":List<BikePos>);
 	 */
-	public static List<Map<String, Object>> getDurationBikesInArea(
-			List<Map<String, Object>> files, BikeArea area) {
+	public static List<Map<String, Object>> getDurationBikesInArea(List<Map<String, Object>> files, BikeArea area) {
 
 		for (Map<String, Object> file : files) {
 			BikeHeader header = (BikeHeader) file.get("header");
-			@SuppressWarnings("unchecked")
 			List<BikePos> bikes = (List<BikePos>) file.get("bikes");
 
 			// 过滤是否在区域内
@@ -143,10 +118,9 @@ public class MapHelper {
 		return files;
 
 	}
-	
-	public static void calcuGridID(BikeArea area, int rows, int cols,double lng,double lat){
-		
-		
+
+	public static void calcuGridID(BikeArea area, int rows, int cols, double lng, double lat) {
+
 	}
 
 	/**
@@ -158,46 +132,44 @@ public class MapHelper {
 	 */
 	public static Map<String, Map<String, Object>> divideMapToGrid(BikeArea area, int rows, int cols) {
 		Map<String, Map<String, Object>> maps = new HashMap<String, Map<String, Object>>();
-		
-		double startLng=area.getStartLng();
-		double startlat=area.getStartLat();
-		double endLng=area.getEndLng();
-		double endLat=area.getEndLat();
-		
-		
-		double colDist=Math.round((endLng-startLng)/cols*1000000)/1000000.0;
-		double rowDist=Math.round((startlat-endLat)/rows*1000000)/1000000.0;
-		
-		if(rowDist==0||colDist==0){
+
+		double startLng = area.getStartLng();
+		double startlat = area.getStartLat();
+		double endLng = area.getEndLng();
+		double endLat = area.getEndLat();
+
+		double colDist = Math.round((endLng - startLng) / cols * 1000000) / 1000000.0;
+		double rowDist = Math.round((startlat - endLat) / rows * 1000000) / 1000000.0;
+
+		if (rowDist == 0 || colDist == 0) {
 			return maps;
 		}
-		int rowCount=0,colCount=0;
-		
+		int rowCount = 0, colCount = 0;
+
 		double nowLng = startLng;
-		double nowLat =startlat;
+		double nowLat = startlat;
 		do {
 			do {
-				double cornerLng = Math.round((nowLng+colDist)*1000000)/1000000.0;
-				double cornerLat = Math.round((nowLat-rowDist)*1000000)/1000000.0;
-				
-				BikeArea small = new BikeArea(nowLng, nowLat, cornerLng,
-						cornerLat);
-				
+				double cornerLng = Math.round((nowLng + colDist) * 1000000) / 1000000.0;
+				double cornerLat = Math.round((nowLat - rowDist) * 1000000) / 1000000.0;
+
+				BikeArea small = new BikeArea(nowLng, nowLat, cornerLng, cornerLat);
+
 				String areaID = rowCount + "_" + colCount;
 				Map<String, Object> mp = new HashMap<String, Object>();
 				mp.put("area", small);
-				mp.put("bikes", new ArrayList<BikePos>());
+				mp.put("bikes", new ArrayList<Point>());
 				maps.put(areaID, mp);
 
 				nowLng = cornerLng;
 				colCount++;
 			} while (colCount < cols);
-			
-			nowLat =  Math.round((nowLat-rowDist)*1000000)/1000000.0;
+
+			nowLat = Math.round((nowLat - rowDist) * 1000000) / 1000000.0;
 			nowLng = startLng;
 			colCount = 0;
 			rowCount++;
-		} while (rowCount <rows);
+		} while (rowCount < rows);
 		return maps;
 	}
 
@@ -210,6 +182,7 @@ public class MapHelper {
 	public List<Point> calcuClusterCenter(List<Map<String, BikePos>> packs) {
 
 		List<Point> result = new ArrayList<Point>();
+		int idCount = 0;
 		for (Map<String, BikePos> pack : packs) {
 			Set<String> keys = pack.keySet();
 
@@ -220,7 +193,7 @@ public class MapHelper {
 
 			}
 			double center[] = CoordsUtil.calcuCenter(ls);
-			Point pt = new Point(new double[] { center[0], center[1] }, "1", 1);
+			Point pt = new Point(new double[] { center[0], center[1] }, "" + idCount++, 1);
 			result.add(pt);
 
 		}
@@ -235,8 +208,7 @@ public class MapHelper {
 	 * @param distance
 	 * @return
 	 */
-	public List<Map<String, BikePos>> neighborCluster(List<BikePos> bikes,
-			int distance) {
+	public List<Map<String, BikePos>> neighborCluster(List<BikePos> bikes, int distance) {
 
 		Map<String, BikePos> pool = new HashMap<String, BikePos>();
 		BikePos bp = null;
@@ -249,13 +221,13 @@ public class MapHelper {
 		setMapDivideDist(distance);
 
 		// 把收集区域的边界朝四个方向分别扩大若干米
-		BikeArea bigArea = getBiggerArea(State.getArea());
+		int bigSize = 400;
+		BikeArea bigArea = getBiggerArea(State.getArea(), bigSize);
 
-		mapSize size = new mapSize();
+		MapSize size = new MapSize();
 
 		// 把区域按照mapDivideDist分割为网状
-		Map<String, Map<String, Object>> maps = divideMapToGrid(bigArea,
-				mapDivideDist, size);
+		Map<String, Map<String, Object>> maps = divideMapToGrid(bigArea, mapDivideDist, size);
 
 		// 判断每个单车属于哪一个网格，并添加进去
 		pubBikesToGrid(bikes, bigArea, maps, mapDivideDist);
@@ -309,9 +281,7 @@ public class MapHelper {
 	 * @param size
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public List<BikePos> getNearBikes(BikePos bike,
-			Map<String, Map<String, Object>> maps, mapSize size) {
+	public List<BikePos> getNearBikes(BikePos bike, Map<String, Map<String, Object>> maps, MapSize size) {
 		BikeArea area = State.getArea();
 		double lng = area.getStartLng();
 		double lat = area.getStartLat();
@@ -322,8 +292,7 @@ public class MapHelper {
 
 		int latPos = latDist / mapDivideDist;
 		findID = latPos + "_" + lngPos;
-		List<String> toFindIDs = getAroundAreas(findID, size.getRow(),
-				size.getCol(), boder);
+		List<String> toFindIDs = getAroundAreas(findID, size.getRow(), size.getCol(), boder);
 		List<BikePos> result = new ArrayList<BikePos>();
 		for (String s : toFindIDs) {
 
@@ -331,8 +300,7 @@ public class MapHelper {
 			List<BikePos> list = (List<BikePos>) around.get("bikes");
 			int calcuDist = 0;
 			for (BikePos pos : list) {
-				calcuDist = CoordsUtil.calcuDist(pos.getLng(), pos.getLat(),
-						bike.getLng(), bike.getLat());
+				calcuDist = CoordsUtil.calcuDist(pos.getLng(), pos.getLat(), bike.getLng(), bike.getLat());
 				if (calcuDist <= minDist) {
 					result.add(pos);
 				}
@@ -342,8 +310,8 @@ public class MapHelper {
 
 	}
 
-	public Map<String, List<BikePos>> getBikesWithinDist(List<BikePos> bikes,
-			Map<String, Map<String, Object>> maps, mapSize size) {
+	public Map<String, List<BikePos>> getBikesWithinDist(List<BikePos> bikes, Map<String, Map<String, Object>> maps,
+			MapSize size) {
 
 		Map<String, List<BikePos>> resultList = new HashMap<String, List<BikePos>>();
 		for (BikePos b : bikes) {
@@ -359,14 +327,12 @@ public class MapHelper {
 	 * @param area
 	 * @return
 	 */
-	public BikeArea getBiggerArea(BikeArea area) {
-		int borderDist = 400;
+	public BikeArea getBiggerArea(BikeArea area, int borderDist) {
 		double startLng = area.getStartLng();
 		double startLat = area.getStartLat();
 		double endLng = area.getEndLng();
 		double endLat = area.getEndLat();
-		double bigStartLng = CoordsUtil.getLng(startLat, startLng, borderDist,
-				false);
+		double bigStartLng = CoordsUtil.getLng(startLat, startLng, borderDist, false);
 		double bigStartLat = CoordsUtil.getLat(startLat, borderDist, false);
 		double bigEndLng = CoordsUtil.getLng(endLat, endLng, borderDist, true);
 		double bigEndLat = CoordsUtil.getLat(endLat, borderDist, true);
@@ -382,8 +348,7 @@ public class MapHelper {
 	 * @param cols
 	 * @return
 	 */
-	public List<String> getAroundAreas(String areaID, int rows, int cols,
-			int border) {
+	public List<String> getAroundAreas(String areaID, int rows, int cols, int border) {
 		String strPos[] = areaID.split("_");
 		int row = Integer.parseInt(strPos[0]);
 		int col = Integer.parseInt(strPos[1]);
@@ -415,8 +380,7 @@ public class MapHelper {
 	 * @param maps
 	 * @param dist
 	 */
-	public void pubBikesToGrid(List<BikePos> bikes, BikeArea area,
-			Map<String, Map<String, Object>> maps, int dist) {
+	public void pubBikesToGrid(List<BikePos> bikes, BikeArea area, Map<String, Map<String, Object>> maps, int dist) {
 		double lng = 0, lat = 0;
 		lng = area.getStartLng();
 		lat = area.getStartLat();
@@ -430,11 +394,13 @@ public class MapHelper {
 			int latPos = latDist / dist;
 
 			findID = latPos + "_" + lngPos;
-			Map<String, Object> small = maps.get(findID);
-			@SuppressWarnings("unchecked")
-			List<BikePos> list = (List<BikePos>) small.get("bikes");
+			if (maps.containsKey(findID)) {
+				Map<String, Object> small = maps.get(findID);
+				List<BikePos> list = (List<BikePos>) small.get("bikes");
 
-			list.add(b);
+				list.add(b);
+			}
+
 		}
 
 	}
@@ -445,10 +411,9 @@ public class MapHelper {
 	 * @param area
 	 * @param dist
 	 * @param size
-	 * @return
+	 * @return 外围string是每个区域的,内围string有area,bikes，存储区域坐标值和单车数据
 	 */
-	public Map<String, Map<String, Object>> divideMapToGrid(BikeArea area,
-			int dist, mapSize size) {
+	public Map<String, Map<String, Object>> divideMapToGrid(BikeArea area, int dist, MapSize size) {
 		Map<String, Map<String, Object>> maps = new HashMap<String, Map<String, Object>>();
 
 		int rows = 0, cols = 0;
@@ -456,11 +421,9 @@ public class MapHelper {
 		double nowLat = area.getStartLat();
 		do {
 			do {
-				double cornerLng = CoordsUtil
-						.getLng(nowLat, nowLng, dist, true);
+				double cornerLng = CoordsUtil.getLng(nowLat, nowLng, dist, true);
 				double cornerLat = CoordsUtil.getLat(nowLat, dist, true);
-				BikeArea small = new BikeArea(nowLng, nowLat, cornerLng,
-						cornerLat);
+				BikeArea small = new BikeArea(nowLng, nowLat, cornerLng, cornerLat);
 
 				String areaID = rows + "_" + cols;
 				Map<String, Object> mp = new HashMap<String, Object>();
@@ -479,28 +442,6 @@ public class MapHelper {
 		size.setRow(rows);
 		size.setCol(maps.size() / rows);
 		return maps;
-	}
-
-	class mapSize {
-		private int row;
-		private int col;
-
-		public int getRow() {
-			return row;
-		}
-
-		public int getCol() {
-			return col;
-		}
-
-		public void setRow(int row) {
-			this.row = row;
-		}
-
-		public void setCol(int col) {
-			this.col = col;
-		}
-
 	}
 
 }
