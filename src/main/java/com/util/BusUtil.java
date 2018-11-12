@@ -7,15 +7,10 @@ import java.util.Map;
 
 import com.execute.State;
 import com.pojo.BikeArea;
-import com.pojo.BusLine;
 import com.pojo.GaodeLine;
 import com.pojo.GaodeStop;
-import com.pojo.Lnglat;
 
 public class BusUtil {
-	public static void main(String[] args) {
-		writeStopsInCircle2();
-	}
 	
 	//提取二环内的公交站
 	public static void writeStopsInCircle2(){
@@ -32,13 +27,6 @@ public class BusUtil {
 		System.out.println("in circle"+result.size());
 		String outFile=System.getProperty("user.dir")+"/stopsfilter15Circle2.txt";
 		FilesUtil.writeListToFile(outFile, result, GaodeStop.class);
-		
-		
-	}
-	
-	public static void filterStops(){
-		String file = System.getProperty("user.dir") + "/allStops3.txt";
-		List<GaodeStop> ls=new ArrayList<GaodeStop>();
 		
 		
 	}

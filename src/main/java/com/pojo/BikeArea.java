@@ -1,10 +1,16 @@
 package com.pojo;
 
+import java.io.Serializable;
+
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class BikeArea {
+public class BikeArea implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1743863959959897169L;
 	private double startLng ;
 	private double startLat ;
 	private double endLng ;

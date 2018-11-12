@@ -3,7 +3,6 @@ package com.util;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.FileVisitResult;
@@ -11,6 +10,7 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -27,7 +27,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pojo.Bike;
 import com.pojo.BikeHeader;
@@ -38,113 +37,166 @@ import com.pojo.Point;
 public class FilesUtil {
 
 	public static String DEFAULT_BIKE_FILE = "/Users/daniel/projects/java/shareBike/bikeData/";
-	public static String BUS_STOP_FILE = System.getProperty("user.dir")
-			+ "/stopsfilter15Circle2.txt";
+	public static String BUS_STOP_FILE = System.getProperty("user.dir") + "/stopsfilter15Circle2.txt";
 	private final static ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	private final static ObjectMapper mapper = new ObjectMapper();
 
 	public static void main(String[] args) {
-		String start="2018_10_31 15";
-		String end="2018_11_1 3";
-		Date st=DateUtil.pareFileTime(start);
-		Date en=DateUtil.pareFileTime(end);
-		readFilesToBikeMap(st,en);
-		
+		getFileRange();
 
 	}
-	
+
+	public static Date[] getFileRange() {
+		Path startPath = Paths.get(DEFAULT_BIKE_FILE);
+
+		Date[] range = new Date[2];
+
+		try {
+			Files.walkFileTree(startPath, new SimpleFileVisitor<Path>() {
+				Date start = null;
+				Date endDate = null;
+
+				@Override
+				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+					Path temPath=dir.getFileName();
+					if (temPath==null||temPath.equals(" ")||temPath.equals(startPath.getFileName())) {
+						return FileVisitResult.CONTINUE;
+					} else {
+						String dirName = temPath.toString();
+						Date temp = DateUtil.parseToDay(dirName);
+						if (temp == null) {
+							return FileVisitResult.TERMINATE;
+						}
+						if (start == null) {
+							start = endDate = temp;
+						} else {
+							if (start.after(temp)) {
+								start = temp;
+							}
+							if (endDate.before(temp)) {
+								endDate = temp;
+							}
+						}
+						range[0] = start;
+						range[1] = endDate;
+						return FileVisitResult.SKIP_SUBTREE;
+
+					}
+
+				}
+
+			});
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return range;
+	}
+
 	/**
 	 * 读取两个时间之间带mapHeader的文件
+	 * 
 	 * @param st_time
 	 * @param end_time
 	 * @return
 	 */
-	public static List<Map<String, Object>> readFilesToBikeMap(Date st_time,Date end_time){
-		List<Path> files=listFilesInDuration(st_time, end_time);
-		List<Map<String, Object>> result=new ArrayList<Map<String,Object>>();
-		
-		for(Path f:files){
+	public static List<Map<String, Object>> readFilesToBikeMap(Date st_time, Date end_time) {
+		List<Path> files = listFilesInDuration(st_time, end_time);
+		List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
+
+		for (Path f : files) {
 			result.add(readFileToBikeMap(f.toString()));
 		}
 		result.sort(new Comparator<Map<String, Object>>() {
 			@Override
 			public int compare(Map<String, Object> o1, Map<String, Object> o2) {
-				BikeHeader header1=(BikeHeader) o1.get("header");
-				BikeHeader header2=(BikeHeader) o2.get("header");
-				
+				BikeHeader header1 = (BikeHeader) o1.get("header");
+				BikeHeader header2 = (BikeHeader) o2.get("header");
+
 				return header1.getStartTime().compareTo(header2.getStartTime());
 			}
 		});
 		return result;
 	}
-
-	//listFilesInDuration("2018_10_30 0", "2018_11_1 0");
-	public static List<Path> listFilesInDuration(Date st_time,Date end_time) {
+	
+	public static List<Map<String, Object>> ListFilesInDay(Date date) {
+		Calendar calendar=Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		Date start=calendar.getTime();
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		Date enDate=calendar.getTime();
+		
+		return readFilesToBikeMap(start, enDate);
+	}
+	
+	// listFilesInDuration("2018_10_30 0", "2018_11_1 0");
+	public static List<Path> listFilesInDuration(Date st_time, Date end_time) {
 		List<Path> ls = new ArrayList<Path>();
-		Calendar cal=Calendar.getInstance();
+		Calendar cal = Calendar.getInstance();
 		cal.setTime(st_time);
 		cal.set(Calendar.HOUR_OF_DAY, 0);
-		Date begin_time=cal.getTime();
-		
+		Date begin_time = cal.getTime();
+
 		cal.setTime(end_time);
 		cal.set(Calendar.HOUR_OF_DAY, 0);
-		Date stop_time=cal.getTime();
-		
+		Date stop_time = cal.getTime();
+
 		if (st_time.compareTo(end_time) > 0) {
 			return ls;
 		}
-		if(st_time.compareTo(end_time)==0){
-			String singlePath=PathUtil.getFileByTime(st_time);
+		if (st_time.compareTo(end_time) == 0) {
+			String singlePath = PathUtil.getFileByTime(st_time);
 			ls.add(Paths.get(singlePath));
 			return ls;
 		}
-		Path startPath=Paths.get(DEFAULT_BIKE_FILE);
+		Path startPath = Paths.get(DEFAULT_BIKE_FILE);
+		
 		try {
 			Files.walkFileTree(startPath, new FileVisitor<Path>() {
-
+				String tempStr=null;
 				@Override
-				public FileVisitResult preVisitDirectory(Path dir,
-						BasicFileAttributes attrs) throws IOException {
-					if(dir.getFileName().equals(startPath.getFileName())){
+				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+					tempStr=dir.getFileName().toString();
+					if (tempStr.equals(startPath.getFileName().toString())) {
 						return FileVisitResult.CONTINUE;
-					}else{
-						String dirName=dir.getFileName().toString();
-						Date temp = DateUtil.parseFile(dirName);
-						
-						if (temp.compareTo(begin_time) >= 0
-								&& temp.compareTo(stop_time) <= 0) {
+					} else {
+						if(!RegexUtil.matchDate(tempStr)) {
+							return FileVisitResult.CONTINUE;
+						}
+						Date temp = DateUtil.parseToDay(tempStr);
+
+						if (temp.compareTo(begin_time) >= 0 && temp.compareTo(stop_time) <= 0) {
 							return FileVisitResult.CONTINUE;
 						}
 						return FileVisitResult.SKIP_SUBTREE;
 					}
-					
+
 				}
 
 				@Override
-				public FileVisitResult visitFile(Path file,
-						BasicFileAttributes attrs) throws IOException {
-					String name=file.getFileName().toString();	
-					String str_date=file.getParent().getFileName().toString();
-					str_date=str_date+" "+name.substring(0, name.length()-4);
-					Date temp=DateUtil.pareFileTime(str_date);
-					if(temp.compareTo(st_time)>=0&&temp.compareTo(end_time)<=0){
-						System.out.println(file.toString());
-						ls.add(file);	
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					String name = file.getFileName().toString();
+					String str_date = file.getParent().getFileName().toString();
+					str_date = str_date + " " + name.substring(0, name.length() - 4);
+					if(!RegexUtil.matchHour(str_date)) {
+						return FileVisitResult.CONTINUE;
+					}
+					Date temp = DateUtil.pareToHour(str_date);
+					if (temp.compareTo(st_time) >= 0 && temp.compareTo(end_time) <= 0) {
+						ls.add(file);
 					}
 					return FileVisitResult.CONTINUE;
-					
+
 				}
 
 				@Override
-				public FileVisitResult visitFileFailed(Path file,
-						IOException exc) throws IOException {				
+				public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
 					return FileVisitResult.TERMINATE;
 				}
 
 				@Override
-				public FileVisitResult postVisitDirectory(Path dir,
-						IOException exc) throws IOException {
-					
+				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+
 					return FileVisitResult.CONTINUE;
 				}
 			});
@@ -161,12 +213,21 @@ public class FilesUtil {
 
 		Date near = null;
 		File latest = null;
+		String string=null;
+		Date temp=null;
 		if (fls.length > 0) {
-			near = DateUtil.parseFile(fls[0].getName());
-			;
+			latest=fls[0];
+			near = DateUtil.parseToDay(fls[0].getName());
+			
 			for (File f : fls) {
-				Date temp = DateUtil.parseFile(f.getName());
-
+				string=f.getName();
+				if(RegexUtil.matchDate(string)) {
+					temp = DateUtil.parseToDay(f.getName());
+				}					
+				
+				if(temp==null) {
+					continue;
+				}
 				if (temp.after(near)) {
 					near = temp;
 					latest = f;
@@ -213,8 +274,7 @@ public class FilesUtil {
 			String temp = null;
 			while ((temp = reader.readLine()) != null) {
 				Bike bike = mapper.readValue(temp, Bike.class);
-				BikePos pos = new BikePos(bike.getDistId(),
-						Double.parseDouble(bike.getDistX()),
+				BikePos pos = new BikePos(bike.getDistId(), Double.parseDouble(bike.getDistX()),
 						Double.parseDouble(bike.getDistY()), 20);
 				list.add(pos);
 			}
@@ -253,8 +313,7 @@ public class FilesUtil {
 			String temp = null;
 			while ((temp = reader.readLine()) != null) {
 				Bike bike = mapper.readValue(temp, Bike.class);
-				BikePos pos = new BikePos(bike.getDistId(),
-						Double.parseDouble(bike.getDistX()),
+				BikePos pos = new BikePos(bike.getDistId(), Double.parseDouble(bike.getDistX()),
 						Double.parseDouble(bike.getDistY()), 20);
 
 				bikes.add(pos);
@@ -291,9 +350,8 @@ public class FilesUtil {
 			while ((temp = reader.readLine()) != null) {
 				Bike bike = mapper.readValue(temp, Bike.class);
 
-				Point p = new Point(new double[] {
-						Double.parseDouble(bike.getDistX()),
-						Double.parseDouble(bike.getDistY()) },
+				Point p = new Point(
+						new double[] { Double.parseDouble(bike.getDistX()), Double.parseDouble(bike.getDistY()) },
 						bike.getDistId(), 1);
 
 				bikes.add(p);
@@ -329,8 +387,7 @@ public class FilesUtil {
 			String temp = null;
 			while ((temp = reader.readLine()) != null) {
 				Bike bike = mapper.readValue(temp, Bike.class);
-				BikePos pos = new BikePos(bike.getDistId(),
-						Double.parseDouble(bike.getDistX()),
+				BikePos pos = new BikePos(bike.getDistId(), Double.parseDouble(bike.getDistX()),
 						Double.parseDouble(bike.getDistY()), 20);
 				list.add(pos);
 			}
@@ -347,8 +404,7 @@ public class FilesUtil {
 		return mp;
 	}
 
-	public static <T> void writeListToFile(String fileName, List<T> ls,
-			Class<T> clas) {
+	public static <T> void writeListToFile(String fileName, List<T> ls, Class<T> clas) {
 		Path p = Paths.get(fileName);
 		BufferedWriter writer = null;
 		try {
@@ -357,8 +413,7 @@ public class FilesUtil {
 
 			}
 
-			writer = Files.newBufferedWriter(p, Charset.forName("utf-8"),
-					StandardOpenOption.APPEND);
+			writer = Files.newBufferedWriter(p, Charset.forName("utf-8"), StandardOpenOption.APPEND);
 
 			for (T t : ls) {
 				writer.write(mapper.writeValueAsString(t));
@@ -384,8 +439,7 @@ public class FilesUtil {
 
 			}
 
-			writer = Files.newBufferedWriter(p, Charset.forName("utf-8"),
-					StandardOpenOption.APPEND);
+			writer = Files.newBufferedWriter(p, Charset.forName("utf-8"), StandardOpenOption.APPEND);
 
 			writer.write(mapper.writeValueAsString(t));
 			writer.write('\n');
@@ -425,14 +479,12 @@ public class FilesUtil {
 		return null;
 	}
 
-	public static String writeBikeToFile(BikeHeader header,
-			Map<String, Bike> bikes) {
+	public static String writeBikeToFile(BikeHeader header, Map<String, Bike> bikes) {
 		Path todayDirec = createDirec();
 		Path bikePath = createNowFile(todayDirec.toString());
 		BufferedWriter writer = null;
 		try {
-			writer = Files.newBufferedWriter(bikePath,
-					Charset.forName("utf-8"), StandardOpenOption.APPEND);
+			writer = Files.newBufferedWriter(bikePath, Charset.forName("utf-8"), StandardOpenOption.APPEND);
 			WriteLock writeLock = lock.writeLock();
 			writeLock.lock();
 			try {
@@ -441,8 +493,7 @@ public class FilesUtil {
 				Set<String> names = bikes.keySet();
 				Iterator<String> iter = names.iterator();
 				while (iter.hasNext()) {
-					writer.write(mapper.writeValueAsString(bikes.get(iter
-							.next())));
+					writer.write(mapper.writeValueAsString(bikes.get(iter.next())));
 					writer.write("\n");
 				}
 			} finally {
@@ -490,8 +541,7 @@ public class FilesUtil {
 			int year = cal.get(Calendar.YEAR);
 			int month = cal.get(Calendar.MONTH) + 1;
 			int day = cal.get(Calendar.DATE);
-			String dateFile = DEFAULT_BIKE_FILE + year + "_" + month + "_"
-					+ day + "/";
+			String dateFile = DEFAULT_BIKE_FILE + year + "_" + month + "_" + day + "/";
 			datePath = Paths.get(dateFile);
 		} else {
 			datePath = Paths.get(DirecName[0]);

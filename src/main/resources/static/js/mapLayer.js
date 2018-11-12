@@ -4,20 +4,18 @@
 //mapLayer.layer.heatmap.setMap(map); 添加
 //mapLayer.layer.heatmap.setMap(null); 删除
 var mapLayer={
-
-}
-
-// load map and its plugins ----BEGIN
-var map = new AMap.Map('container', {
-	zoom : 15,// 级别
-	// 'bg'（地图背景）、'point'（POI点）、'road'（道路）、'building'（建筑物）
-	features:['bg','point','road','building'],
-	center : [ 108.916913, 34.265569 ],// 中心点坐标
-	viewMode : '2D',// 使用2D视图
-//	isHotspot:true,
-});
-
-mapLayer={
+		config:{
+				clusterDist:20,
+				startTime:"latest",
+				endTime:"latest",
+				// share.config.setParam("clusterDist", 20);
+				setParam:function(param,value){
+					this[param]=value;
+				},
+				getParam:function(param){
+					return  this[param];
+				},
+		},
 		// name,mod
 		loaded : [],
 		icons:{
@@ -38,6 +36,37 @@ mapLayer={
 		    }],
 		},
 		
+		markers:{
+			bus:null,
+			init:{
+				bus:function(){
+					mapUtil.link.getData("/map/busStop", true, {}, function(data) {
+						if(data){
+							var markers=[];
+							data.forEach(function(marker) {
+								marker= new AMap.Marker({
+									icon: mapLayer.icons.bus,
+									position: [marker.location.lng,marker.location.lat],
+									offset: new AMap.Pixel(-12,-12),
+									zIndex: 2,
+									map:map,
+									visible:false,
+									title: marker.name
+							        });
+								markers.push(marker);
+							});
+							mapLayer.markers.bus={
+									marker:markers,
+									show:false,
+							}
+							
+						}				
+						// if ends
+					});
+				},
+				// bus init ends
+			},
+		},
 		cleanMarkers:function(markers){
 			if(markers&&markers!=null){
 				for(var i=0;i<markers.length;i++){
@@ -48,13 +77,38 @@ mapLayer={
 				}			
 			}	
 		},
-		showMarkers:function(markers){
-			if(markers&&markers!=null){
-				for(var i=0;i<markers.length;i++){
-					if (markers[i]) {
-						markers[i].show();
-			        }
-				}			
+		getMarkerMod:function(modName){
+			switch (modName) {
+			case "busStop":
+				return this.markers.bus;
+			default:
+				break;
+			}
+		},
+		showMarkers:function(mod){
+			if(mod&&mod!=null){
+				if(mod.marker){
+					mod.show=true;
+					for(var i=0;i<mod.marker.length;i++){
+						if (mod.marker[i]) {
+							mod.marker[i].show();
+				        }
+					}
+				}
+							
+			}	
+		},
+		hideMarkers:function(mod){
+			if(mod&&mod!=null){
+				if(mod.marker){
+					mod.show=false;
+					for(var i=0;i<mod.marker.length;i++){
+						if (mod.marker[i]) {
+							mod.marker[i].hide();
+				        }
+					}
+				}
+							
 			}	
 		},
 		addMapFeature:function(modName){
@@ -73,14 +127,59 @@ mapLayer={
 			}
 			map.setFeatures(feats);
 		},
+		task:{
+			tasks:[],
+			addTask:function(task){
+					this.tasks.push(task);
+			},
+			removeTask:function(name){
+				for(var i in this.tasks){
+					if(name==this.tasks[i]){
+						this.tasks.splice(i,1);
+					}
+				}
+			},
+			isDone:function(){
+				return this.tasks.length==0;
+			}
+		},
+	
+		resetMods:function(){
 		
-		show:function(modName){
+			if(!mapLayer.task.isDone()){
+				console.log("tasks not done");
+				return ;
+			}
+			// 以记录任务数和定时读取任务完成情况来控制加载插件,最多等待十秒钟
+			var timesRun = 0;
+			var interval = setInterval(function(){
+				timesRun += 1;
+				if(mapLayer.task.isDone()||timesRun==100){
+					share.clockLoader.hide();
+					clearInterval(interval);
+				}
+			}, 100);
+			 
+			 for(var i in this.loaded){
+				 var modName=this.loaded[i].name;
+				 if(this.loaded[i].show==true){
+					 this.task.addTask(modName);
+					 this.loadAndShow(modName,{show:true,hideLoader:false,removeTask:true});
+				 }else{
+					 this.loadAndShow(modName,{show:false});
+				 }
+				 
+			 }
+			 this.hideAll();
+			 share.clockLoader.show();
+		},
+		
+		showMod:function(modName){
 			var module=mapLayer.getMod(modName);
 					
 			if(module&&module!=null){
-				module.show=true;
 				if(module.hasData){
-					
+					module.show=true;
 					if(mapUtil.utils.isArray(module.mod)){
 						for(var i=0;i<module.mod.length;i++){
 							if (module.mod[i]) {
@@ -91,12 +190,26 @@ mapLayer={
 						module.mod.show();
 					}
 				}else{
-					mapLayer.data.loadMod(modName);
+					share.clockLoader.show();
+					this.loadAndShow(modName,{show:true,hideLoader:true});
 				}
 				
 			}
 		},
-		
+		loadAndShow:function(modName,options){
+			mapLayer.data.loadMod(modName,function(modName,header){
+				if(options.show){
+					mapLayer.showMod(modName);
+				}
+				if(options.hideLoader){
+					share.clockLoader.hide();
+				}
+				if(options.removeTask){
+					mapLayer.task.removeTask(modName);
+				}
+				
+			});
+		},
 		hide:function(modName){
 			var module=mapLayer.getMod(modName);
 			if(module&&module!=null){
@@ -122,44 +235,22 @@ mapLayer={
 				this.show(this.loaded[i].name);
 			}
 		},
+		getShowOnMap:function(){
+			var list=[];
+			for(var i in this.loaded){
+				if(this.loaded[i].show){
+					list.push(this.loaded[i].name);
+				}
+			}
+			return list;
+		},
 		hideAll:function(){
 			for(var i in this.loaded){
 				this.hide(this.loaded[i].name);
 			}
 		},	
 		init:{
-			busMarkers:function(moduleName){
-				mapUtil.link.getData("/map/busStop", true, {
-				}, function(data) {
-					if(data){
-						var markers=[];
-						data.forEach(function(marker) {
-							marker= new AMap.Marker({
-								icon: mapLayer.icons.bus,
-								// [116.406315,39.908775]
-								position: [marker.location.lng,marker.location.lat],
-								offset: new AMap.Pixel(-12,-12),
-								zIndex: 2,
-								map:map,
-								visible:false,
-								title: marker.name
-						        });
-							markers.push(marker);
-						});
-						
-						mapLayer.loaded.push({
-							name:moduleName,
-							mod:markers,
-							hasData:true,
-							show:false,
-						});
-						
-					}				
-
-				});
-				
-				
-			},
+			
 			massMark:function(moduleName){
 
 				var mass = new AMap.MassMarks([], {
@@ -182,7 +273,7 @@ mapLayer={
 					name:moduleName,
 					mod:mass,
 					hasData:false,
-					show:true,
+					show:false,
 				});
 				
 				console.log("初始化海量点图");
@@ -238,126 +329,187 @@ mapLayer={
 			},
 		},
 		data:{
-			setShow:function(module){
-				if(module.show){
-					module.mod.show();
-				}else{
-					module.mod.hide();
-				}
-			},
-			loadMod:function(moduleName,time){
+			loadMod:function(moduleName,func){
 				switch (moduleName) {
 				case "":					
 					break;
 				case "bikePos":
-					this.bikePos(moduleName,time);
+					this.bikePos(moduleName,func);
 					break;
 				case "cluster":
-					this.cluster(moduleName,time);
+					this.cluster(moduleName,func);
 					break;
 				case "heat":
-					this.heatmap(moduleName,time);					
+					this.heatmap(moduleName,func);					
 					break;
 				default:
 				}				
 			},
-			bikePos:function(modName,time){
-				if(!time){
+			checkTime:function(time){
+				
+				if(!time||time==null||time==''){
 					time="latest";
 				}
-				share.clockLoader.show();
-				mapUtil.link.getData("/map/bikePos", true, {
-					time : time
-				}, function(data) {
-					if(data&&data.header){
-						// {"lnglat":[116.258446,37.686622],"name":"景县","style":2}
-						var mass=mapLayer.getMod(modName);
-
-						var time=mapUtil.utils.parser(data.header.startTime);
-
-						share.timeSetter.set(time);
-						mass.mod.setData(data.bikes);
-						mass.hasData=true;
+				return time;
+			},
+			bikePos:function(modName,func){
+				var start=mapLayer.config.getParam("startTime");
+				var end=mapLayer.config.getParam("endTime");
+				start=this.checkTime(start);
+				end=this.checkTime(end);
+				if(start=="latest"||end=="latest"||start==end){
+					mapUtil.link.getData("/map/bikePos", true, {
+						time : start
+					}, function(data) {
+						if(data&&data.header){
+							// {"lnglat":[116.258446,37.686622],"name":"景县","style":2}
+							var mass=mapLayer.getMod(modName);
+							mass.mod.setData(data.bikes);
+							mass.hasData=true;
+							var header=data.header;
+							func(modName);
+							console.log(header);
+							var panel={
+									bikesCount:header.bikeCount,
+									startTime:share.params.formTime(header.startTime),
+									endTime:share.params.formTime(header.startTime),
+									timeSpan:"0",
+									regionStart:[header.bikeRec.startLng,header.bikeRec.startLat],
+									regionEnd:[header.bikeRec.endLng,header.bikeRec.endLat],
+									weather:header.weather.weather,
+									tempareture:header.weather.tempature
+							};
+							share.infoPanel.setData(panel);
+							share.params.setRange(header.startTime,header.startTime);	
+						}				
+					});
+				}else{
+					mapUtil.link.getData("/map/rangebikePos", true, {
+						start : start,
+						end:end,
+					}, function(data) {
+						if(data){
+							console.log(data);
+							var list=[];
+							for(var i in data){
+								if(data[i]&&data[i].bikes){
+									list=list.concat(data[i].bikes);	
+								}
+							}
+							// {"lnglat":[116.258446,37.686622],"name":"景县","style":2}
+							 var mass=mapLayer.getMod(modName);
+							 mass.mod.setData(list);
+							 mass.hasData=true;
+							// var header=data.header;
+							 func(modName);
+							 console.log(data.header);
+							 var header=data.header;
+							 var panel={
+										bikesCount:header.bikesCount,
+										startTime:share.params.formTime(start),
+										endTime:share.params.formTime(end),
+										timeSpan:share.params.getSpan(start,end),
+										regionStart:[header.bikeRec.startLng,header.bikeRec.startLat],
+										regionEnd:[header.bikeRec.endLng,header.bikeRec.endLat],
+										weather:"无",
+										tempareture:header.temperature
+								};
+								share.infoPanel.setData(panel);
+								share.params.setRange(start,end);
+						}				
 						
-						mapLayer.data.setShow(mass);
-												
-						var header=data.header;
-						var panel={
-								bikesCount:header.bikeCount,
-								regionStart:[header.bikeRec.startLng,header.bikeRec.startLat],
-								regionEnd:[header.bikeRec.endLng,header.bikeRec.endLat],
-								weather:header.weather.weather,
-								tempareture:header.weather.tempature
-						};
-						share.infoPanel.setData(panel);
-					}				
-					share.clockLoader.hide();
-				});
+					});
+				}
+				
 							
 			},
 			
-			cluster:function(modName,time){
-				if(!time){
-					time="latest";
-				}
-				share.clockLoader.show();
-				mapUtil.link.getData("/map/cluster", true, {
-					time : time,
-					distance : 20
-				}, function(data) {
-					if(data){
-						console.log("加载聚类图");
-						var cluster=mapLayer.getMod(modName);
-						
-						var time=mapUtil.utils.parser(data.header.startTime);
-						share.timeSetter.set(time);
-						cluster.mod.setData(data.clusters);
-						cluster.hasData=true;
-						mapLayer.data.setShow(cluster);
-						
-					}
-					share.clockLoader.hide();
-				});
-			},
-			heatmap:function(modName,time){
-				if(!time){
-					time="latest";
-				}
-				share.clockLoader.show();
-				mapUtil.link.getData("/map/heat", true, {
-					time : time					
-				}, function(data) {
-					if(data){
-						console.log("加载热力图");
-						var header = data.header;
-						var panel = {
-							header : "数据显示",
-							body : {
-								"单车数量" : header.bikeCount,
-								"区域起始点" : new Array(header.bikeRec.startLng,
-										header.bikeRec.startLat),
-								"区域终止点" : new Array(header.bikeRec.endLng,
-										header.bikeRec.endLat),
-								"采集时间" : mapUtil.utils.parser(header.time),
-								"天气情况" : header.weather.weather,
-								"温度" : header.weather.tempature
+			cluster:function(modName,func){
+				var start=mapLayer.config.getParam("startTime");
+				var end=mapLayer.config.getParam("endTime");
+				start=this.checkTime(start);
+				end=this.checkTime(end);
+				console.log("加载聚类图");
+				console.log(start);
+				console.log(end);
+				console.log("聚类距离"+mapLayer.config.clusterDist);
+				if(start=="latest"||end=="latest"||start==end){
+					mapUtil.link.getData("/map/cluster", true, {
+						time : start,
+						distance : mapLayer.config.clusterDist,
+					}, function(data) {
+						if(data){
+							var cluster=mapLayer.getMod(modName);
+							
+							cluster.mod.setData(data);
+							cluster.hasData=true;
+							func(modName);
+							
+						}				
+					});
+				}else{
+					mapUtil.link.getData("/map/rangecluster", true, {
+						start : start,
+						end:end,
+						distance : mapLayer.config.clusterDist,
+					}, function(data) {
+						if(data){
+							console.log("加载区间聚类图");
+							console.log(data);
+							var list=[];
+							for(var i in data){
+								list=list.concat(data[i]);
 							}
-						};
-						// 设置面板信息
-						share.infoPanel.setData(panel);
-						// 设置热力数据
+							var cluster=mapLayer.getMod(modName);
+							cluster.mod.setData(list);
+							cluster.hasData=true;
+							func(modName);
+						}				
 						
-						var heater=mapLayer.getMod(modName);
-						heater.hasData=true;
-						heater.mod.setDataSet({
-							data : data.bikes,
-							max : 100
-						});				
-						mapLayer.data.setShow(heater);
-					}
-					
-					share.clockLoader.hide();
-				});
+					});
+				}
+			},
+			heatmap:function(modName,func){
+				var start=mapLayer.config.getParam("startTime");
+				var end=mapLayer.config.getParam("endTime");
+				start=this.checkTime(start);
+				end=this.checkTime(end);
+				console.log("加载热力图");
+				if(start=="latest"||end=="latest"||start==end){
+					mapUtil.link.getData("/map/heat", true, {
+						time : start
+					}, function(data) {
+						if(data){
+							var heater=mapLayer.getMod(modName);
+							heater.hasData=true;
+							heater.mod.setDataSet({
+								data : data.bikes,
+								max : 100
+							});		
+							func(modName);
+						}				
+					});
+				}else{
+					mapUtil.link.getData("/map/rangeheat", true, {
+						start : start,
+						end:end,
+					}, function(data) {
+						if(data){
+							var list=[];
+							for(var i in data){
+								list=list.concat(data[i].bikes);
+							}
+							 var heater=mapLayer.getMod(modName);
+							 heater.hasData=true;
+							 heater.mod.setDataSet({
+								 data : list,
+								 max : 100
+							 });
+							func(modName);
+						}				
+						
+					});
+				}
 			},
 		},
 		getMod : function(moduleName) {

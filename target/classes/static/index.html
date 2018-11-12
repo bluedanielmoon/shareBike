@@ -8,6 +8,12 @@
 <meta
 	content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
 	name="viewport">
+
+<script
+	src="https://webapi.amap.com/maps?v=1.4.10&key=5b1dec2e1d0e0824ffa4856a80310ef2"></script>
+<script
+	src="https://webapi.amap.com/loca?v=1.2.0&key=5b1dec2e1d0e0824ffa4856a80310ef2"></script>
+
 <link rel="stylesheet" href="css/bootstrap.min.css">
 <!-- Font Awesome -->
 <link rel="stylesheet" href="css/font-awesome.min.css">
@@ -22,12 +28,7 @@
 
 <link rel="stylesheet" href="css/map.css">
 <link rel="stylesheet" href="css/util.css">
-<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-<!--[if lt IE 9]>
-  <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-  <![endif]-->
+
 </head>
 <!--
 BODY TAG OPTIONS:
@@ -290,7 +291,7 @@ desired effect
 			</div>
 			<section id="console-map" class="console content container-fluid">
 				<div class="row">
-					<div class="col-md-10 col-xs-12">
+					<div class="col-md-12 col-xs-12">
 
 						<div id="container">
 							<!-- collapse panels -->
@@ -314,7 +315,7 @@ desired effect
 									<div class="panel-group " id="accordion">
 
 										<!-- penal mapSet -->
-										<div class="panel panel-default">
+										<div class="panel panel-default set-console">
 											<div class="panel-heading">
 												<h4 class="panel-title">
 													<a data-toggle="collapse" data-parent="#accordion"
@@ -345,7 +346,7 @@ desired effect
 																type="checkbox" class="js-switch form-control" checked />
 														</div>
 														<div class="form-group">
-															<label>公交站分布</label> <input id="show-busStop"
+															<label>公交站分布</label> <input id="show-marker-busStop"
 																type="checkbox" class="js-switch form-control" />
 														</div>
 														<div class="form-group">
@@ -363,7 +364,106 @@ desired effect
 										<!-- ./penal mapSet -->
 
 										<!-- penal timeSet -->
-										<div class="panel panel-default">
+										<div class="panel panel-default set-console">
+											<div class="panel-heading ">
+												<h4 class="panel-title">
+													<a data-toggle="collapse" data-parent="#accordion"
+														href="#collapseTime">参数设置 </a>
+												</h4>
+											</div>
+											<div id="collapseTime" class="panel-collapse collapse">
+												<div class="panel-body">
+													<form role="form">
+														<div class="form-group">
+															<label>数据时间范围(最细到小时)</label>
+
+															<div class="input-group">
+																<div class="input-group-addon">
+																	<i class="fa fa-clock-o"></i>
+																</div>
+																<input type="text" class="form-control pull-right"
+																	id="time-picker">
+															</div>
+														</div>
+
+														<div class="form-group">
+															<label>聚类距离</label>
+
+															<div class="input-group">
+																<div class="input-group-addon">
+																	<i class="fa fa-clock-o"></i>
+																</div>
+																<input type="text" class="form-control pull-right"
+																	id="clusterDist">
+															</div>
+														</div>
+
+														<button id="submit-param" type="button"
+															class="btn btn-block btn-primary btn-lg">提交参数</button>
+
+													</form>
+												</div>
+											</div>
+										</div>
+										<!-- penal timeSet -->
+
+										<!-- penal timeSet -->
+										<div id="data-panel" class="panel panel-default set-console">
+											<div class="panel-heading ">
+												<h4 class="panel-title">
+													<a data-toggle="collapse" data-parent="#accordion"
+														href="#collapseInfo"> 地图信息 </a>
+												</h4>
+											</div>
+											<div id="collapseInfo" class="panel-collapse collapse">
+												<div class="panel-body">
+													<form role="form">
+														<div class="form-group">
+															<ul class="nav nav-pills nav-stacked">
+																<li><a href="#"><i
+																		class="fa fa-circle-o text-red"></i> 单车数量<span
+																		data-count class="label label-primary pull-right"></span></a></li>
+																<li><a href="#"><i
+																		class="fa fa-circle-o text-red"></i> 开始时间<span
+																		data-startTime class="label label-primary pull-right"></span></a></li>
+																<li><a href="#"><i
+																		class="fa fa-circle-o text-red"></i> 结束时间<span
+																		data-endTime class="label label-primary pull-right"></span></a></li>
+																<li><a href="#"><i
+																		class="fa fa-circle-o text-red"></i> 时间跨度<span
+																		data-timeSpan class="label label-primary pull-right"></span></a></li>
+																<li><a href="#"><i
+																		class="fa fa-circle-o text-yellow"></i> 区域起点
+																		<button type="button" data-regionStart
+																			data-coords="108.891913, 34.286154"
+																			class="btn btn-default pull-right coords-btn">
+																			<i class="fa  fa-map-marker"></i>
+																		</button> </a></li>
+																<li><a href="#"><i
+																		class="fa fa-circle-o text-blue"></i> 区域终点
+																		<button type="button" data-regionEnd
+																			data-coords="108.996753, 34.240899"
+																			class="btn btn-default pull-right coords-btn">
+																			<i class="fa  fa-map-marker"></i>
+																		</button> </a></li>
+																<li><a href="#"><i
+																		class="fa fa-circle-o text-green"></i> 天气情况<span
+																		data-weather class="label label-primary pull-right"></span></a></li>
+																<li><a href="#"><i
+																		class="fa fa-circle-o text-purple"></i> 温度<span
+																		data-temperature class="label label-primary pull-right"></span></a></li>
+															</ul>
+														</div>
+
+													</form>
+												</div>
+											</div>
+										</div>
+										<!-- penal timeSet -->
+
+
+										<!-- penal heatSet -->
+										<div class="panel panel-default set-visual">
 											<div class="panel-heading ">
 												<h4 class="panel-title">
 													<a data-toggle="collapse" data-parent="#accordion"
@@ -389,52 +489,7 @@ desired effect
 												</div>
 											</div>
 										</div>
-										<!-- penal timeSet -->
-
-										<!-- penal timeSet -->
-										<div id="data-panel" class="panel panel-default">
-											<div class="panel-heading ">
-												<h4 class="panel-title">
-													<a data-toggle="collapse" data-parent="#accordion"
-														href="#collapseInfo"> 地图信息 </a>
-												</h4>
-											</div>
-											<div id="collapseInfo" class="panel-collapse collapse">
-												<div class="panel-body">
-													<form role="form">
-														<div class="form-group">
-															<ul class="nav nav-pills nav-stacked">
-																<li><a href="#"><i
-																		class="fa fa-circle-o text-red"></i> 单车数量<span
-																		data-bikesCount class="label label-primary pull-right">12</span></a></li>
-																<li><a href="#"><i
-																		class="fa fa-circle-o text-yellow"></i> 区域起点
-																		<button type="button" data-regionStart
-																			data-coords="108.891913, 34.286154"
-																			class="btn btn-default pull-right coords-btn">
-																			<i class="fa  fa-map-marker"></i>
-																		</button> </a></li>
-																<li><a href="#"><i
-																		class="fa fa-circle-o text-blue"></i> 区域终点
-																		<button type="button" data-regionEnd
-																			data-coords="108.996753, 34.240899"
-																			class="btn btn-default pull-right coords-btn">
-																			<i class="fa  fa-map-marker"></i>
-																		</button> </a></li>
-																<li><a href="#"><i
-																		class="fa fa-circle-o text-green"></i> 天气情况<span
-																		data-weather class="label label-primary pull-right">12</span></a></li>
-																<li><a href="#"><i
-																		class="fa fa-circle-o text-purple"></i> 温度<span
-																		data-temprature class="label label-primary pull-right">12</span></a></li>
-															</ul>
-														</div>
-
-													</form>
-												</div>
-											</div>
-										</div>
-										<!-- penal timeSet -->
+										<!-- penal heatSet -->
 									</div>
 									<!-- ./penal group -->
 								</div>
@@ -470,154 +525,11 @@ desired effect
 
 						</div>
 					</div>
-					<div class="col-md-2 col-xs-12">
-
-						<div class="nav-tabs-custom">
-							<ul class="nav nav-tabs">
-								<li class="active"><a href="#tab_single" data-toggle="tab">单例设置</a></li>
-								<li><a href="#tab_duration" data-toggle="tab">区间设置</a></li>
-								<!-- 	<li class="dropdown"><a class="dropdown-toggle"
-									data-toggle="dropdown" href="#"> Dropdown <span
-										class="caret"></span>
-								</a>
-									<ul class="dropdown-menu">
-										<li role="presentation"><a role="menuitem" tabindex="-1"
-											href="#">Action</a></li>
-										<li role="presentation"><a role="menuitem" tabindex="-1"
-											href="#">Another action</a></li>
-										<li role="presentation"><a role="menuitem" tabindex="-1"
-											href="#">Something else here</a></li>
-										<li role="presentation" class="divider"></li>
-										<li role="presentation"><a role="menuitem" tabindex="-1"
-											href="#">Separated link</a></li>
-									</ul></li>
-								<li class="pull-right"><a href="#" class="text-muted"><i
-										class="fa fa-gear"></i></a></li> -->
-							</ul>
-							<div class="tab-content">
-								<div class="tab-pane active" id="tab_single">
-
-									<!-- paramSet -->
-									<div class="box box-primary">
-										<!-- /.box-header -->
-										<!-- form start -->
-										<form role="form">
-											<div class="box-body">
-
-												<!-- timePicker -->
-												<div class="form-group">
-													<label for="dataTime">数据时间<span
-														class="help-block m-b-none">(可选范围:2018/10/30-2018/11/1)</span></label>
-
-													<div class="input-group date time-picker">
-														<div class="input-group-addon">
-															<i class="fa fa-calendar"></i>
-														</div>
-														<input type="text" class="form-control pull-right"
-															id="dataTime" readonly>
-													</div>
-													<button id="Setter-Time" type="button"
-														class="btn btn-primary">更新数据</button>
-													<!-- /.input group -->
-												</div>
-												<!-- /.timePicker -->
-												<div class="form-group">
-													<label for="dataTime">聚类距离<span
-														class="help-block m-b-none">(推荐范围：10-100)</span></label>
-
-													<div class="input-group date">
-														<div class="input-group-addon">
-															<i class="fa fa-arrows-h"></i>
-														</div>
-														<input type="text" class="form-control pull-right"
-															id="clusterDist">
-													</div>
-													<button id="Setter-Time" type="button"
-														class="btn btn-primary">重新聚类</button>
-													<!-- /.input group -->
-												</div>
-
-
-											</div>
-											<!-- /.box-body -->
-										</form>
-									</div>
-									<!-- /.paramSet -->
-								</div>
-								<div class="tab-pane" id="tab_duration">
-
-									<!-- paramSet -->
-									<div class="box box-primary">
-										<!-- /.box-header -->
-										<!-- form start -->
-										<form role="form">
-											<div class="box-body">
-
-												<!-- timePicker -->
-												<div class="form-group">
-													<label for="dataTime">开始时间<span
-														class="help-block m-b-none">(可选范围:2018/10/30-结束时间)</span></label>
-
-													<div class="input-group date time-picker">
-														<div class="input-group-addon">
-															<i class="fa fa-calendar"></i>
-														</div>
-														<input type="text" class="form-control pull-right"
-															id="dataTime" readonly>
-													</div>
-
-
-													<!-- /.input group -->
-												</div>
-												<div class="form-group">
-													<label for="dataTime">结束时间<span
-														class="help-block m-b-none">(可选范围:开始时间-2018/11/1)</span></label>
-
-													<div class="input-group date time-picker">
-														<div class="input-group-addon">
-															<i class="fa fa-calendar"></i>
-														</div>
-														<input type="text" class="form-control pull-right"
-															id="dataTime" readonly>
-													</div>
-													<button id="Setter-Time" type="button"
-														class="input-group btn btn-primary">更新数据</button>
-													<!-- /.input group -->
-												</div>
-
-												<!-- /.timePicker -->
-												<div class="form-group">
-													<label for="dataTime">聚类距离<span
-														class="help-block m-b-none">(推荐范围：10-100)</span></label>
-
-													<div class="input-group date">
-														<div class="input-group-addon">
-															<i class="fa fa-arrows-h"></i>
-														</div>
-														<input type="text" class="form-control pull-right"
-															id="clusterDist">
-													</div>
-													<button id="Setter-Time" type="button"
-														class="btn btn-primary">重新聚类</button>
-													<!-- /.input group -->
-												</div>
-											</div>
-											<!-- /.box-body -->
-										</form>
-									</div>
-									<!-- /.paramSet -->
-								</div>
-								<!-- /.tab-pane -->
-
-							</div>
-							<!-- /.tab-content -->
-						</div>
-
-					</div>
 
 				</div>
 
-				<div class="row"></div>
+
+
 
 			</section>
 			<!-- /.content -->
@@ -719,21 +631,16 @@ desired effect
 	<script src="js/bootstrap-datetimepicker.js"></script>
 	<script src="js/bootstrap-datetimepicker.zh-CN.js"></script>
 	<script src="js/moment.js"></script>
+	<script src="js/twix.min.js"></script>
 	<script src="js/daterangepicker.js"></script>
 	<script src="js/layer/layer.js"></script>
 	<script src="js/heatmap.min.js"></script>
 	<script src="js/switchery.js"></script>
 	<!-- gaode link -->
-	<script
-		src="https://webapi.amap.com/maps?v=1.4.10&key=e1143a4a1cfc86ae2d6c61cce436f76e"></script>
-
-
 	<!-- OFFICIAL JS END -->
-
-	<!-- SELF JS START -->
-
 	<script src="js/mapUtil.js"></script>
 	<script src="js/mapLayer.js"></script>
+	<script src="js/mapVisual.js"></script>
 	<script src="js/share.js"></script>
 	<!-- SELF JS END -->
 </body>
