@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -8,12 +9,12 @@
 <meta
 	content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
 	name="viewport">
-
 <script
 	src="https://webapi.amap.com/maps?v=1.4.10&key=5b1dec2e1d0e0824ffa4856a80310ef2"></script>
 <script
 	src="https://webapi.amap.com/loca?v=1.2.0&key=5b1dec2e1d0e0824ffa4856a80310ef2"></script>
-
+<script type="text/javascript"
+	src="https://api.map.baidu.com/api?v=2.0&ak=CV4TUMa0b7k26GeMzaGln8RjNv2iyllH"></script>
 <link rel="stylesheet" href="css/bootstrap.min.css">
 <!-- Font Awesome -->
 <link rel="stylesheet" href="css/font-awesome.min.css">
@@ -25,10 +26,9 @@
 <link rel="stylesheet" href="css/bootstrap-datetimepicker.min.css">
 <link rel="stylesheet" href="css/daterangepicker.css">
 <link rel="stylesheet" href="css/switchery.css">
-
+<link rel="stylesheet" href="css/square/red.css">
 <link rel="stylesheet" href="css/map.css">
 <link rel="stylesheet" href="css/util.css">
-
 </head>
 <!--
 BODY TAG OPTIONS:
@@ -50,18 +50,16 @@ desired effect
 |               | sidebar-mini                            |
 |---------------------------------------------------------|
 -->
+
 <body class="hold-transition skin-blue sidebar-mini">
 	<div class="wrapper">
-
 		<!-- Main Header -->
 		<header class="main-header">
-
 			<!-- Logo -->
 			<a href="index2.html" class="logo"> <!-- mini logo for sidebar mini 50x50 pixels -->
 				<span class="logo-mini"><b>A</b>LT</span> <!-- logo for regular state and mobile devices -->
 				<span class="logo-lg"><b>ShareBIKE</b></span>
 			</a>
-
 			<!-- Header Navbar -->
 			<nav class="navbar navbar-static-top" role="navigation">
 				<!-- Sidebar toggle button-->
@@ -103,7 +101,6 @@ desired effect
 							</ul>
 						</li>
 						<!-- /.messages-menu -->
-
 						<!-- Notifications Menu -->
 						<li class="dropdown notifications-menu">
 							<!-- Menu toggle button --> <a href="#" class="dropdown-toggle"
@@ -171,7 +168,6 @@ desired effect
 								<!-- The user image in the menu -->
 								<li class="user-header"><img src="image/user4-128x128.jpg"
 									class="img-circle" alt="User Image">
-
 									<p>
 										Alexander Pierce - Web Developer <small>Member since
 											Nov. 2012</small>
@@ -210,10 +206,8 @@ desired effect
 		</header>
 		<!-- Left side column. contains the logo and sidebar -->
 		<aside class="main-sidebar">
-
 			<!-- sidebar: style can be found in sidebar.less -->
 			<section class="sidebar">
-
 				<!-- Sidebar user panel (optional) -->
 				<div class="user-panel">
 					<div class="pull-left image">
@@ -226,7 +220,6 @@ desired effect
 						<a href="#"><i class="fa fa-circle text-success"></i> Online</a>
 					</div>
 				</div>
-
 				<!-- search form (Optional) -->
 				<form action="#" method="get" class="sidebar-form">
 					<div class="input-group">
@@ -240,7 +233,6 @@ desired effect
 					</div>
 				</form>
 				<!-- /.search form -->
-
 				<!-- Sidebar Menu -->
 				<ul class="sidebar-menu" data-widget="tree">
 					<!-- Optionally, you can add icons to the links -->
@@ -271,7 +263,6 @@ desired effect
 			</section>
 			<!-- /.sidebar -->
 		</aside>
-
 		<!-- Content Wrapper. Contains page content -->
 		<div class="content-wrapper">
 			<!-- Content Header (Page header) -->
@@ -284,22 +275,109 @@ desired effect
 					<li class="active">Here</li>
 				</ol>
 			</section>
-
 			<!-- Main content -->
 			<div id="console-chart" class="console content container-fluid">
-				<P style="height: 500px;">asdasd</P>
+				<div class="row">
+					<div class="col-md-12">
+						<!-- Custom Tabs -->
+						<div class="nav-tabs-custom ">
+							<ul class="nav nav-tabs">
+								<li class="active"><a href="#tab-varia" data-toggle="tab">波动分析
+								</a></li>
+								<li><a href="#tab-stack" data-toggle="tab">总量统计</a></li>
+								<li><a href="#tab-daily" data-toggle="tab">每日统计</a></li>
+							</ul>
+							<div class="tab-content">
+								<div class="tab-pane active " id="tab-varia">
+									<div class="row">
+										<div class="col-md-9">
+											<div id="chart-varia" style="width: 100%; height: 500px;"></div>
+										</div>
+										<div class="col-md-3">
+											<div class="box box-primary">
+												<div class="box-header with-border">
+													<h3 class="box-title">参数设置</h3>
+												</div>
+												<!-- /.box-header -->
+												<!-- form start -->
+												<form role="form">
+													<div class="box-body">
+														<div class="form-group">
+
+															<label>日期</label>
+
+															<div class="input-group date">
+																<div class="input-group-addon">
+																	<i class="fa fa-calendar"></i>
+																</div>
+																<input type="text" class="form-control pull-right"
+																	id="fluc-date">
+															</div>
+
+														</div>
+														<div class="form-group">
+															<label>类型</label>
+
+															<div class="input-group " id="fluc-type">
+
+																<div class="checkbox">
+																	<label for="fluc-varia">方差</label> <input
+																		id="fluc-varia" type="radio" class="pull-right"
+																		name="iCheck">
+																</div>
+																<div class="checkbox">
+																	<label for="fluc-chance">概率累积 </label> <input
+																		id="fluc-chance" type="radio" class="pull-right"
+																		name="iCheck" checked>
+																</div>
+
+															</div>
+														</div>
+														<div class="form-group">
+															<label for="fluc-dist">地图栅格单位距离(米)</label>
+															<div class="input-group">
+																<div class="input-group-addon">
+																	<i class="fa fa-clock-o"></i>
+																</div>
+																<input type="text" class="form-control pull-right"
+																	id="fluc-dist">
+															</div>
+														</div>
+
+													</div>
+
+												</form>
+											</div>
+										</div>
+										<!-- general form elements -->
+									</div>
+								</div>
+								<!-- /.tab-pane -->
+								<div class="tab-pane" id="tab-stack">
+
+									<div id="chart-stack" style="width: 1000px; height: 500px;"></div>
+
+								</div>
+								<!-- /.tab-pane -->
+								<div class="tab-pane" id="tab-daily">
+									<div id="chart-daily" style="width: 1000px; height: 500px;"></div>
+								</div>
+								<!-- /.tab-pane -->
+							</div>
+							<!-- /.tab-content -->
+						</div>
+						<!-- nav-tabs-custom -->
+					</div>
+				</div>
 			</div>
 			<section id="console-map" class="console content container-fluid">
 				<div class="row">
 					<div class="col-md-12 col-xs-12">
-
 						<div id="container">
 							<!-- collapse panels -->
-
 							<div class="box box-default collapsed-box map-setter">
 								<div class="box-header with-border">
 									<h3 class="box-title">设置</h3>
-
 									<div class="box-tools pull-right">
 										<button type="button" class="btn btn-box-tool"
 											data-widget="collapse">
@@ -310,12 +388,10 @@ desired effect
 								</div>
 								<!-- /.box-header -->
 								<div class="box-body">
-
 									<!-- penal group -->
 									<div class="panel-group " id="accordion">
-
 										<!-- penal mapSet -->
-										<div class="panel panel-default set-console">
+										<div class="panel panel-default">
 											<div class="panel-heading">
 												<h4 class="panel-title">
 													<a data-toggle="collapse" data-parent="#accordion"
@@ -362,9 +438,8 @@ desired effect
 											</div>
 										</div>
 										<!-- ./penal mapSet -->
-
 										<!-- penal timeSet -->
-										<div class="panel panel-default set-console">
+										<div class="panel panel-default ">
 											<div class="panel-heading ">
 												<h4 class="panel-title">
 													<a data-toggle="collapse" data-parent="#accordion"
@@ -376,7 +451,6 @@ desired effect
 													<form role="form">
 														<div class="form-group">
 															<label>数据时间范围(最细到小时)</label>
-
 															<div class="input-group">
 																<div class="input-group-addon">
 																	<i class="fa fa-clock-o"></i>
@@ -385,10 +459,8 @@ desired effect
 																	id="time-picker">
 															</div>
 														</div>
-
 														<div class="form-group">
 															<label>聚类距离</label>
-
 															<div class="input-group">
 																<div class="input-group-addon">
 																	<i class="fa fa-clock-o"></i>
@@ -397,18 +469,15 @@ desired effect
 																	id="clusterDist">
 															</div>
 														</div>
-
 														<button id="submit-param" type="button"
 															class="btn btn-block btn-primary btn-lg">提交参数</button>
-
 													</form>
 												</div>
 											</div>
 										</div>
 										<!-- penal timeSet -->
-
 										<!-- penal timeSet -->
-										<div id="data-panel" class="panel panel-default set-console">
+										<div id="data-panel" class="panel panel-default">
 											<div class="panel-heading ">
 												<h4 class="panel-title">
 													<a data-toggle="collapse" data-parent="#accordion"
@@ -451,91 +520,51 @@ desired effect
 																		data-weather class="label label-primary pull-right"></span></a></li>
 																<li><a href="#"><i
 																		class="fa fa-circle-o text-purple"></i> 温度<span
-																		data-temperature class="label label-primary pull-right"></span></a></li>
+																		data-temperature
+																		class="label label-primary pull-right"></span></a></li>
 															</ul>
 														</div>
-
 													</form>
 												</div>
 											</div>
 										</div>
 										<!-- penal timeSet -->
-
-
-										<!-- penal heatSet -->
-										<div class="panel panel-default set-visual">
-											<div class="panel-heading ">
-												<h4 class="panel-title">
-													<a data-toggle="collapse" data-parent="#accordion"
-														href="#collapseTime">参数设置 </a>
-												</h4>
-											</div>
-											<div id="collapseTime" class="panel-collapse collapse">
-												<div class="panel-body">
-													<form role="form">
-														<div class="form-group">
-															<label>数据时间范围(最细到小时)</label>
-
-															<div class="input-group">
-																<div class="input-group-addon">
-																	<i class="fa fa-clock-o"></i>
-																</div>
-																<input type="text" class="form-control pull-right"
-																	id="time-picker">
-															</div>
-														</div>
-
-													</form>
-												</div>
-											</div>
-										</div>
-										<!-- penal heatSet -->
 									</div>
 									<!-- ./penal group -->
 								</div>
 								<!-- /.box-body -->
 							</div>
-
-
 							<!-- ./collapse panels -->
-
 							<!-- clock timer -->
 							<div id="clockLoader" class="load-clock">
 								<svg version="1.1" id="L2" x="0px" y="0px" viewBox="0 0 100 100"
 									enable-background="new 0 0 100 100" xml:space="preserve">
-								<circle fill="none" stroke="#8B0000" stroke-width="4"
-										stroke-miterlimit="10" cx="50" cy="50" r="48" />
-								<line fill="none" stroke-linecap="round" stroke="#8B0000"
-										stroke-width="4" stroke-miterlimit="10" x1="50" y1="50"
-										x2="85" y2="50.5">
-								  <animateTransform attributeName="transform" dur="2s"
-										type="rotate" from="0 50 50" to="360 50 50"
-										repeatCount="indefinite" />
-								</line>
-								<line fill="none" stroke-linecap="round" stroke="#8B0000"
-										stroke-width="4" stroke-miterlimit="10" x1="50" y1="50"
-										x2="49.5" y2="74">
-								  <animateTransform attributeName="transform" dur="15s"
-										type="rotate" from="0 50 50" to="360 50 50"
-										repeatCount="indefinite" />
-								</line>
-								</svg>
+                                    <circle fill="none" stroke="#8B0000"
+										stroke-width="4" stroke-miterlimit="10" cx="50" cy="50" r="48" />
+                                    <line fill="none"
+										stroke-linecap="round" stroke="#8B0000" stroke-width="4"
+										stroke-miterlimit="10" x1="50" y1="50" x2="85" y2="50.5">
+                                        <animateTransform
+										attributeName="transform" dur="2s" type="rotate"
+										from="0 50 50" to="360 50 50" repeatCount="indefinite" />
+                                    </line>
+                                    <line fill="none"
+										stroke-linecap="round" stroke="#8B0000" stroke-width="4"
+										stroke-miterlimit="10" x1="50" y1="50" x2="49.5" y2="74">
+                                        <animateTransform
+										attributeName="transform" dur="15s" type="rotate"
+										from="0 50 50" to="360 50 50" repeatCount="indefinite" />
+                                    </line>
+                                </svg>
 							</div>
 							<!-- ./clock timer -->
-
 						</div>
 					</div>
-
 				</div>
-
-
-
-
 			</section>
 			<!-- /.content -->
 		</div>
 		<!-- /.content-wrapper -->
-
 		<!-- Main Footer -->
 		<footer class="main-footer">
 			<!-- To the right -->
@@ -544,7 +573,6 @@ desired effect
 			<strong>Copyright &copy; 2016 <a href="#">Company</a>.
 			</strong> All rights reserved.
 		</footer>
-
 		<!-- Control Sidebar -->
 		<aside class="control-sidebar control-sidebar-dark">
 			<!-- Create the tabs -->
@@ -571,7 +599,6 @@ desired effect
 						</a></li>
 					</ul>
 					<!-- /.control-sidebar-menu -->
-
 					<h3 class="control-sidebar-heading">Tasks Progress</h3>
 					<ul class="control-sidebar-menu">
 						<li><a href="javascript:;">
@@ -588,7 +615,6 @@ desired effect
 						</a></li>
 					</ul>
 					<!-- /.control-sidebar-menu -->
-
 				</div>
 				<!-- /.tab-pane -->
 				<!-- Stats tab content -->
@@ -599,12 +625,10 @@ desired effect
 				<div class="tab-pane" id="control-sidebar-settings-tab">
 					<form method="post">
 						<h3 class="control-sidebar-heading">General Settings</h3>
-
 						<div class="form-group">
 							<label class="control-sidebar-subheading"> Report panel
 								usage <input type="checkbox" class="pull-right" checked>
 							</label>
-
 							<p>Some information about this general settings option</p>
 						</div>
 						<!-- /.form-group -->
@@ -619,9 +643,7 @@ desired effect
 		<div class="control-sidebar-bg"></div>
 	</div>
 	<!-- ./wrapper -->
-
 	<!-- OFFICIAL JS START -->
-
 	<!-- jQuery 3 -->
 	<script src="js/jquery.min.js"></script>
 	<!-- Bootstrap 3.3.7 -->
@@ -636,12 +658,22 @@ desired effect
 	<script src="js/layer/layer.js"></script>
 	<script src="js/heatmap.min.js"></script>
 	<script src="js/switchery.js"></script>
+	<script src="js/d3-dsv.min.js"></script>
+	<script src="js/echarts.js"></script>
+	<script src="js/echarts-gl.min.js"></script>
+	<script src="js/ecStat.min.js"></script>
+	<script src="js/dataTool.min.js"></script>
+	<script src="js/bmap.min.js"></script>
+	<script src="js/simplex.js"></script>
+	<script src="js/icheck.min.js"></script>
 	<!-- gaode link -->
 	<!-- OFFICIAL JS END -->
 	<script src="js/mapUtil.js"></script>
 	<script src="js/mapLayer.js"></script>
 	<script src="js/mapVisual.js"></script>
+	<script src="js/mapChart.js"></script>
 	<script src="js/share.js"></script>
 	<!-- SELF JS END -->
 </body>
+
 </html>

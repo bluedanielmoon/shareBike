@@ -20,4 +20,11 @@ public class MapSize {
 		this.col = col;
 	}
 
+	@Override
+	public String toString() {
+		return "MapSize [row=" + row + ", col=" + col + "]";
+	}
+
+	
+	
 }

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dao.UserDao">
+
+	<resultMap id="UserMap" type="com.pojo.User">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="username" property="userName"
+			jdbcType="VARCHAR" />
+		<result column="password" property="password"
+			jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime"
+			jdbcType="DATE" />
+		<result column="update_time" property="updateTime"
+			jdbcType="DATE" />
+	</resultMap>
+	<!-- property 指User中的属性值，column指数据库中的列表 -->
+	<!-- 在各种标签中的id属性必须和接口中的方法名相同 ， id属性值必须是唯一的，不能够重复使用。 parameterType属性指明查询时使用的参数类型， 
+		resultType属性指明查询返回的结果集类型 -->
+	<!-- useGeneratedKeys：（ 仅 对 insert 有 用 ） 这 会 告 诉 MyBatis 使 用 JDBC 的getGeneratedKeys 
+		方法来取出由数据（比如：像 MySQL 和 SQLServer 这样的数据库管理系统的自动递增字段）内部生成的主键。默认值： false。 -->
+	<!--#{}中的内容，为占位符，当参数为某个JavaBean时，表示放置该Bean对象的属性值 -->
+
+
+	<select id="getUser" parameterType="int" resultMap="UserMap">
+		SELECT *
+		FROM users WHERE id = #{id}
+	</select>
+
+	<!-- 因为ID是自增长的，在插入中可以省略ID，通过useGenerated keyProperty来指定id 使用自增长策略 -->
+	<insert id="addUser" useGeneratedKeys="true" keyProperty="id" parameterType="com.pojo.User">
+		insert into users (username,password)
+		values (#{userName},#{password})
+	</insert>
+
+	<update id="updateUser" parameterType="com.pojo.User">
+		update users set
+		username = #{userName},
+		password = #{password},
+		where id = #{id}
+	</update>
+
+	<delete id="deleteUser" parameterType="int">
+		delete from users where id = #{id}
+	</delete>
+
+</mapper>

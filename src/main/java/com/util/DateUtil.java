@@ -21,7 +21,7 @@ public class DateUtil {
 	 */
 	public static Date parseToMinute(String time){
 		Date date=null;
-		SimpleDateFormat parse=new SimpleDateFormat("yyyy-MM-dd HH:mm");
+		SimpleDateFormat parse=new SimpleDateFormat("yyyy_MM_dd HH:mm");
 		
 		try {
 			date=parse.parse(time);
@@ -70,6 +70,8 @@ public class DateUtil {
 		
 	}
 	
+	
+	
 	/**
 	 * 解析yyyy_M_d H格式的时间
 	 * @param time
@@ -84,5 +86,9 @@ public class DateUtil {
 			e.printStackTrace();
 		}
 		return date;
+	}
+	
+	public static String getLatestDay() {
+		return "2018_11_14";
 	}
 }

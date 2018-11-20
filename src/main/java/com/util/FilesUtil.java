@@ -14,6 +14,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
@@ -25,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import org.apache.http.Header;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,8 +60,8 @@ public class FilesUtil {
 
 				@Override
 				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-					Path temPath=dir.getFileName();
-					if (temPath==null||temPath.equals(" ")||temPath.equals(startPath.getFileName())) {
+					Path temPath = dir.getFileName();
+					if (temPath == null || temPath.equals(" ") || temPath.equals(startPath.getFileName())) {
 						return FileVisitResult.CONTINUE;
 					} else {
 						String dirName = temPath.toString();
@@ -117,18 +119,72 @@ public class FilesUtil {
 		});
 		return result;
 	}
-	
+
+	public static List<Path> listAllFiles() {
+		Date[] dates = FilesUtil.getFileRange();
+		Date enDate = dates[1];
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(enDate);
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		dates[1] = calendar.getTime();
+
+		List<Path> files = listFilesInDuration(dates[0], dates[1]);
+		files.sort(new Comparator<Path>() {
+
+			@Override
+			public int compare(Path o1, Path o2) {
+				String p1=o1.getParent().getFileName().toString();
+				String s1=o1.getFileName().toString();
+				String p2=o2.getParent().getFileName().toString();
+				String s2=o2.getFileName().toString();
+				if(p1.equals(p2)) {
+					int x1=Integer.parseInt(s1.substring(0,s1.length()-4));
+					int x2=Integer.parseInt(s2.substring(0,s2.length()-4));
+					return Integer.compare(x1, x2);
+				}else {
+					Date d1=DateUtil.parseToDay(p1);
+					Date d2=DateUtil.parseToDay(p2);
+					return d1.compareTo(d2);
+				}
+			}
+		});
+		return files;
+	}
+
+	public static List<BikeHeader> readFileHeaders(Date st_time, Date end_time) {
+		List<Path> files = listFilesInDuration(st_time, end_time);
+		List<BikeHeader> result = new ArrayList<BikeHeader>();
+
+		for (Path f : files) {
+			result.add(readFileHeader(f.toString()));
+		}
+		result.sort(new Comparator<BikeHeader>() {
+			@Override
+			public int compare(BikeHeader o1, BikeHeader o2) {
+
+				return o1.getStartTime().compareTo(o2.getStartTime());
+			}
+
+		});
+		return result;
+	}
+
+	/**
+	 * 读取单日24个小时的单车文件，带头
+	 * @param date
+	 * @return
+	 */
 	public static List<Map<String, Object>> ListFilesInDay(Date date) {
-		Calendar calendar=Calendar.getInstance();
+		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(date);
 		calendar.set(Calendar.HOUR_OF_DAY, 0);
-		Date start=calendar.getTime();
+		Date start = calendar.getTime();
 		calendar.set(Calendar.HOUR_OF_DAY, 23);
-		Date enDate=calendar.getTime();
-		
+		Date enDate = calendar.getTime();
+
 		return readFilesToBikeMap(start, enDate);
 	}
-	
+
 	// listFilesInDuration("2018_10_30 0", "2018_11_1 0");
 	public static List<Path> listFilesInDuration(Date st_time, Date end_time) {
 		List<Path> ls = new ArrayList<Path>();
@@ -150,17 +206,18 @@ public class FilesUtil {
 			return ls;
 		}
 		Path startPath = Paths.get(DEFAULT_BIKE_FILE);
-		
+
 		try {
 			Files.walkFileTree(startPath, new FileVisitor<Path>() {
-				String tempStr=null;
+				String tempStr = null;
+
 				@Override
 				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-					tempStr=dir.getFileName().toString();
+					tempStr = dir.getFileName().toString();
 					if (tempStr.equals(startPath.getFileName().toString())) {
 						return FileVisitResult.CONTINUE;
 					} else {
-						if(!RegexUtil.matchDate(tempStr)) {
+						if (!RegexUtil.matchDate(tempStr)) {
 							return FileVisitResult.CONTINUE;
 						}
 						Date temp = DateUtil.parseToDay(tempStr);
@@ -178,7 +235,7 @@ public class FilesUtil {
 					String name = file.getFileName().toString();
 					String str_date = file.getParent().getFileName().toString();
 					str_date = str_date + " " + name.substring(0, name.length() - 4);
-					if(!RegexUtil.matchHour(str_date)) {
+					if (!RegexUtil.matchHour(str_date)) {
 						return FileVisitResult.CONTINUE;
 					}
 					Date temp = DateUtil.pareToHour(str_date);
@@ -213,19 +270,19 @@ public class FilesUtil {
 
 		Date near = null;
 		File latest = null;
-		String string=null;
-		Date temp=null;
+		String string = null;
+		Date temp = null;
 		if (fls.length > 0) {
-			latest=fls[0];
+			latest = fls[0];
 			near = DateUtil.parseToDay(fls[0].getName());
-			
+
 			for (File f : fls) {
-				string=f.getName();
-				if(RegexUtil.matchDate(string)) {
+				string = f.getName();
+				if (RegexUtil.matchDate(string)) {
 					temp = DateUtil.parseToDay(f.getName());
-				}					
-				
-				if(temp==null) {
+				}
+
+				if (temp == null) {
 					continue;
 				}
 				if (temp.after(near)) {
@@ -260,26 +317,27 @@ public class FilesUtil {
 	 */
 	public static Map<String, Object> readFileToBikeList(String file) {
 		Map<String, Object> mp = new HashMap<String, Object>();
-		List<BikePos> list = new ArrayList<BikePos>();
+		List<Bike> bikes = new ArrayList<>();
 		Path path = Paths.get(file);
 		if (!Files.exists(path)) {
 			return mp;
 		}
-
 		BufferedReader reader = null;
 		try {
 			reader = Files.newBufferedReader(path);
-			reader.readLine();
+			String strHeader = reader.readLine();
+			BikeHeader header = mapper.readValue(strHeader, BikeHeader.class);
 
+			mp.put("header", header);
 			String temp = null;
 			while ((temp = reader.readLine()) != null) {
 				Bike bike = mapper.readValue(temp, Bike.class);
-				BikePos pos = new BikePos(bike.getDistId(), Double.parseDouble(bike.getDistX()),
-						Double.parseDouble(bike.getDistY()), 20);
-				list.add(pos);
+
+				bikes.add(bike);
 			}
-		} catch (IOException e1) {
-			e1.printStackTrace();
+			mp.put("bikes", bikes);
+		} catch (IOException e) {
+			e.printStackTrace();
 		} finally {
 			try {
 				reader.close();
@@ -329,6 +387,30 @@ public class FilesUtil {
 			}
 		}
 		return mp;
+	}
+
+	public static BikeHeader readFileHeader(String file) {
+		Path path = Paths.get(file);
+		if (!Files.exists(path)) {
+			return null;
+		}
+		BufferedReader reader = null;
+		try {
+			reader = Files.newBufferedReader(path);
+			String strHeader = reader.readLine();
+			BikeHeader header = mapper.readValue(strHeader, BikeHeader.class);
+
+			return header;
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				reader.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
 	}
 
 	public static Map<String, Object> readFileToPoint(String file) {

@@ -7,80 +7,233 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.catalina.mapper.Mapper;
+import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SequenceWriter;
 import com.pojo.BikeArea;
 import com.pojo.BikeHeader;
 import com.pojo.BikePos;
+import com.pojo.Lnglat;
 import com.pojo.MapSize;
+import com.pojo.Varia;
+import com.util.CoordsUtil;
 import com.util.DateUtil;
 import com.util.FilesUtil;
+import com.util.MapperUtil;
 
+@Component
 public class Heater {
 
 	private static MapHelper helper = new MapHelper();
 	private static String DEFAULT_HEAT = "heatData/";
 
 	public static void main(String[] args) {
-		String str_day = "2018_10_31";
-		int dist = 50;
-		long start = System.currentTimeMillis();
-		String path=getFilePath(str_day, dist);
-//		Map<String, Map<String, Object>> result = getHeatList(str_day, dist);
-//		writeHeatData(str_day, dist, result);
 
-		
-		Map<String, Map<String, Object>> data=readHeatData(path);
-		
-		Map<String, Double>  vaResult=new HashMap<String, Double>();
-		
-		for(String s:data.keySet()) {
-			List<Integer>  ls=(List<Integer>) data.get(s).get("numList");
-			double varia=calcuVariance(ls);
-			System.out.println(varia);
-			vaResult.put(s, varia);
-		}
-		long end = System.currentTimeMillis();
+		String date="2018_10_31";
+		int dist=50;
+		int type=2;
+		Heater heater=new Heater();
+		heater.checkOrProduce(date, dist, type);
 
-//		System.out.println("cost time:" + (end - start));
 	}
-	
-	public static double calcuAverage(List<Integer>  ls) {
-		if(ls.size()==0) {
+
+	public List<Varia> calcuFlucByChance(Map<String, Varia> data, List<Map<String, Object>> bikes) {
+
+		List<Varia> result = new ArrayList<>();
+
+		List<Double> bkCounts = new ArrayList<>();
+		for (Map<String, Object> b : bikes) {
+			BikeHeader header = (BikeHeader) b.get("header");
+			bkCounts.add((double) header.getBikeCount());
+		}
+		double[] avgChange = new double[23];
+		int[] changed = new int[23];
+
+		int temp = 0;
+		for (String s : data.keySet()) {
+			Varia var = data.get(s);
+
+			List<Integer> nums = var.getNumList();
+			for (int i = 0; i < nums.size() - 1; i++) {
+				temp = Math.abs(nums.get(i) - nums.get(i + 1));
+				avgChange[i] = avgChange[i] + temp;
+				if (temp > 0) {
+					changed[i] += 1;
+				}
+			}
+
+		}
+		for (int i = 0; i < avgChange.length; i++) {
+			avgChange[i] /= changed[i];
+		}
+
+		for (String s : data.keySet()) {
+			Varia var = data.get(s);
+
+			List<Integer> nums = var.getNumList();
+			double start = 1;
+			// 1*（时刻变化数/时刻平均变化数）*（单车数量/单车总数）
+			for (int i = 0; i < nums.size() - 1; i++) {
+				int change = Math.abs(nums.get(i) - nums.get(i + 1));
+				start = start * (1 + (nums.get(i) / bkCounts.get(i)) * (change / avgChange[i]));
+			}
+
+			var.setFluc(start);
+			Lnglat gaode = CoordsUtil.getAreaCenter(var.getArea());
+			var.setCenter(CoordsUtil.turnBaiDuCoord(gaode));
+			result.add(var);
+
+		}
+		return result;
+	}
+
+	public List<Varia> checkOrProduce(String day, int dist, int type) {
+		String path = getFilePath(day, dist, type);
+		
+		if (Files.exists(Paths.get(path))) {
+			return MapperUtil.readListData(path, Varia.class);
+
+		} else {
+			List<Varia> ls = new ArrayList<>();
+			if (type == 1) {
+				ls = getFlucByVaria(day,dist);
+			} else if (type == 2) {
+				ls = getFlucByChance(day,dist);
+			}
+			MapperUtil.writeListData(path, ls,Varia.class);
+			return ls;
+		}
+	}
+
+	/**
+	 * 通过概率累积的方式计算波动
+	 * 
+	 * @param day
+	 * @param dis
+	 * @return
+	 */
+	public List<Varia> getFlucByChance(String day, int dist) {
+
+		Date date = DateUtil.parseToDay(day);
+		List<Map<String, Object>> bikes = FilesUtil.ListFilesInDay(date);
+
+		Map<String, Varia> data = getBikesData(day, dist);
+		return calcuFlucByChance(data, bikes);
+	}
+
+	private static Map<String, Varia> getBikesData(String day, int dist) {
+		String path = getFilePath(day, dist, 0);
+		Map<String, Varia> data = null;
+		if (!Files.exists(Paths.get(path))) {
+			data = getGridBikesList(day, dist);
+
+			MapperUtil.writeMapData(path, data, Varia.class);
+		} else {
+			data = MapperUtil.readMapData(path, Varia.class);
+		}
+		return data;
+	}
+
+	/**
+	 * 通过方差的方式计算波动,并转化为百度地图坐标值
+	 * 
+	 * @param day
+	 * @param dis
+	 * @return
+	 */
+	public List<Varia> getFlucByVaria(String day, int dist) {
+		Map<String, Varia> data = getBikesData(day, dist);
+
+		List<Varia> result = new ArrayList<>();
+
+		for (String s : data.keySet()) {
+			Varia var = data.get(s);
+			List<Integer> ls = var.getNumList();
+
+			double avg = calcuAverage(ls);
+
+			double varia = calcuVariance(ls, avg);
+			var.setAvrg(avg);
+			var.setFluc(varia);
+
+			// 百度地图存在坐标加密， 通过转换，以近似的方式展示坐标
+			Lnglat gaode = CoordsUtil.getAreaCenter(var.getArea());
+			var.setCenter(CoordsUtil.turnBaiDuCoord(gaode));
+			result.add(var);
+		}
+		return result;
+	}
+
+	/**
+	 * 计算平均值
+	 * 
+	 * @param ls
+	 * @return
+	 */
+	public static double calcuAverage(List<Integer> ls) {
+		if (ls.size() == 0) {
 			return 0;
 		}
-		double total=0;
-		for(Integer i:ls) {
-			total+=i;
+		double total = 0;
+		for (Integer i : ls) {
+			total += i;
 		}
-	
-		return total/ls.size();
-	}
-	
-	public static double calcuVariance(List<Integer> ls) {
-		
-		double avg=calcuAverage(ls);
-		double total=0;
-		for(Integer i:ls) {
-			total+=(i-avg)*(i-avg);
-		}
-		BigDecimal bigDecimal=new BigDecimal(total/(ls.size()-1));
+		BigDecimal bigDecimal = new BigDecimal(total / ls.size());
 		return bigDecimal.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
 	}
-	
-	public static String getFilePath(String day, int dist) {
-		return DEFAULT_HEAT + day + "_" + dist + ".txt";
+
+	/**
+	 * 计算方差
+	 * 
+	 * @param ls
+	 * @param avg
+	 * @return
+	 */
+	public static double calcuVariance(List<Integer> ls, double avg) {
+
+		double total = 0;
+		for (Integer i : ls) {
+			total += (i - avg) * (i - avg);
+		}
+		BigDecimal bigDecimal = new BigDecimal(total / (ls.size() - 1));
+		return bigDecimal.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
 	}
 
-	public static void writeHeatData(String path,Map<String, Map<String, Object>> result) {
+	/**
+	 * 得到文件路径,0--
+	 * 
+	 * @param day
+	 * @param dist
+	 * @return
+	 */
+	private static String getFilePath(String day, int dist, int type) {
+		if (type == 1 || type == 2) {
+			return DEFAULT_HEAT + day + "_" + dist + "_" + type + ".txt";
+		} else {
+			return DEFAULT_HEAT + day + "_" + dist + ".txt";
+		}
+
+	}
+
+	/**
+	 * 把栅格地图单车的结果写入文件
+	 * 
+	 * @param        <T>
+	 * @param path
+	 * @param result
+	 */
+	private static <T> void writeMapData(String path, Map<String, T> result) {
 		ObjectMapper mapper = new ObjectMapper();
 		File file = new File(path);
 		try {
@@ -95,40 +248,40 @@ public class Heater {
 		}
 	}
 
-	public static Map<String, Map<String, Object>> readHeatData(String file) {
-		ObjectMapper mapper = new ObjectMapper();
-		Path path = Paths.get(file);
-		if (!Files.exists(path)) {
-			return null;
-		}
-
-		try {
-
-			Map<String, Map<String, Object>> maps = mapper.readValue(path.toFile(), Map.class);
-			return maps;
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		return null;
-	}
-
-	public static Map<String, Map<String, Object>> getHeatList(String day, int dist) {
+	/**
+	 * 对某一天的数据，将单车数据放入栅格地图
+	 * 
+	 * @param day
+	 * @param dist
+	 * @return
+	 */
+	private static Map<String, Varia> getGridBikesList(String day, int dist) {
 		BikeArea area = State.getArea();
 
 		MapSize size = new MapSize();
 		Map<String, Map<String, Object>> map = helper.divideMapToGrid(area, dist, size);
 
+		System.out.println(size);
 		Date date = DateUtil.parseToDay(day);
 
 		List<Map<String, Object>> bikes = FilesUtil.ListFilesInDay(date);
 
-		return getRecBikesCount(area, dist, map, bikes);
+		return addRecBikesCount(area, dist, map, bikes);
 	}
 
-	public static Map<String, Map<String, Object>> getRecBikesCount(BikeArea area, int dist,
-			Map<String, Map<String, Object>> map, List<Map<String, Object>> bikes) {
+	/**
+	 * 把单车的数据放入栅格地图
+	 * 
+	 * @param area
+	 * @param dist
+	 * @param map
+	 * @param bikes
+	 * @return
+	 */
+	private static Map<String, Varia> addRecBikesCount(BikeArea area, int dist, Map<String, Map<String, Object>> map,
+			List<Map<String, Object>> bikes) {
 
-		TreeMap<String, Map<String, Object>> result = new TreeMap<>(new Comparator<String>() {
+		TreeMap<String, Varia> result = new TreeMap<>(new Comparator<String>() {
 
 			@Override
 			public int compare(String o1, String o2) {
@@ -161,9 +314,10 @@ public class Heater {
 					nums.add(recCount);
 					count.clear();
 
-					Map<String, Object> recInfo = new HashMap<>();
-					recInfo.put("area", rec);
-					recInfo.put("numList", nums);
+					Varia recInfo = new Varia();
+					recInfo.setArea(rec);
+					recInfo.setNumList(nums);
+
 					result.put(s, recInfo);
 				}
 
@@ -172,8 +326,8 @@ public class Heater {
 					Map<String, Object> info = map.get(s);
 					List<BikePos> count = (List<BikePos>) info.get("bikes");
 
-					Map<String, Object> recInfo = result.get(s);
-					List<Integer> nums = (List<Integer>) recInfo.get("numList");
+					Varia recInfo = result.get(s);
+					List<Integer> nums = recInfo.getNumList();
 
 					recCount = count.size();
 					nums.add(recCount);
