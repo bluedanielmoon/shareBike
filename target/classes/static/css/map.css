@@ -1,4 +1,10 @@
-
+#poi-list{
+	height:400px;
+	overflow:auto;
+}
+#poi-map{
+	height:400px;
+}
 .chart-varia{
 	width:800px;
 	height:600px;

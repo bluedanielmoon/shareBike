@@ -70,7 +70,7 @@ public class MapServImpl implements MapServ {
 		List<BikePos> bikes = (List<BikePos>) mp.get("bikes");
 
 		List<Map<String, BikePos>> packs = maphelper.neighborCluster(bikes,
-				distance);
+				distance,0);
 		List<Point> result = maphelper.calcuClusterCenter(packs);
 		return result;
 	}
@@ -95,7 +95,7 @@ public class MapServImpl implements MapServ {
 
 
 		List<Map<String, BikePos>> packs = maphelper.neighborCluster(allBikes,
-				distance);
+				distance,0);
 		List<Point> result = maphelper.calcuClusterCenter(packs);
 		return result;
 	}

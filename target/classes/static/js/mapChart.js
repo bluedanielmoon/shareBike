@@ -177,7 +177,7 @@
 
             var bmap = new BMap.Map("chart-varia");
             // 创建地图实例
-            var point = new BMap.Point(116.404, 39.915);
+            var point = new BMap.Point(108.951771, 34.266582);
             // 创建点坐标
             bmap.centerAndZoom(point, 15);
 
@@ -542,6 +542,345 @@
         }
 
     }
+    
+    var siteDom = document.getElementById("chart-site");
+    var siteChart;
+    var siteInited=false;
+    var siteSlider=null;
+    
+    var scoreData=[];
+    var clusterData=[];
+    
+    var initSiteMap = function(time) {
+        if (!siteInited) {
+
+            var smap = new BMap.Map("chart-site");
+            // 创建地图实例
+            var point = new BMap.Point(108.951771, 34.266582);
+            // 创建点坐标
+            smap.centerAndZoom(point, 15);
+
+            siteChart = echarts.init(siteDom);
+
+            var siteInit={
+        			rate:1,
+        			flucSca:60,
+        			countSca:30,
+        			poiSca:10	
+        	}
+            loadSiteScoreData(siteInit,setSiteShow);
+            loadSiteClusterData(siteInit);
+            
+            siteInited = true;
+            
+            siteSlider=$('#site-rate').slider({
+            	formatter: function(value) {
+            		return 'Current value: ' + value;
+            	}
+            });
+            
+            var siteScaleSlider=$("#site-scoreScal").slider({
+            	min: 0,
+            	max: 100,
+            	value: [60, 90],
+            	labelledby: ['site-scoreScal-1', 'site-scoreScal-2'],
+            	formatter:function(){
+            		return "波动占比:"+arguments[0][0]+"%  最大停放数占比:"
+            		+(arguments[0][1]-arguments[0][0])+"%  POI占比:"+(100-arguments[0][1]+"%");
+            	},
+            });
+            
+            var swts = $(".site-switch");
+            var swit;
+            swts.each(function(index, ele) {
+                swit = new Switchery(ele);
+                $(this).change(function(){
+                	if(this.checked){
+                		$("#show-site-check label").text("预选点");
+                		setSiteShow(scoreData);
+                    }else{
+                    	$("#show-site-check label").text("站点");
+                    	setSiteShow(clusterData);        		
+                    }
+                });
+            });
+            
+            $("#submit-site").click(function(){
+            	var slidVal=$(siteSlider).val();
+            	
+            	
+            	var scaleVal=$(siteScaleSlider).val().split(',');
+            	var scale1=scaleVal[0];
+            	var scale2=scaleVal[1]-scale1;
+            	var scale3=100-scaleVal[1];
+            	var params={
+            			rate:slidVal,
+            			flucSca:scale1,
+            			countSca:scale2,
+            			poiSca:scale3	
+            	}
+            	console.log(params);
+            	if(swit.element.checked){
+            		loadSiteScoreData(params,setSiteShow);
+            		loadSiteClusterData(params);
+            	}else{
+            		loadSiteScoreData(params);
+            		loadSiteClusterData(params,setSiteShow);
+            	}
+            });
+            
+            $("#submit-siteBase").click(function(){
+            	var slidVal=$(siteSlider).val();
+            	var scaleVal=$(siteScaleSlider).val().split(',');
+            	var scale1=scaleVal[0];
+            	var scale2=scaleVal[1]-scale1;
+            	var scale3=100-scaleVal[1];
+            	var params={
+            			rate:slidVal,
+            			flucSca:scale1,
+            			countSca:scale2,
+            			poiSca:scale3	
+            	}
+            	mapUtil.link.getData("/site/submit", true,params , function(data) {
+            		if (data) {
+            			console.log(data);
+            			
+                    }
+                });
+            });
+            
+        }
+    };
+    
+    var renderItemSite = function(params, api) {
+        var ltPoint = api.coord([api.value(0), api.value(1)]);
+
+        return {
+            type: 'rect',
+            shape: {
+                x: ltPoint[0],
+                y: ltPoint[1],
+                width: 2,
+                height: 2
+            },
+            style: api.style({
+                stroke: 'rgba(0,0,0,0.1)'
+            }),
+            styleEmphasis: api.styleEmphasis()
+        };
+    };
+    
+    var setSiteShow=function(list){
+    	var option = {
+                tooltip: {},
+                visualMap: {
+                	pieces: [
+                	    {min: 0.2},
+                	    {min: 0.15, max: 0.2},
+                	    {min: 0.1, max: 0.15},
+                	    {min: 0.08, max: 0.1},
+                	    {min: 0.04, max: 0.08},
+                	    {min: 0.02, max: 0.04},
+                	    {min: 0.01, max: 0.02},
+                	    {max: 0.1}     
+                	],
+                    inRange: {
+                        color: ['#50a3ba', '#eac736', '#d94e5d']
+                    },
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
+                series: [{
+                    type: 'scatter',
+                    coordinateSystem: 'bmap', 
+                    animation: false,
+                    itemStyle: {
+                        emphasis: {
+                            color: 'yellow'
+                        }
+                    },
+                    encode: {
+                        tooltip: 2
+                    },
+                    data: list,
+                }],
+                bmap: bMap
+            };
+            if (option && typeof option === "object") {
+                siteChart.setOption(option,{
+                	notMerge:true,
+                });
+
+            }
+    }
+    var loadSiteScoreData = function(param,showFunc) {
+
+    	mapUtil.link.getData("/site/score", true, param, function(data) {
+    		if (data) {
+    			var list = [];
+    			for(var i in data){
+    				var item={
+    						name:[data[i].lng,data[i].lat],
+    						value:[data[i].lng,data[i].lat,i],
+    				}
+                    list.push(item);
+    				
+    			};
+    			scoreData=list;
+    			if(showFunc){
+    				showFunc(scoreData);
+    			}
+    			
+            }
+        });
+
+    };
+    var loadSiteClusterData = function(param,showFunc) {
+    
+    	mapUtil.link.getData("/site/cluster", true,param, function(data) {
+    		if (data) {
+    			var list = [];
+    			data.forEach(function(ele,index){
+    				var item={
+    						name:[ele.name],
+    						value:[ele.lnglat[0],ele.lnglat[1]],
+    				}
+                    list.push(item);
+    			});
+    			clusterData=list; 
+    			if(showFunc){
+    				showFunc(clusterData);
+    			}
+    			
+            }
+        });
+
+    };
+
+    
+    var list = [];
+    var colors = [
+        '#2c7bb6',
+        '#abd9e9',
+        '#ffffbf',
+        '#fdae61',
+        '#d7191c'
+    ];
+    var colors1 = [
+        '#000000',
+        '#000000',
+        '#000000',
+        '#000000',
+        '#000000',
+        '#000000',
+        '#000000',
+        '#000000',
+        '#000000',
+        '#000000',
+        '#000000',
+        '#000000',
+        '#000000',
+        '#000000',
+        '#000033',
+        '#000066',
+        '#003366',
+        '#000099',
+        '#003399',
+        '#0000CC',
+        '#0033CC',
+        '#0000FF',
+        '#0033FF',
+        '#0066FF',
+        '#0099FF',
+// '#FFFFFF',
+// '#FFFFCC',
+// '#FFFF99',
+// '#FFCC99',
+// '#FFCC66',
+// '#FF6600',
+        '#FF3300',
+        '#FF0000',
+    ];
+    // 000033,000099,0033FF,9933CC,FFFF99,FF9933 ,FF3366,FF0000
+    // 000080,0000FF,00BFFF,00FFFF,FAF0E6,FFFACD ,FF8C00,FF00FF,FF0000
+    
+// mapUtil.link.getData("/site/score", true, {}, function(data) {
+// if (data) {
+// for(var i in data){
+// list.push({
+// coord: [data[i].center.lng,data[i].center.lat],
+// value: +data[i].score
+// });
+// }
+// siteLayer.setData(list, {
+// lnglat: 'coord'
+// });
+// siteLayer.setOptions({
+// // 单位米
+// unit: 'meter',
+// style: {
+// // 正多边形半径
+// radius: 10,
+// // 高度为 0 即可贴地面
+// height: {
+// key: 'value',
+// value: [100, 1000]
+// },
+// // 顶面颜色
+// color: {
+// key: 'value',
+// scale: 'quantile',
+// value: colors1
+// },
+// opacity: 0.85
+// },
+// selectStyle:{
+// radius: 20,
+// color: '#ffe30a',
+// opacity: 1
+// }
+// });
+//
+// siteLayer.render();
+//
+// }
+// });
+    
+    
+
+    
+
+   
+
+    
+    
+// var siteMap= new AMap.Map('chart-site', {
+// viewMode: '2D',
+// zoom: 15,
+// features: ['bg','point','road', 'building'],
+// center: [108.916913, 34.265569], // 中心点坐标
+// });
+//    
+// mapUtil.link.getData("/site/score", true, {}, function(data) {
+// if (data) {
+// console.log(data);
+// var list = [];
+// data.forEach(function(marker) {
+// marker = new AMap.Marker({
+// icon: "image/point.png",
+// position: [marker.location.lng, marker.location.lat],
+// offset: new AMap.Pixel(-12, -12),
+// zIndex: 2,
+// map: siteMap,
+// visible: true,
+// title: marker.name
+// });
+// list.push(marker);
+// });
+//
+// }
+// });
 
 
     mapChart = {
@@ -551,8 +890,11 @@
         showDaily: function() {
             dailyOps.show();
         },
-        show: function(time) {
-            initVariaMap();
+        showSite: function() {
+        	initSiteMap();
+        },
+        showVaria: function(time) {
+            initVariaMap();    
         },
         setData: function(time, dist) {
             loadVariaData();

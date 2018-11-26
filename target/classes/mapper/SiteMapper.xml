@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dao.SiteDao">
+
+	<resultMap id="SiteMap" type="com.pojo.Site">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="name" property="name"
+			jdbcType="VARCHAR" />
+		<result column="volume" property="volume"
+			jdbcType="INTEGER" />
+		<result column="site_type" property="type"
+			jdbcType="INTEGER"/>
+		<result column="lng" property="lng" jdbcType="DECIMAL" />
+		<result column="lat" property="lat" jdbcType="DECIMAL" />
+	</resultMap>
+	
+	<select id="getSite" parameterType="int" resultMap="SiteMap">
+		SELECT * FROM sites WHERE id = #{id}
+	</select>
+	
+	<select id="getAll" resultMap="SiteMap">
+		SELECT * FROM sites
+	</select>
+
+	<!-- 因为ID是自增长的，在插入中可以省略ID，通过useGenerated keyProperty来指定id 使用自增长策略 -->
+	<insert id="addSite" useGeneratedKeys="true" keyProperty="id" parameterType="com.pojo.Site">
+		insert into sites (name,volume,site_type,lng,lat)
+		values (#{name},#{volume},#{type},#{lng},#{lat})
+	</insert>
+	
+	<insert id="addSites" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.List">
+		insert into sites (name,volume,site_type,lng,lat) values 
+		<foreach collection="list" item="st" separator=",">
+           	(#{st.name},#{st.volume},#{st.type},#{st.lng},#{st.lat})
+           	
+        </foreach>
+		 
+	</insert>
+
+	<update id="updateSite" parameterType="com.pojo.Site">
+		update sites set
+		name = #{name},
+		volume = #{volume},
+		site_type = #{type},
+		lng = #{lng},
+		lat = #{lat}  where id = #{id}
+	</update>
+	
+	
+
+	<delete id="deleteSite" parameterType="int">
+		delete from sites where id = #{id}
+	</delete>
+	
+	<delete id="deleteSites" parameterType="java.util.List">
+		delete from sites where name in 
+        <foreach collection="list" item="name" separator="," open="(" close=")">
+            #{name}
+        </foreach>
+	</delete>
+
+</mapper>

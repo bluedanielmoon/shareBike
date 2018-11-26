@@ -98,8 +98,20 @@
 						succFunc(result);
 					}
 				});
+			},
+			postList: function(url, async, data, succFunc) {
+				$.ajax({
+					url: url,
+					async: async,
+					//默认为false,设置为true,组织序列化
+					traditional: true,
+					data: data,
+					type: "POST",
+					success: function(result, status, xhr) {
+						succFunc(result);
+					}
+				});
 			}
-
 
 		}
 	}();

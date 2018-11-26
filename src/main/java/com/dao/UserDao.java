@@ -1,5 +1,7 @@
 package com.dao;
 
+import java.util.List;
+
 import com.pojo.User;
 
 public interface UserDao{
@@ -9,10 +11,12 @@ public interface UserDao{
 	
 	int addUser(User user);
 	
-	//boolean addList(List<Integer> list);
+	List<User> getAll();
 	
 	int updateUser(User user);
 	
 	int deleteUser(int id);
+	
+	int deleteUsers(List<String> names);
 
 }
