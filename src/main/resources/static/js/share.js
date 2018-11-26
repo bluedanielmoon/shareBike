@@ -320,6 +320,9 @@ share.chart = {
         $("#console-chart a[href='#tab-stack']").click(function(event) {
         	mapChart.showStack();
         });
+        $("#console-chart a[href='#tab-site']").click(function(event) {
+        	mapChart.showSite();
+        });
         $("#console-chart a[href='#tab-daily']").click(function(event) {
         	mapChart.showDaily();
         });
@@ -366,12 +369,21 @@ share.console = {
 
             this.show("map");
 
-        } else { // 其他页面
+        }  else { // 其他页面
             // 保存地图上的地图模块
             link = link.substring(1, link.length);
-            if (link == "anaylyze_heat") {
+            
+           if(link == "manage"){
+            	this.show("manage");
+            	manage.init();
+            }else if (link == "anaylyze_data") {
                 this.show("chart");
-                mapChart.show();
+                mapChart.showVaria();
+               
+
+            }else if (link == "anaylyze_site") {
+                this.show("site");
+                mapChart.showSite();
                
 
             }
@@ -389,10 +401,10 @@ $(document).ready(function() {
     var map = new AMap.Map('container', {
         viewMode: '3D', // 使用2D视图
         zoom: 15, // 级别
-        pitch: 50,
-        mapStyle: 'amap://styles/twilight',
+        //pitch: 50,
+        //mapStyle: 'amap://styles/twilight',
         // 'bg'（地图背景）、'point'（POI点）、'road'（道路）、'building'（建筑物）
-        features: ['bg', 'road'],
+        features: ['bg','point','road', 'building'],
         center: [108.916913, 34.265569], // 中心点坐标
     });
 

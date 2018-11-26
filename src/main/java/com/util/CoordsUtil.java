@@ -125,6 +125,36 @@ public class CoordsUtil {
 		}
 		return new double[] { totalLng / ls.size(), totalLat / ls.size() };
 	}
+	
+	public static double[] calcuCenterWithPower(List<BikePos> ls) {
+		double totalLng = 0, totalLat = 0;
+		
+		double total=0;
+		for (BikePos bk : ls) {
+			double pow=Double.parseDouble(bk.getBikeID());
+			total+=pow;
+		}
+		double temp=0;
+		for (BikePos bk : ls) {
+			double pow=Double.parseDouble(bk.getBikeID());
+			temp=pow/total;
+			totalLng += bk.getLng()*temp;
+			totalLat += bk.getLat()*temp;
+		}
+		System.out.println(totalLng);
+		System.out.println(totalLat);
+		return new double[] { totalLng ,totalLat  };
+	}
+	
+	public static double[] calcuLngLatCenter(List<Lnglat> ls) {
+		double totalLng = 0, totalLat = 0;
+
+		for (Lnglat bk : ls) {
+			totalLng += bk.getLng();
+			totalLat += bk.getLat();
+		}
+		return new double[] { totalLng / ls.size(), totalLat / ls.size() };
+	}
 
 	public static int calcuDist(double lng1, double lat1, double lng2, double lat2) {
 		lng1 = ConvertDegreesToRadians(lng1);

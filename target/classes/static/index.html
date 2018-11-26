@@ -16,6 +16,8 @@
 <script type="text/javascript"
 	src="https://api.map.baidu.com/api?v=2.0&ak=CV4TUMa0b7k26GeMzaGln8RjNv2iyllH"></script>
 <link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="css/bootstrap-table.min.css">
+<link rel="stylesheet" href="css/font-awesome.min.css">
 <!-- Font Awesome -->
 <link rel="stylesheet" href="css/font-awesome.min.css">
 <!-- Ionicons -->
@@ -24,6 +26,8 @@
 <link rel="stylesheet" href="css/AdminLTE.min.css">
 <link rel="stylesheet" href="css/skin-blue.min.css">
 <link rel="stylesheet" href="css/bootstrap-datetimepicker.min.css">
+<link rel="stylesheet" href="css/bootstrap-treeview.css">
+<link rel="stylesheet" href="css/bootstrap-slider.min.css">
 <link rel="stylesheet" href="css/daterangepicker.css">
 <link rel="stylesheet" href="css/switchery.css">
 <link rel="stylesheet" href="css/square/red.css">
@@ -238,18 +242,17 @@ desired effect
 					<!-- Optionally, you can add icons to the links -->
 					<li class="active"><a href="#"><i class="fa fa-television"></i>
 							<span>控制台</span></a></li>
-					<li class="treeview"><a href="#analyze"><i
-							class="fa fa-bar-chart"></i> <span>数据分析</span> <span
+					<li class="treeview"><a href="#analyze"> <i
+							class="fa fa-bar-chart"></i> <span>数据处理</span> <span
 							class="pull-right-container"> <i
 								class="fa fa-angle-left pull-right"></i>
-						</span> </a>
+						</span>
+					</a>
 						<ul class="treeview-menu">
-							<li><a href="#anaylyze_heat"><i class="fa fa-circle-o"></i>热力分析</a></li>
-							<li><a href="#anaylyze_cluster"><i
-									class="fa fa-circle-o"></i>聚类分析</a></li>
-							<li><a href="#anaylyze_move"><i class="fa fa-circle-o"></i>迁移分析</a></li>
+							<li><a href="#anaylyze_data"><i class="fa fa-circle-o"></i>数据分析</a></li>
+							<li><a href="#anaylyze_site"><i class="fa fa-circle-o"></i>站点生成</a></li>
 						</ul></li>
-					<li><a href="#"><i class="fa fa-link"></i> <span>管理页</span></a></li>
+					<li><a href="#manage"><i class="fa fa-link"></i> <span>资源管理</span></a></li>
 					<li class="treeview"><a href="#"><i class="fa fa-link"></i>
 							<span>设置</span> <span class="pull-right-container"> <i
 								class="fa fa-angle-left pull-right"></i>
@@ -288,7 +291,7 @@ desired effect
 								<li><a href="#tab-daily" data-toggle="tab">每日统计</a></li>
 							</ul>
 							<div class="tab-content">
-								<div class="tab-pane active " id="tab-varia">
+								<div class="tab-pane active" id="tab-varia">
 									<div class="row">
 										<div class="col-md-9">
 											<div id="chart-varia" style="width: 100%; height: 500px;"></div>
@@ -303,9 +306,7 @@ desired effect
 												<form role="form">
 													<div class="box-body">
 														<div class="form-group">
-
 															<label>日期</label>
-
 															<div class="input-group date">
 																<div class="input-group-addon">
 																	<i class="fa fa-calendar"></i>
@@ -313,13 +314,10 @@ desired effect
 																<input type="text" class="form-control pull-right"
 																	id="fluc-date">
 															</div>
-
 														</div>
 														<div class="form-group">
 															<label>类型</label>
-
 															<div class="input-group " id="fluc-type">
-
 																<div class="checkbox">
 																	<label for="fluc-varia">方差</label> <input
 																		id="fluc-varia" type="radio" class="pull-right"
@@ -330,7 +328,6 @@ desired effect
 																		id="fluc-chance" type="radio" class="pull-right"
 																		name="iCheck" checked>
 																</div>
-
 															</div>
 														</div>
 														<div class="form-group">
@@ -343,24 +340,101 @@ desired effect
 																	id="fluc-dist">
 															</div>
 														</div>
-
 													</div>
-
 												</form>
 											</div>
 										</div>
 										<!-- general form elements -->
 									</div>
 								</div>
+
 								<!-- /.tab-pane -->
 								<div class="tab-pane" id="tab-stack">
-
 									<div id="chart-stack" style="width: 1000px; height: 500px;"></div>
-
 								</div>
 								<!-- /.tab-pane -->
 								<div class="tab-pane" id="tab-daily">
 									<div id="chart-daily" style="width: 1000px; height: 500px;"></div>
+								</div>
+								<!-- /.tab-pane -->
+							</div>
+							<!-- /.tab-content -->
+						</div>
+						<!-- nav-tabs-custom -->
+					</div>
+				</div>
+			</div>
+			<div id="console-site" class="console content container-fluid">
+				<div class="row">
+					<div class="col-md-12">
+						<!-- Custom Tabs -->
+						<div class="nav-tabs-custom ">
+							<ul class="nav nav-tabs">
+								<li class="active"><a href="#tab-site" data-toggle="tab">站点分析</a></li>
+							</ul>
+							<div class="tab-content">
+
+								<div class="tab-pane active" id="tab-site">
+									<div class="row">
+										<div class="col-md-9">
+											<div id="chart-site" style="width: 850px; height: 500px;"></div>
+										</div>
+										<div class="col-md-3">
+											<div class="box box-primary">
+												<div class="box-header with-border">
+													<h3 class="box-title">参数设置</h3>
+												</div>
+												<form role="form">
+													<div class="box-body">
+														<div class="form-group">
+															<label>预选站点个数比例(1%~10%)</label> <input id="site-rate"
+																data-slider-id='site-rate-Slider' type="text"
+																data-slider-min="1" data-slider-max="10"
+																data-slider-step="1" data-slider-value="1" />
+														</div>
+
+														<div class="form-group">
+															<label>POI评分占比</label>
+															<p class="help-block"></p>
+															<span id="site-scoreScal-1" class="hidden">Example
+																low value</span> <span id="site-scoreScal-2" class="hidden">Example
+																high value</span> <span id="site-scoreScal-3" class="hidden">Example
+																high value</span> <input id="site-scoreScal" type="text" />
+														</div>
+
+														<div id="show-site-check" class="form-group">
+															<label>预选点</label> <input type="checkbox" checked
+																class="site-switch form-control" />
+
+														</div>
+
+														<div class="form-group">
+															<label>聚类距离</label>
+															<div class="input-group">
+																<div class="input-group-addon">
+																	<i class="fa fa-clock-o"></i>
+																</div>
+																<input type="text" class="form-control pull-right"
+																	id="site-cluster-Dist">
+															</div>
+														</div>
+
+														<div class="form-group">
+															<button id="submit-site" type="button"
+																class="btn btn-block btn-primary btn-lg">提交设置</button>
+														</div>
+
+														<div class="form-group">
+															<button id="submit-siteBase" type="button"
+																class="btn btn-block btn-primary btn-lg">覆盖数据库站点</button>
+														</div>
+
+													</div>
+												</form>
+											</div>
+										</div>
+										<!-- general form elements -->
+									</div>
 								</div>
 								<!-- /.tab-pane -->
 							</div>
@@ -562,16 +636,146 @@ desired effect
 					</div>
 				</div>
 			</section>
+			<div id="console-manage" class="console content container-fluid">
+				<div class="row">
+					<div class="col-md-12 col-xs-12">
+						<div class="nav-tabs-custom ">
+							<ul class="nav nav-tabs">
+								<li class="active"><a href="#tab-user" data-toggle="tab">用户管理
+								</a></li>
+								<li><a href="#tab-POI" data-toggle="tab">POI管理</a></li>
+								<li><a href="#tab-siteManage" data-toggle="tab">站点管理</a></li>
+								<li><a href="#tab-disp" data-toggle="tab">调度管理</a></li>
+							</ul>
+							<div class="tab-content">
+								<div class="tab-pane active " id="tab-user">
+
+									<div id="toolbar-user" class="btn-group">
+										<button id="btn-add-user" type="button" data-toggle="modal"
+											data-target="#modal-add-user" class="btn btn-default">
+											<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>新增
+										</button>
+										<div class="modal modal-info fade" id="modal-add-user">
+											<div class="modal-dialog">
+												<div class="modal-content">
+													<div class="modal-header">
+														<button type="button" class="close" data-dismiss="modal"
+															aria-label="Close">
+															<span aria-hidden="true">&times;</span>
+														</button>
+														<h4 class="modal-title">添加用户</h4>
+													</div>
+													<div class="modal-body">
+														<form id="user-form" role="form">
+															<div class="box-body">
+																<div class="form-group">
+																	<label for="userName">用户名</label> <input type="text"
+																		class="form-control" id="modal-userName"
+																		placeholder="填写用户名">
+																</div>
+																<div class="form-group">
+																	<label for="userPass">密码</label> <input type="password"
+																		class="form-control" id="modal-userPass"
+																		placeholder="密码">
+																</div>
+															</div>
+
+														</form>
+													</div>
+													<div class="modal-footer">
+														<button id="modal-user-close" type="button"
+															class="btn btn-outline pull-left" data-dismiss="modal">关闭</button>
+														<button id="modal-user-submit" type="button"
+															class="btn btn-outline" data-dismiss="modal">提交</button>
+													</div>
+												</div>
+												<!-- /.modal-content -->
+											</div>
+											<!-- /.modal-dialog -->
+										</div>
+										<button id="btn-delete-user" type="button"
+											class="btn btn-default">
+											<span class="glyphicon glyphicon-minus" aria-hidden="true"></span>删除
+										</button>
+
+									</div>
+									<table id="table-user">
+
+									</table>
+								</div>
+								<div class="tab-pane " id="tab-POI">
+									<div class="row">
+										<div class="col-xs-8">
+
+											<div id="poi-map"></div>
+										</div>
+										<div class="col-xs-4">
+											<div id="poi-list"></div>
+										</div>
+									</div>
+								</div>
+								<div class="tab-pane " id="tab-siteManage">
+
+									<div id="toolbar-site" class="btn-group">
+										<button id="btn-add-site" type="button" data-toggle="modal"
+											data-target="#modal-add-site" class="btn btn-default">
+											<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>新增
+										</button>
+										<div class="modal modal-info fade" id="modal-add-site">
+											<div class="modal-dialog">
+												<div class="modal-content"></div>
+												/.modal-content
+											</div>
+											/.modal-dialog
+										</div>
+										<button id="btn-delete-site" type="button"
+											class="btn btn-default">
+											<span class="glyphicon glyphicon-minus" aria-hidden="true"></span>删除
+										</button>
+
+									</div>
+									<table id="table-site">
+
+									</table>
+								</div>
+								<div class="tab-pane " id="tab-disp">
+									<div id="toolbar-disp" class="btn-group">
+										<button id="btn-add-disp" type="button" data-toggle="modal"
+											data-target="#modal-add-disp" class="btn btn-default">
+											<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>新增
+										</button>
+										<div class="modal modal-info fade" id="modal-add-disp">
+											<div class="modal-dialog">
+												<div class="modal-content"></div>
+												<!-- /.modal-content -->
+											</div>
+											<!-- /.modal-dialog -->
+										</div>
+										<button id="btn-delete-disp" type="button"
+											class="btn btn-default">
+											<span class="glyphicon glyphicon-minus" aria-hidden="true"></span>删除
+										</button>
+
+									</div>
+									<table id="table-disp">
+
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 			<!-- /.content -->
 		</div>
 		<!-- /.content-wrapper -->
 		<!-- Main Footer -->
 		<footer class="main-footer">
 			<!-- To the right -->
-			<div class="pull-right hidden-xs">Anything you want</div>
+			<div class="pull-right hidden-xs">@共享单车@</div>
 			<!-- Default to the left -->
-			<strong>Copyright &copy; 2016 <a href="#">Company</a>.
-			</strong> All rights reserved.
+			<strong>Copyright &copy; 2018 <a href="#">Daniel</a>.
+			</strong> All rights not reserved.
 		</footer>
 		<!-- Control Sidebar -->
 		<aside class="control-sidebar control-sidebar-dark">
@@ -666,12 +870,16 @@ desired effect
 	<script src="js/bmap.min.js"></script>
 	<script src="js/simplex.js"></script>
 	<script src="js/icheck.min.js"></script>
+	<script src="js/bootstrap-table.min.js"></script>
+	<script src="js/bootstrap-treeview.js"></script>
+	<script src="js/bootstrap-slider.min.js"></script>
 	<!-- gaode link -->
 	<!-- OFFICIAL JS END -->
 	<script src="js/mapUtil.js"></script>
 	<script src="js/mapLayer.js"></script>
 	<script src="js/mapVisual.js"></script>
 	<script src="js/mapChart.js"></script>
+	<script src="js/manage.js"></script>
 	<script src="js/share.js"></script>
 	<!-- SELF JS END -->
 </body>

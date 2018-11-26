@@ -18,6 +18,7 @@ import com.pojo.GaodeLine;
 import com.pojo.GaodeStop;
 import com.pojo.Point;
 import com.serviceImpl.MapServImpl;
+import com.util.BusUtil;
 import com.util.FilesUtil;
 
 @Controller
@@ -87,7 +88,7 @@ public class MapController {
 	@GetMapping(value = "/busStop")
 	@ResponseBody
 	public List<GaodeStop> getBusStops() {
-		return FilesUtil.readFromFile(FilesUtil.BUS_STOP_FILE, GaodeStop.class);
+		return FilesUtil.readFromFile(BusUtil.BUS_STOP_FILE, GaodeStop.class);
 
 	}
 

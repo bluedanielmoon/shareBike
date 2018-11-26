@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+import java.util.stream.Stream;
 
 import org.apache.http.Header;
 import org.springframework.stereotype.Component;
@@ -38,13 +39,23 @@ import com.pojo.Point;
 @Component
 public class FilesUtil {
 
-	public static String DEFAULT_BIKE_FILE = "/Users/daniel/projects/java/shareBike/bikeData/";
-	public static String BUS_STOP_FILE = System.getProperty("user.dir") + "/stopsfilter15Circle2.txt";
+	public static String DEFAULT_BIKE_FILE = "/Users/daniel/projects/bikeData/";
+	
 	private final static ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	private final static ObjectMapper mapper = new ObjectMapper();
 
 	public static void main(String[] args) {
-		getFileRange();
+		Date[] dates=getFileRange();
+		System.out.println(dates[0]);
+		System.out.println(dates[1]);
+		Date d1=DateUtil.pareToHour("2018_11_20 0");
+		Date d2=DateUtil.pareToHour("2018_11_23 15");
+		
+		
+		List<Path> ls=listAllFiles();
+		for(Path p:ls) {
+			System.out.println(p);
+		}
 
 	}
 
@@ -196,6 +207,9 @@ public class FilesUtil {
 		cal.setTime(end_time);
 		cal.set(Calendar.HOUR_OF_DAY, 0);
 		Date stop_time = cal.getTime();
+		
+		System.out.println(begin_time);
+		System.out.println(stop_time);
 
 		if (st_time.compareTo(end_time) > 0) {
 			return ls;
@@ -214,6 +228,7 @@ public class FilesUtil {
 				@Override
 				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
 					tempStr = dir.getFileName().toString();
+					
 					if (tempStr.equals(startPath.getFileName().toString())) {
 						return FileVisitResult.CONTINUE;
 					} else {
@@ -225,6 +240,9 @@ public class FilesUtil {
 						if (temp.compareTo(begin_time) >= 0 && temp.compareTo(stop_time) <= 0) {
 							return FileVisitResult.CONTINUE;
 						}
+//						Stream<Path> files=Files.list(dir);
+//						System.out.println(dir);
+//						System.out.println(files.count());
 						return FileVisitResult.SKIP_SUBTREE;
 					}
 

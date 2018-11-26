@@ -2,6 +2,9 @@ package com.pojo;
 
 import java.util.Date;
 
+import org.springframework.stereotype.Repository;
+
+@Repository
 public class User {
 	private Integer id;
 	private String userName;
@@ -12,11 +15,19 @@ public class User {
 	
 	
 	
+	public User() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+
 	public User(String userName, String password) {
 		super();
 		this.userName = userName;
 		this.password = password;
 	}
+
+
 	public Integer getId() {
 		return id;
 	}
@@ -46,6 +57,15 @@ public class User {
 	}
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
+	}
+
+
+
+
+	@Override
+	public String toString() {
+		return "User [id=" + id + ", userName=" + userName + ", password=" + password + ", createTime=" + createTime
+				+ ", updateTime=" + updateTime + "]";
 	}
 	
 	

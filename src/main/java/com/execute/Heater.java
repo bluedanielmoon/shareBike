@@ -36,36 +36,33 @@ import com.util.MapperUtil;
 public class Heater {
 
 	private static MapHelper helper = new MapHelper();
-	private static String DEFAULT_HEAT = "heatData/";
+	private static String DEFAULT_HEAT = "/Users/daniel/projects/heatData/";
 
 	public static void main(String[] args) {
 
-		String date="2018_10_31";
-		int dist=50;
-		int type=2;
-		Heater heater=new Heater();
+		String date = "2018_10_31";
+		int dist = 50;
+		int type = 2;
+		Heater heater = new Heater();
 		heater.checkOrProduce(date, dist, type);
 
 	}
 
-	public List<Varia> calcuFlucByChance(Map<String, Varia> data, List<Map<String, Object>> bikes) {
+	public List<Varia> calcuFlucByChance(Map<String, Varia> data, List<Double> bkCounts) {
 
 		List<Varia> result = new ArrayList<>();
+	
+		int size=bkCounts.size()-1;
 
-		List<Double> bkCounts = new ArrayList<>();
-		for (Map<String, Object> b : bikes) {
-			BikeHeader header = (BikeHeader) b.get("header");
-			bkCounts.add((double) header.getBikeCount());
-		}
-		double[] avgChange = new double[23];
-		int[] changed = new int[23];
+		double[] avgChange = new double[size];
+		int[] changed = new int[size];
 
 		int temp = 0;
 		for (String s : data.keySet()) {
 			Varia var = data.get(s);
 
 			List<Integer> nums = var.getNumList();
-			for (int i = 0; i < nums.size() - 1; i++) {
+			for (int i = 0; i < size; i++) {
 				temp = Math.abs(nums.get(i) - nums.get(i + 1));
 				avgChange[i] = avgChange[i] + temp;
 				if (temp > 0) {
@@ -84,7 +81,7 @@ public class Heater {
 			List<Integer> nums = var.getNumList();
 			double start = 1;
 			// 1*（时刻变化数/时刻平均变化数）*（单车数量/单车总数）
-			for (int i = 0; i < nums.size() - 1; i++) {
+			for (int i = 0; i < size; i++) {
 				int change = Math.abs(nums.get(i) - nums.get(i + 1));
 				start = start * (1 + (nums.get(i) / bkCounts.get(i)) * (change / avgChange[i]));
 			}
@@ -100,18 +97,18 @@ public class Heater {
 
 	public List<Varia> checkOrProduce(String day, int dist, int type) {
 		String path = getFilePath(day, dist, type);
-		
+
 		if (Files.exists(Paths.get(path))) {
 			return MapperUtil.readListData(path, Varia.class);
 
 		} else {
 			List<Varia> ls = new ArrayList<>();
 			if (type == 1) {
-				ls = getFlucByVaria(day,dist);
+				ls = getFlucByVaria(day, dist);
 			} else if (type == 2) {
-				ls = getFlucByChance(day,dist);
+				ls = getFlucByChance(day, dist);
 			}
-			MapperUtil.writeListData(path, ls,Varia.class);
+			MapperUtil.writeListData(path, ls, Varia.class);
 			return ls;
 		}
 	}
@@ -129,10 +126,16 @@ public class Heater {
 		List<Map<String, Object>> bikes = FilesUtil.ListFilesInDay(date);
 
 		Map<String, Varia> data = getBikesData(day, dist);
-		return calcuFlucByChance(data, bikes);
+		
+		List<Double> bkCounts = new ArrayList<>();
+		for (Map<String, Object> b : bikes) {
+			BikeHeader header = (BikeHeader) b.get("header");
+			bkCounts.add((double) header.getBikeCount());
+		}
+		return calcuFlucByChance(data, bkCounts);
 	}
 
-	private static Map<String, Varia> getBikesData(String day, int dist) {
+	private Map<String, Varia> getBikesData(String day, int dist) {
 		String path = getFilePath(day, dist, 0);
 		Map<String, Varia> data = null;
 		if (!Files.exists(Paths.get(path))) {
@@ -255,7 +258,7 @@ public class Heater {
 	 * @param dist
 	 * @return
 	 */
-	private static Map<String, Varia> getGridBikesList(String day, int dist) {
+	private Map<String, Varia> getGridBikesList(String day, int dist) {
 		BikeArea area = State.getArea();
 
 		MapSize size = new MapSize();
@@ -270,15 +273,65 @@ public class Heater {
 	}
 
 	/**
-	 * 把单车的数据放入栅格地图
+	 * 将某一天的日期
 	 * 
+	 * @param date
+	 * @param dist
+	 * @return
+	 */
+	public Map<String, Varia> getGridBikesList(Date date, int dist) {
+		BikeArea area = State.getArea();
+
+		MapSize size = new MapSize();
+		Map<String, Map<String, Object>> map = helper.divideMapToGrid(area, dist, size);
+		List<Map<String, Object>> bikes = FilesUtil.ListFilesInDay(date);
+
+		return addRecBikesCount(area, dist, map, bikes);
+	}
+
+	/**
+	 * 为了避免单次读入文件过多，对一个已经有的Varia，进行单车数据的补充
+	 * @param parent
 	 * @param area
 	 * @param dist
 	 * @param map
 	 * @param bikes
 	 * @return
 	 */
-	private static Map<String, Varia> addRecBikesCount(BikeArea area, int dist, Map<String, Map<String, Object>> map,
+	public Map<String, Varia> addBikeToVaria(Map<String, Varia> parent, BikeArea area, int dist,
+			Map<String, Map<String, Object>> map, List<Map<String, Object>> bikes) {
+		int recCount = 0;
+		for (int i = 0; i < bikes.size(); i++) {
+			Map<String, Object> b = bikes.get(i);
+			List<BikePos> ls = (List<BikePos>) b.get("bikes");
+			helper.pubBikesToGrid(ls, area, map, dist);
+
+			for (String s : map.keySet()) {
+				Map<String, Object> info = map.get(s);
+				List<BikePos> count = (List<BikePos>) info.get("bikes");
+
+				Varia recInfo = parent.get(s);
+				List<Integer> nums = recInfo.getNumList();
+
+				recCount = count.size();
+				nums.add(recCount);
+				count.clear();
+			}
+
+		}
+		return null;
+	}
+
+	/**
+	 * 把单车的数据放入栅格地图
+	 * 
+	 * @param area
+	 * @param dist
+	 * @param map
+	 * @param bikes
+	 * @return Map<String, Varia> 键值为地图方块ID，代表横纵信息，Varia代表里面的信息
+	 */
+	public Map<String, Varia> addRecBikesCount(BikeArea area, int dist, Map<String, Map<String, Object>> map,
 			List<Map<String, Object>> bikes) {
 
 		TreeMap<String, Varia> result = new TreeMap<>(new Comparator<String>() {

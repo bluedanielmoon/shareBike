@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dao.PoiDao">
+
+	<resultMap id="POIMap" type="com.pojo.Poi">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="name" property="name" jdbcType="VARCHAR" />
+		<result column="poi_type" property="type" jdbcType="INTEGER" />
+		<result column="lng" property="lng" jdbcType="DECIMAL" />
+		<result column="lat" property="lat" jdbcType="DECIMAL" />
+	</resultMap>
+
+	<select id="getPoi" parameterType="int" resultMap="POIMap">
+		SELECT * FROM poi WHERE id = #{id}
+	</select>
+
+	<select id="getAll" resultMap="POIMap">
+		SELECT * FROM poi
+	</select>
+
+	<!-- 因为ID是自增长的，在插入中可以省略ID，通过useGenerated keyProperty来指定id 使用自增长策略 -->
+	<insert id="addPoi" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.pojo.Poi">
+		insert into poi (name,poi_type,lng,lat)
+		values
+		(#{name},#{type},#{lng},#{lat})
+	</insert>
+	
+	<insert id="addPoiList" parameterType="java.util.List">
+		insert into poi (name,poi_type,lng,lat)
+         values
+		<foreach collection ="list" item="poi" separator =",">
+			(
+			#{poi.name},
+			#{poi.type},
+			#{poi.lng},
+			#{poi.lat}
+			)
+             </foreach >
+	</insert>
+
+	<update id="updatePoi" parameterType="com.pojo.Poi">
+		update poi set name=1
+	</update>
+
+	<delete id="deletePoi" parameterType="int">
+		delete from poi where id = #{id}
+	</delete>
+
+	<delete id="deletePois" parameterType="java.util.List">
+		delete from poi where name in
+		<foreach collection="list" item="name" separator="," open="("
+			close=")">
+			#{name}
+		</foreach>
+	</delete>
+
+</mapper>

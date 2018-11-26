@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.springframework.stereotype.Component;
 
+import com.pojo.Bike;
 import com.pojo.BikeArea;
 import com.pojo.BikeHeader;
 import com.pojo.BikePos;
@@ -23,7 +24,6 @@ import com.util.CoordsUtil;
 @Component
 public class MapHelper {
 	private static int mapDivideDist = 550;
-	private static int boder = 1;
 	// 100-500，200-600，300-700，400-800
 	private static int minDist = 150;
 
@@ -32,12 +32,16 @@ public class MapHelper {
 	 * 
 	 * @param dist
 	 */
-	private static void setMapDivideDist(int dist) {
+	private static void setMapDivideDist(int dist,int divideDist) {
 		minDist = dist;
-		if (minDist <= 100) {
-			mapDivideDist = 500;
-		} else {
-			mapDivideDist = 500 + (minDist - 100);
+		if(divideDist==0) {
+			if (minDist <= 100) {
+				mapDivideDist = 500;
+			} else {
+				mapDivideDist = 500 + (minDist - 100);
+			}
+		}else {
+			mapDivideDist=divideDist;
 		}
 
 	}
@@ -119,10 +123,6 @@ public class MapHelper {
 
 	}
 
-	public static void calcuGridID(BikeArea area, int rows, int cols, double lng, double lat) {
-
-	}
-
 	/**
 	 * 将某一区域划分为多行多列的区域,边缘可能存在由于double计算带来的误差
 	 * 
@@ -189,10 +189,33 @@ public class MapHelper {
 			List<BikePos> ls = new ArrayList<BikePos>();
 			for (String key : keys) {
 				BikePos bike = pack.get(key);
+				
 				ls.add(bike);
 
 			}
 			double center[] = CoordsUtil.calcuCenter(ls);
+			Point pt = new Point(new double[] { center[0], center[1] }, "" + idCount++, 1);
+			result.add(pt);
+
+		}
+		return result;
+
+	}
+	
+	public List<Point> calcuClusterCenter2(List<Map<String, BikePos>> packs) {
+
+		List<Point> result = new ArrayList<Point>();
+		int idCount = 0;
+		for (Map<String, BikePos> pack : packs) {
+			Set<String> keys = pack.keySet();
+
+			List<BikePos> ls = new ArrayList<BikePos>();
+			for (String key : keys) {
+				BikePos bike = pack.get(key);
+				ls.add(bike);
+
+			}
+			double center[] = CoordsUtil.calcuCenterWithPower(ls);
 			Point pt = new Point(new double[] { center[0], center[1] }, "" + idCount++, 1);
 			result.add(pt);
 
@@ -208,7 +231,7 @@ public class MapHelper {
 	 * @param distance
 	 * @return
 	 */
-	public List<Map<String, BikePos>> neighborCluster(List<BikePos> bikes, int distance) {
+	public List<Map<String, BikePos>> neighborCluster(List<BikePos> bikes, int distance,int divideDist,BikeArea... area) {
 
 		Map<String, BikePos> pool = new HashMap<String, BikePos>();
 		BikePos bp = null;
@@ -218,17 +241,23 @@ public class MapHelper {
 		}
 
 		// 设置搜索距离
-		setMapDivideDist(distance);
+		setMapDivideDist(distance,divideDist);
 
 		// 把收集区域的边界朝四个方向分别扩大若干米
-		int bigSize = 400;
-		BikeArea bigArea = getBiggerArea(State.getArea(), bigSize);
+		BikeArea bigArea=null;
+		if(area.length>0) {
+			bigArea=area[0];
+		}else {
+			int bigSize = 400;
+			bigArea = getBiggerArea(State.getArea(), bigSize);
+		}
+		
 
 		MapSize size = new MapSize();
 
 		// 把区域按照mapDivideDist分割为网状
 		Map<String, Map<String, Object>> maps = divideMapToGrid(bigArea, mapDivideDist, size);
-
+		
 		// 判断每个单车属于哪一个网格，并添加进去
 		pubBikesToGrid(bikes, bigArea, maps, mapDivideDist);
 
@@ -292,7 +321,8 @@ public class MapHelper {
 
 		int latPos = latDist / mapDivideDist;
 		findID = latPos + "_" + lngPos;
-		List<String> toFindIDs = getAroundAreas(findID, size.getRow(), size.getCol(), boder);
+		int border=(minDist/mapDivideDist)+1;
+		List<String> toFindIDs = getAroundAreas(findID, size.getRow(), size.getCol(), border);
 		List<BikePos> result = new ArrayList<BikePos>();
 		for (String s : toFindIDs) {
 

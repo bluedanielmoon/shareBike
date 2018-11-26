@@ -18,7 +18,7 @@ import com.util.FilesUtil;
 import com.util.MapperUtil;
 
 public class BikeTracker {
-	private final static String DEFAULT_FILE="trackData/";
+	private final static String DEFAULT_FILE="/Users/daniel/projects/trackData/";
 	private final int LAST_NOW_DISTANCE=100;
 
 	public static void main(String[] args) {
