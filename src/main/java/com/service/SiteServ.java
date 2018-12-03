@@ -5,6 +5,7 @@ import java.util.List;
 import com.pojo.Site;
 
 public interface SiteServ {
+	
 	Site getSiteById(int id);
 	
 	List<Site> getAllSites();

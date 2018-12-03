@@ -10,6 +10,8 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import com.init.InitPoi;
+import com.init.InitState;
+import com.init.State;
 import com.pojo.AppInfo;
 import com.util.FilesUtil;
 
@@ -20,6 +22,8 @@ import com.util.FilesUtil;
  *
  */
 public class AppRunner implements ApplicationRunner{
+	@Autowired
+	private InitState initState;
 	
 	@Autowired
 	private AppInfo info;
@@ -30,9 +34,8 @@ public class AppRunner implements ApplicationRunner{
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
 		System.out.println("App start!");	
-		System.out.println("Author:"+info.getName());
-		System.out.println("Date:"+new Date());
-		System.out.println("Age:"+info.getAge());
+		
+		initState.init();
 		
 		initer.initBus();
 		initer.initSubway();

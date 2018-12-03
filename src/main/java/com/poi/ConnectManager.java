@@ -30,6 +30,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
+import org.springframework.stereotype.Component;
+import org.springframework.test.annotation.Commit;
 
 /**
  * http连接的链接池
@@ -38,6 +40,7 @@ import org.apache.http.protocol.HttpContext;
  * @date 2018.10.13
  *
  */
+@Component
 public class ConnectManager {
 	public static PoolingHttpClientConnectionManager manager;
 	private static HttpRequestRetryHandler retry;

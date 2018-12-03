@@ -43,7 +43,7 @@ public class AnayServ {
 
 	public List<BikeHeader> getBikeInfo() {
 
-		List<Path> all = FilesUtil.listAllFiles();
+		List<Path> all = FilesUtil.listAllFiles(false);
 		List<BikeHeader> list = new ArrayList<>();
 		BikeHeader bk = null;
 		for (Path p : all) {

@@ -138,6 +138,7 @@
     		mapUtil.link.getData("/poi/all",true,{},function(data){
     			if(data){
     				var types = new Set(); // 空Set
+    				console.log(data);
     				//将数据按类型分开
     				data.forEach(function(ele, index) {
     					var nameType=null;

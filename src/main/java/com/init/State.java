@@ -4,59 +4,150 @@ import com.pojo.BikeArea;
 
 public class State {
 
-		//玉祥门区域
-		//public static BikeArea area=new BikeArea(108.918125, 34.270856, 108.923468, 34.2684);
+		public static int SITE_NORMAL_TYPE;
+		public static int SITE_REMEND_TYPE;
+	    
+		public static int POI_BUS;
+		public static int POI_SUBWAY;
 		
-		//从大兴立交到桥梓口
-		//public static BikeArea area=new BikeArea(108.891913, 34.286154, 108.93251, 34.259512);
+		public static int TRUCK_TYPE=1;
+		public static int TRUCK_SPEED;
+		public static int TRUCK_CAPACITY=30;
+		public static int TRICYCLE_TYPE=2;
+		public static int TRICYCLE_SPEED;
+		public static int TRICYCLE_CAPACITY=15;
+		public static int MAN_TYPE=3;
+		public static int MAN_SPEED;
+		public static int MAN_CAPACITY=1;
 		
+		public static int MOVE_TASK=1;
+		public static int LOAD_TASK=2;
 		
-		public static BikeArea area=new BikeArea(108.891913, 34.286154, 108.996753, 34.240899);
+		public static int LOAD=1;
+		public static int UNLOAD=2;
 		
-		//三环线
-		//public static BikeArea area=new BikeArea(108.841793,34.343364, 109.05431,34.185037);
+		public static int MIN_SITE_BIKE_COUNT=3;
 		
-		public static int collectThreadSize = 20;
-		public static int collectMaxRunTime =60;//minutes
-		public static int jobPrintGap=5;//seconds
-		public static long schedulGap=60*60*1000;//milliSeconds
-		public static int lngLatGap = 50;//meter
+		public static int LOAD_UNIT_TIME=10;
+		
 
-		public static void setArea(BikeArea area) {
-			State.area = area;
-		}
+	    
+		public static BikeArea AREA;
 		
-		/**
-		 * 设置收集的线程数
-		 * @param threadSize
-		 */
-		public static void setThreadSize(int threadSize) {
-			State.collectThreadSize = threadSize;
-		}
-		
-		/**
-		 * 设置Collecor最大运行时间，单位(分钟)
-		 * @param runTime
-		 */
-		public static void setRunTime(int runTime) {
-			State.collectMaxRunTime = runTime;
-		}
-		
-		/**
-		 * 设置单车收集进度的间隔，单位(秒)
-		 * @param jobPrintGap
-		 */
-		public static void setJobPrintGap(int jobPrintGap) {
-			State.jobPrintGap = jobPrintGap;
+		public State() {}
+
+		public static int getSITE_NORMAL_TYPE() {
+			return SITE_NORMAL_TYPE;
 		}
 
-		/**
-		 * 设置收集区域的间隔,单位(米)
-		 * @param lngLatGap
-		 */
-		public static void setLngLatGap(int lngLatGap) {
-			State.lngLatGap = lngLatGap;
+		public static void setSITE_NORMAL_TYPE(int sITE_NORMAL_TYPE) {
+			SITE_NORMAL_TYPE = sITE_NORMAL_TYPE;
 		}
+
+		public static int getSITE_REMEND_TYPE() {
+			return SITE_REMEND_TYPE;
+		}
+
+		public static void setSITE_REMEND_TYPE(int sITE_REMEND_TYPE) {
+			SITE_REMEND_TYPE = sITE_REMEND_TYPE;
+		}
+
+		public static int getPOI_BUS() {
+			return POI_BUS;
+		}
+
+		public static void setPOI_BUS(int pOI_BUS) {
+			POI_BUS = pOI_BUS;
+		}
+
+		public static int getPOI_SUBWAY() {
+			return POI_SUBWAY;
+		}
+
+		public static void setPOI_SUBWAY(int pOI_SUBWAY) {
+			POI_SUBWAY = pOI_SUBWAY;
+		}
+
+		public static BikeArea getAREA() {
+			return AREA;
+		}
+
+		public static void setAREA(double[] list) {
+			AREA=new BikeArea(list[0], list[1], list[2], list[3]);
+		}
+
+		public static int getTRUCK_TYPE() {
+			return TRUCK_TYPE;
+		}
+
+		public static void setTRUCK_TYPE(int tRUCK_TYPE) {
+			TRUCK_TYPE = tRUCK_TYPE;
+		}
+
+		public static int getTRUCK_SPEED() {
+			return TRUCK_SPEED;
+		}
+
+		public static void setTRUCK_SPEED(int tRUCK_SPEED) {
+			TRUCK_SPEED = tRUCK_SPEED;
+		}
+
+		public static int getTRUCK_CAPACITY() {
+			return TRUCK_CAPACITY;
+		}
+
+		public static void setTRUCK_CAPACITY(int tRUCK_CAPACITY) {
+			TRUCK_CAPACITY = tRUCK_CAPACITY;
+		}
+
+		public static int getTRICYCLE_TYPE() {
+			return TRICYCLE_TYPE;
+		}
+
+		public static void setTRICYCLE_TYPE(int tRICYCLE_TYPE) {
+			TRICYCLE_TYPE = tRICYCLE_TYPE;
+		}
+
+		public static int getTRICYCLE_SPEED() {
+			return TRICYCLE_SPEED;
+		}
+
+		public static void setTRICYCLE_SPEED(int tRICYCLE_SPEED) {
+			TRICYCLE_SPEED = tRICYCLE_SPEED;
+		}
+
+		public static int getTRICYCLE_CAPACITY() {
+			return TRICYCLE_CAPACITY;
+		}
+
+		public static void setTRICYCLE_CAPACITY(int tRICYCLE_CAPACITY) {
+			TRICYCLE_CAPACITY = tRICYCLE_CAPACITY;
+		}
+
+		public static int getMAN_TYPE() {
+			return MAN_TYPE;
+		}
+
+		public static void setMAN_TYPE(int mAN_TYPE) {
+			MAN_TYPE = mAN_TYPE;
+		}
+
+		public static int getMAN_SPEED() {
+			return MAN_SPEED;
+		}
+
+		public static void setMAN_SPEED(int mAN_SPEED) {
+			MAN_SPEED = mAN_SPEED;
+		}
+
+		public static int getMAN_CAPACITY() {
+			return MAN_CAPACITY;
+		}
+
+		public static void setMAN_CAPACITY(int mAN_CAPACITY) {
+			MAN_CAPACITY = mAN_CAPACITY;
+		}
+		
 		
 
 		

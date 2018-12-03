@@ -1,7 +1,6 @@
 ;
 (function(global, undefined) {
 
-	console.log(this);
 
 	var _global;
 	var mapLayer;

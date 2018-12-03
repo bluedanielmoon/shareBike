@@ -1,3 +1,7 @@
+#simu-map{
+	height:500px;
+	width:100%;
+}
 #poi-list{
 	height:400px;
 	overflow:auto;

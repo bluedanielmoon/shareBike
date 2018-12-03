@@ -34,7 +34,7 @@ public class DispatcherServImplTest {
 
 	@Test
 	public void testAddDispatcher() {
-		Dispatcher disp = new Dispatcher("kache1", 1);
+		Dispatcher disp = new Dispatcher("调度员2", 3);
 
 		dispatcher.addDispatcher(disp);
 	}

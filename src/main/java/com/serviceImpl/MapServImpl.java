@@ -39,7 +39,7 @@ public class MapServImpl implements MapServ {
 
 		Date st = DateUtil.parseToMinute(startTime);
 		Date en = DateUtil.parseToMinute(endTime);
-		List<Map<String, Object>> maps = FilesUtil.readFilesToBikeMap(st, en);
+		List<Map<String, Object>> maps = FilesUtil.readFilesToBikeMap(st, en,false);
 		return maps;
 	}
 
@@ -54,7 +54,7 @@ public class MapServImpl implements MapServ {
 
 		Date st = DateUtil.parseToMinute(startTime);
 		Date en = DateUtil.parseToMinute(endTime);
-		List<Map<String, Object>> maps = FilesUtil.readFilesToBikeMap(st, en);
+		List<Map<String, Object>> maps = FilesUtil.readFilesToBikeMap(st, en,false);
 		BikeArea area = State.getArea();
 
 		Map<String, Map<String, Object>> result = maphelper
@@ -79,7 +79,7 @@ public class MapServImpl implements MapServ {
 		
 		Date st = DateUtil.parseToMinute(start);
 		Date en = DateUtil.parseToMinute(end);
-		List<Map<String, Object>> maps = FilesUtil.readFilesToBikeMap(st, en);
+		List<Map<String, Object>> maps = FilesUtil.readFilesToBikeMap(st, en,false);
 		
 		
 		List<BikePos> allBikes=new ArrayList<>();
