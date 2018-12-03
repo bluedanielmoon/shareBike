@@ -63,7 +63,6 @@ public class Connector {
 						+ "Safari/537.36 XiaoMi/MiuiBrowser/9.1.3");
 		RequestConfig config = null;
 		if (withPxoxy) {
-			System.out.println("Executing with " + proxy.toURI());
 
 			config = RequestConfig.custom().setProxy(proxy)
 					.setConnectTimeout(CONNECT_TIME_OUT)
@@ -71,7 +70,6 @@ public class Connector {
 					.setConnectionRequestTimeout(REQUEST_TIME_SECONDS)
 					.setCookieSpec(CookieSpecs.IGNORE_COOKIES).build();
 		} else {
-			System.out.println("Executing with local address");
 			config = RequestConfig.custom().setConnectTimeout(CONNECT_TIME_OUT)
 					.setSocketTimeout(SOCKET_TIME_OUT)
 					.setConnectionRequestTimeout(REQUEST_TIME_SECONDS)
@@ -250,7 +248,7 @@ public class Connector {
 		CloseableHttpResponse response = null;
 		
 		try {
-			System.out.println(ip+" "+port);
+//			System.out.println(ip+" "+port);
 			HttpHost proxy = new HttpHost(ip, port);
 			config(httpget, proxy, URI.create(url), withProxy);
 			//System.out.println("Executing request " + httpget.getRequestLine());

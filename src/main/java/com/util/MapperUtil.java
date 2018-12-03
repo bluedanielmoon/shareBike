@@ -75,7 +75,7 @@ public class MapperUtil {
 	 * @param path
 	 * @param result
 	 */
-	public static <T> void writeMapListData(String fileName, Map data, Class<T> clas) {
+	public static <T> void writeMapListData(String fileName, Map data,Class keyClass, Class<T> clas) {
 		ObjectMapper mapper = new ObjectMapper();
 		Path path=Paths.get(fileName);
 		if(!Files.exists(path)) {
@@ -88,7 +88,7 @@ public class MapperUtil {
 		File file = path.toFile();
 		try {
 			JavaType listType=mapper.getTypeFactory().constructCollectionType(List.class, clas);
-			JavaType StringType=mapper.getTypeFactory().constructType(String.class);
+			JavaType StringType=mapper.getTypeFactory().constructType(keyClass);
 			JavaType javaType = mapper.getTypeFactory().constructMapLikeType(HashMap.class, StringType, listType);
 			mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 			ObjectWriter writer = mapper.writerFor(javaType);
@@ -99,6 +99,59 @@ public class MapperUtil {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
+	}
+	
+	/**
+	 * 把栅格地图单车的结果写入文件
+	 * 
+	 * @param        <T>
+	 * @param path
+	 * @param result
+	 */
+	public static <T> void writeIntMapMapData(String fileName, Map data) {
+		ObjectMapper mapper = new ObjectMapper();
+		Path path=Paths.get(fileName);
+		if(!Files.exists(path)) {
+			try {
+				Files.createFile(path);
+			} catch (IOException e) {
+				System.out.println("创建文件 "+fileName+" 失败");
+			}
+		}
+		File file = path.toFile();
+		try {
+			JavaType mapType=mapper.getTypeFactory().constructMapLikeType(HashMap.class, String.class, Object.class);
+			JavaType intType=mapper.getTypeFactory().constructType(Integer.class);
+			JavaType javaType = mapper.getTypeFactory().constructMapLikeType(HashMap.class, intType, mapType);
+			mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+			ObjectWriter writer = mapper.writerFor(javaType);
+			SequenceWriter sequenceWriter = writer.writeValues(file);
+			sequenceWriter.write(data);
+			sequenceWriter.close();
+
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+	
+	public static Map<Integer, Map<String, Object>> readIntMapMapData(String fileName) {
+		ObjectMapper mapper = new ObjectMapper();
+		Path path = Paths.get(fileName);
+		if (!Files.exists(path)) {
+			return null;
+		}
+
+		try {
+			JavaType mapType=mapper.getTypeFactory().constructMapLikeType(HashMap.class, String.class, Object.class);
+			JavaType intType=mapper.getTypeFactory().constructType(Integer.class);
+			JavaType javaType = mapper.getTypeFactory().constructMapLikeType(HashMap.class, intType, mapType);
+			Map<Integer, Map<String, Object>> maps = mapper.readValue(path.toFile(), javaType);
+			return maps;
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		return null;
+		
 	}
 	
 	/**
@@ -168,8 +221,7 @@ public class MapperUtil {
 
 		try {
 			JavaType javaType = mapper.getTypeFactory().constructParametricType(List.class, clas);
-			List<T> ls = mapper.readValue(path.toFile(), new TypeReference<List<T>>() {
-			});
+			List<T> ls = mapper.readValue(path.toFile(), javaType);
 			return ls;
 		} catch (IOException e1) {
 			e1.printStackTrace();

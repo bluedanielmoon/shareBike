@@ -23,7 +23,16 @@ public class CoordsUtil {
 	public static void main(String[] args) {
 		//108.898072,34.275492
 		//t: 108.9046604697586,34.28116261508937
-		turnBaiDuCoord(108.898072,34.275492);
+	//	turnBaiDuCoord(108.898072,34.275492);
+		
+		
+		int dist=CoordsUtil.calcuDist(108.91663,34.280733, 108.922183,34.280826);
+		
+		
+//		Lnglat aLnglat=new Lnglat(108.902508,34.286365);
+//		Lnglat bLnglat=new Lnglat(108.921948,34.286436);
+//		Lnglat xLnglat=getRatioPos(aLnglat, bLnglat, 0.1);
+		System.out.println(dist);
 	}
 	/**
 	 * 手里拿着高德坐标，现在要往百度地图画。百度相当于把坐标往左下角挪了，现在要挪回去
@@ -56,6 +65,12 @@ public class CoordsUtil {
 		return new double[] {gaoLng,gaoLat};
 	}
 	
+	public static Lnglat turnGaodeCoord(Lnglat ll) {
+		double gaoLng=getLng(ll.getLat(), ll.getLng(), 605, false);
+		double gaoLat=getLat(ll.getLat(), 633, true);
+		return new Lnglat(gaoLng, gaoLat);
+	}
+	
 	private static double haverSin(double theta) {
 		double v = Math.sin(theta / 2);
 		return v * v;
@@ -69,7 +84,20 @@ public class CoordsUtil {
 		lnglat.setLat((long)((area.getStartLat() + area.getEndLat()) / 2*1000000)/1000000.0);
 		return lnglat;
 	}
-
+	
+	
+	public static BikeArea getCenterArea(Lnglat center,int dist) {
+		BikeArea area=new BikeArea();
+		double LngRight=getLng(center.getLat(), center.getLng(), dist, true);
+		double LngLeft=getLng(center.getLat(), center.getLng(), dist, false);
+		double latDown=getLat(center.getLat(), dist, true);
+		double latUp=getLat(center.getLat(), dist, false);
+		area.setStartLng(LngLeft);
+		area.setStartLat(latUp);
+		area.setEndLng(LngRight);
+		area.setEndLat(latDown);
+		return area;
+	}
 	
 
 	public static boolean isInArea(BikeArea area, double lng, double lat) {
@@ -83,6 +111,12 @@ public class CoordsUtil {
 			return false;
 		}
 
+	}
+	
+	public static Lnglat getRatioPos(Lnglat A,Lnglat B,double ratio) {
+		double lng=	(long)(((1-ratio)*A.getLng()+ratio*B.getLng())*1000000)/1000000.0;	
+		double lat=(long)(((1-ratio)*A.getLat()+ratio*B.getLat())*1000000)/1000000.0;
+		return new Lnglat(lng, lat);
 	}
 
 	/**

@@ -33,7 +33,7 @@ public class BikeTracker {
 		System.out.println("共有单车："+data.size());
 		List<Integer> statis=getMoveCount(data);
 		System.out.println(statis);
-		MapperUtil.writeMapListData(file, data, LnglatTime.class);
+		MapperUtil.writeMapListData(file, data,String.class,LnglatTime.class);
 	}
 	
 	public List<Integer> getMoveCount(Map<String, List<LnglatTime>> data){
@@ -64,7 +64,7 @@ public class BikeTracker {
 	}
 
 	public Map<String, List<LnglatTime>> getBikesToDay() {
-		List<Path> allFiles = FilesUtil.listAllFiles();
+		List<Path> allFiles = FilesUtil.listAllFiles(true);
 		Map<String, List<LnglatTime>> bikes = new HashMap<>();
 
 		String bikeId = null;

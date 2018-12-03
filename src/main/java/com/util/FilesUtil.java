@@ -45,19 +45,21 @@ public class FilesUtil {
 	private final static ObjectMapper mapper = new ObjectMapper();
 
 	public static void main(String[] args) {
-		Date[] dates=getFileRange();
-		System.out.println(dates[0]);
-		System.out.println(dates[1]);
-		Date d1=DateUtil.pareToHour("2018_11_20 0");
-		Date d2=DateUtil.pareToHour("2018_11_23 15");
-		
-		
-		List<Path> ls=listAllFiles();
-		for(Path p:ls) {
-			System.out.println(p);
-		}
+//		Date[] dates=getFileRange();
+//		System.out.println(dates[0]);
+//		System.out.println(dates[1]);
+//		Date d1=DateUtil.pareToHour("2018_11_20 0");
+//		Date d2=DateUtil.pareToHour("2018_11_23 15");
+//		
+//		
+//		List<Path> ls=listAllFiles();
+//		for(Path p:ls) {
+//			System.out.println(p);
+//		}
 
 	}
+	
+	
 
 	public static Date[] getFileRange() {
 		Path startPath = Paths.get(DEFAULT_BIKE_FILE);
@@ -112,8 +114,8 @@ public class FilesUtil {
 	 * @param end_time
 	 * @return
 	 */
-	public static List<Map<String, Object>> readFilesToBikeMap(Date st_time, Date end_time) {
-		List<Path> files = listFilesInDuration(st_time, end_time);
+	public static List<Map<String, Object>> readFilesToBikeMap(Date st_time, Date end_time,boolean check24) {
+		List<Path> files = listFilesInDuration(st_time, end_time,check24);
 		List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
 
 		for (Path f : files) {
@@ -131,7 +133,7 @@ public class FilesUtil {
 		return result;
 	}
 
-	public static List<Path> listAllFiles() {
+	public static List<Path> listAllFiles(boolean check24) {
 		Date[] dates = FilesUtil.getFileRange();
 		Date enDate = dates[1];
 		Calendar calendar = Calendar.getInstance();
@@ -139,7 +141,7 @@ public class FilesUtil {
 		calendar.set(Calendar.HOUR_OF_DAY, 23);
 		dates[1] = calendar.getTime();
 
-		List<Path> files = listFilesInDuration(dates[0], dates[1]);
+		List<Path> files = listFilesInDuration(dates[0], dates[1],check24);
 		files.sort(new Comparator<Path>() {
 
 			@Override
@@ -162,8 +164,8 @@ public class FilesUtil {
 		return files;
 	}
 
-	public static List<BikeHeader> readFileHeaders(Date st_time, Date end_time) {
-		List<Path> files = listFilesInDuration(st_time, end_time);
+	public static List<BikeHeader> readFileHeaders(Date st_time, Date end_time,boolean check24) {
+		List<Path> files = listFilesInDuration(st_time, end_time,check24);
 		List<BikeHeader> result = new ArrayList<BikeHeader>();
 
 		for (Path f : files) {
@@ -193,11 +195,11 @@ public class FilesUtil {
 		calendar.set(Calendar.HOUR_OF_DAY, 23);
 		Date enDate = calendar.getTime();
 
-		return readFilesToBikeMap(start, enDate);
+		return readFilesToBikeMap(start, enDate,false);
 	}
 
 	// listFilesInDuration("2018_10_30 0", "2018_11_1 0");
-	public static List<Path> listFilesInDuration(Date st_time, Date end_time) {
+	public static List<Path> listFilesInDuration(Date st_time, Date end_time,boolean check24) {
 		List<Path> ls = new ArrayList<Path>();
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(st_time);
@@ -207,9 +209,6 @@ public class FilesUtil {
 		cal.setTime(end_time);
 		cal.set(Calendar.HOUR_OF_DAY, 0);
 		Date stop_time = cal.getTime();
-		
-		System.out.println(begin_time);
-		System.out.println(stop_time);
 
 		if (st_time.compareTo(end_time) > 0) {
 			return ls;
@@ -232,6 +231,13 @@ public class FilesUtil {
 					if (tempStr.equals(startPath.getFileName().toString())) {
 						return FileVisitResult.CONTINUE;
 					} else {
+						if(check24) {
+							File file=new File(dir.toUri());
+							if(file.list().length<24) {
+								return FileVisitResult.SKIP_SUBTREE;
+							}
+						}
+						
 						if (!RegexUtil.matchDate(tempStr)) {
 							return FileVisitResult.CONTINUE;
 						}
@@ -240,9 +246,7 @@ public class FilesUtil {
 						if (temp.compareTo(begin_time) >= 0 && temp.compareTo(stop_time) <= 0) {
 							return FileVisitResult.CONTINUE;
 						}
-//						Stream<Path> files=Files.list(dir);
-//						System.out.println(dir);
-//						System.out.println(files.count());
+						
 						return FileVisitResult.SKIP_SUBTREE;
 					}
 

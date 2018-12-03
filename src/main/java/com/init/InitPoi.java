@@ -14,8 +14,7 @@ import com.util.BusUtil;
 
 @Component
 public class InitPoi {
-	private static final int POI_BUS=1;
-	private static final int POI_SUBWAY=2;
+	
 	@Autowired
 	private PoiServ poiServ;
 	
@@ -31,7 +30,7 @@ public class InitPoi {
 		List<GaodeStop> stops=BusUtil.readBusStops();
 		List<Poi> buses=new ArrayList<>();
 		for(GaodeStop stop:stops) {
-			Poi poi=new Poi(stop.getName(), POI_BUS, stop.getLocation().getLng(), stop.getLocation().getLat());
+			Poi poi=new Poi(stop.getName(), State.POI_BUS, stop.getLocation().getLng(), stop.getLocation().getLat());
 			buses.add(poi);
 		}
 		
@@ -44,7 +43,7 @@ public class InitPoi {
 		List<GaodeStop> stops=BusUtil.readSubStations();
 		List<Poi> subs=new ArrayList<>();
 		for(GaodeStop stop:stops) {
-			Poi poi=new Poi(stop.getName(), POI_SUBWAY, stop.getLocation().getLng(), stop.getLocation().getLat());
+			Poi poi=new Poi(stop.getName(),State.POI_SUBWAY, stop.getLocation().getLng(), stop.getLocation().getLat());
 			subs.add(poi);
 		}
 		poiServ.patchAddPoi(subs);

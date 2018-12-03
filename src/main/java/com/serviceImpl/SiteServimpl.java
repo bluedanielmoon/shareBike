@@ -14,6 +14,10 @@ public class SiteServimpl implements SiteServ {
 
 	@Autowired
 	private SiteDao siteDao;
+	
+	public SiteServimpl(SiteDao userDao) {
+		this.siteDao = userDao;
+	}
 
 	@Override
 	public Site getSiteById(int id) {

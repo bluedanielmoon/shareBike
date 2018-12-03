@@ -339,6 +339,7 @@ public class SiteChooser {
 		List<Site>  lSites=new ArrayList<>();
 		for(Point p:sites) {
 			lnglat=p.getLnglat();
+			lnglat=CoordsUtil.turnGaodeCoord(lnglat[0], lnglat[1]);
 			Site site=new Site("123", 20, 1, lnglat[0], lnglat[1]);
 			lSites.add(site);
 		}

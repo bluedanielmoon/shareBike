@@ -85,8 +85,7 @@ share.area = {
             })
 
             rectangleEditor.on('end', function(e) {
-                console.log("end");
-                console.log(e);
+               
                 // event.target 即为编辑后的矩形对象
             })
             rectangleEditor.close();
@@ -362,30 +361,22 @@ share.console = {
     },
     change: function() {
         var link = window.location.hash;
-
-        console.log(link);
-        // console主页
         if (link == "") {
-
             this.show("map");
-
         }  else { // 其他页面
-            // 保存地图上的地图模块
             link = link.substring(1, link.length);
-            
            if(link == "manage"){
             	this.show("manage");
             	manage.init();
             }else if (link == "anaylyze_data") {
                 this.show("chart");
                 mapChart.showVaria();
-               
-
             }else if (link == "anaylyze_site") {
                 this.show("site");
                 mapChart.showSite();
-               
-
+            }else if(link == "simuler"){
+            	this.show("simuler");
+            	mapSimu.init();
             }
         }
     },
