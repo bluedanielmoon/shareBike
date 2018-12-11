@@ -20,7 +20,6 @@ public class SiteAnalyzeTest {
 	@Autowired
 	private SiteAnalyze siteAna;
 
-<<<<<<< HEAD
 	
 //	@Test
 //	public void testProduce() {
@@ -48,36 +47,5 @@ public class SiteAnalyzeTest {
 //		System.out.println(ls);
 //	}
 	
-=======
-	@Test
-	public void testGetFileHeaders() {
-		siteAna.getFileHeaders();
-	}
-//
-//	@Test
-//	public void testGo() {
-//		siteAna.go();
-//	}
-//	
-//	@Test
-//	public void testCreateDefaultCircums() {
-//		siteAna.createDefaultCircums();
-//	}
-	
-	@Test
-	public void testCreateSitesCircums() {
-		CircumState circumState = new CircumState();
-		circumState.setHour(12);
-		circumState.setWorkDay(10);
-		circumState.setWeather(1);
-		circumState.setTemp(1);
-		
-		int id=9;
-		List<Integer> ls= siteAna.getSitesCircums(circumState,id);
-		
-		System.out.println(ls);
-	}
-	
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 }

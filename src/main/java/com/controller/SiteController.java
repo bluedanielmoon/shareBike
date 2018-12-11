@@ -11,12 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-<<<<<<< HEAD
 import com.execute.SiteAnalyze;
-=======
-import com.execute.SiteChooser;
-import com.execute.SiteChooser.MaxScore;
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 import com.pojo.Lnglat;
 import com.pojo.Point;
 import com.pojo.Site;
@@ -35,8 +30,7 @@ public class SiteController {
 	@Autowired
 	private SiteServ siteServ;
 	
-	@Autowired
-	private SiteChooser SiteChooser;
+	
 	
 	@GetMapping(value = "/all")
 	@ResponseBody
@@ -49,26 +43,14 @@ public class SiteController {
 	public Map<Double, Lnglat> getSiteScore(@RequestParam int rate,@RequestParam double flucSca,@RequestParam double countSca,
 			@RequestParam double poiSca) {
 		
-
-		MaxScore maxScore=SiteChooser.new MaxScore();
-		Map<String, Map<String, Object>> totalScore =SiteChooser.judgeScore(maxScore,flucSca,countSca,poiSca);
-		
-		return SiteChooser.chooseSite(totalScore,maxScore,rate,true);
+		return siteServ.getScores(rate, flucSca, countSca, poiSca);
 	}
 	
 	@GetMapping(value = "/cluster")
 	@ResponseBody
 	public List<Point> getClusterScore(@RequestParam int rate,@RequestParam double flucSca,@RequestParam double countSca,
-			@RequestParam double poiSca) {
-		
-		int divideDist=50;
-		int minDist=200;
-		MaxScore maxScore=SiteChooser.new MaxScore();
-		Map<String, Map<String, Object>> totalScore =SiteChooser.judgeScore(maxScore,flucSca,countSca,poiSca);
-		
-		Map<Double, Lnglat> choosed=SiteChooser.chooseSite(totalScore,maxScore,rate,false);
-		
-		return SiteChooser.mergeSites(choosed, minDist, divideDist);
+			@RequestParam double poiSca,@RequestParam int clusterDist) {
+		return siteServ.mergeSites(rate, flucSca, countSca, poiSca, clusterDist);
 	}
 	
 	@GetMapping(value = "/submit")
@@ -96,17 +78,8 @@ public class SiteController {
 	@GetMapping(value = "/updateInfo")
 	@ResponseBody
 	public boolean updateSiteInfo(@RequestParam int id,@RequestParam String siteName,@RequestParam int siteLimit,
-			@RequestParam int siteType,@RequestParam double poiSca) {
-		
-		int divideDist=50;
-		int minDist=200;
-		MaxScore maxScore=SiteChooser.new MaxScore();
-		Map<String, Map<String, Object>> totalScore =SiteChooser.judgeScore(maxScore,flucSca,countSca,poiSca);
-		
-		Map<Double, Lnglat> choosed=SiteChooser.chooseSite(totalScore,maxScore,rate,false);
-		List<Point> sites=SiteChooser.mergeSites(choosed, minDist, divideDist);
-		
-		return SiteChooser.writeToDatabase(sites);
+			@RequestParam int siteType) {
+		return siteServ.updateSite(id,siteName,siteLimit,siteType);
 	}
 
 	@GetMapping(value = "/add")
@@ -118,13 +91,8 @@ public class SiteController {
 
 	@PostMapping(value = "/delete")
 	@ResponseBody
-<<<<<<< HEAD
 	public boolean postSite(@RequestParam List<Integer> ids) {
 		return siteServ.patchDeleteSites(ids);
-=======
-	public boolean postSite(@RequestParam List<String> names) {
-		return siteServ.patchDeleteSites(names);
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	}
 
 

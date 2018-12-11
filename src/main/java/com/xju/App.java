@@ -5,9 +5,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import com.pojo.GaodePath;
-import com.util.CopyUtil;
-
 @SpringBootApplication
 public class App {
 	

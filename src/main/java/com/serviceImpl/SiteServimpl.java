@@ -1,16 +1,12 @@
 package com.serviceImpl;
 
 import java.util.List;
-<<<<<<< HEAD
 import java.util.Map;
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dao.SiteDao;
-<<<<<<< HEAD
 import com.execute.SiteAnalyze;
 import com.execute.SiteChooser;
 import com.execute.SiteTypeJudger;
@@ -18,8 +14,6 @@ import com.execute.SiteChooser.MaxScore;
 import com.helper.SiteHelper;
 import com.pojo.Lnglat;
 import com.pojo.Point;
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 import com.pojo.Site;
 import com.service.SiteServ;
 
@@ -29,7 +23,6 @@ public class SiteServimpl implements SiteServ {
 	@Autowired
 	private SiteDao siteDao;
 	
-<<<<<<< HEAD
 	@Autowired
 	private SiteChooser SiteChooser;
 	
@@ -42,27 +35,17 @@ public class SiteServimpl implements SiteServ {
 	@Autowired
 	private SiteTypeJudger judger;
 	
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	public SiteServimpl(SiteDao userDao) {
 		this.siteDao = userDao;
 	}
 
 	@Override
 	public Site getSiteById(int id) {
-<<<<<<< HEAD
-=======
-		// TODO Auto-generated method stub
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 		return siteDao.getSite(id);
 	}
 
 	@Override
 	public List<Site> getAllSites() {
-<<<<<<< HEAD
-=======
-		// TODO Auto-generated method stub
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 		return siteDao.getAll();
 	}
 
@@ -83,7 +66,6 @@ public class SiteServimpl implements SiteServ {
 		}
 		return false;
 	}
-<<<<<<< HEAD
 	
 	@Override
 	public boolean updateSite(int id,double lng, double lat) {
@@ -101,8 +83,6 @@ public class SiteServimpl implements SiteServ {
 		site.setType(1);
 		return updateSite(site);
 	}
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 	@Override
 	public boolean deleteSite(int id) {
@@ -125,11 +105,7 @@ public class SiteServimpl implements SiteServ {
 	}
 
 	@Override
-<<<<<<< HEAD
 	public boolean patchDeleteSites(List<Integer> names) {
-=======
-	public boolean patchDeleteSites(List<String> names) {
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 		if (names.size() > 0) {
 			int change = siteDao.deleteSites(names);
 			if (change > 0) {
@@ -147,7 +123,6 @@ public class SiteServimpl implements SiteServ {
 		return addSite(site);
 	}
 
-<<<<<<< HEAD
 	@Override
 	public boolean clearTable() {
 		siteDao.truncateSite();
@@ -202,6 +177,4 @@ public class SiteServimpl implements SiteServ {
 		return true;
 	}
 
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 }

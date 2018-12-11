@@ -100,6 +100,7 @@ public class CoordsUtil {
 		area.setEndLat(latDown);
 		return area;
 	}
+	
 
 	public static boolean isInArea(BikeArea area, double lng, double lat) {
 		double startLat = area.getStartLat();

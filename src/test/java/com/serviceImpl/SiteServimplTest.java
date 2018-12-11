@@ -1,10 +1,5 @@
 package com.serviceImpl;
 
-<<<<<<< HEAD
-=======
-import static org.junit.Assert.*;
-
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,13 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-<<<<<<< HEAD
 import com.pojo.Site;
-=======
-import com.pojo.Dispatcher;
-import com.pojo.Site;
-import com.pojo.User;
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 import com.service.SiteServ;
 import com.xju.App;
 
@@ -75,7 +64,6 @@ public class SiteServimplTest {
 	@Test
 	public void testPatchDeleteSites() {
 		List<Site> ls=siteServ.getAllSites();
-<<<<<<< HEAD
 		List<Integer> names=new ArrayList<>();
 		for(Site u:ls) {
 			names.add(u.getId());
@@ -87,13 +75,5 @@ public class SiteServimplTest {
 	public void testClear() {
 		siteServ.clearTable();
 	}
-=======
-		List<String> names=new ArrayList<>();
-		for(Site u:ls) {
-			names.add(u.getName());
-		}
-		siteServ.patchDeleteSites(names);
-	}
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 }

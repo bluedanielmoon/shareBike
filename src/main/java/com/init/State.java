@@ -20,7 +20,6 @@ public class State {
 		public static int MAN_SPEED;
 		public static int MAN_CAPACITY=1;
 		
-<<<<<<< HEAD
 		//任务类型，移动任务，搬运任务
 		public static int MOVE_TASK=1;
 		public static int LOAD_TASK=2;
@@ -39,17 +38,6 @@ public class State {
 		//某个点的单车是增长还是减少
 		public static int GROW_TREND=1;
 		public static int REDUCE_TREND=2;
-=======
-		public static int MOVE_TASK=1;
-		public static int LOAD_TASK=2;
-		
-		public static int LOAD=1;
-		public static int UNLOAD=2;
-		
-		public static int MIN_SITE_BIKE_COUNT=3;
-		
-		public static int LOAD_UNIT_TIME=10;
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 		
 
 	    
@@ -168,7 +156,6 @@ public class State {
 		public static void setMAN_CAPACITY(int mAN_CAPACITY) {
 			MAN_CAPACITY = mAN_CAPACITY;
 		}
-<<<<<<< HEAD
 
 		public static int getMOVE_TASK() {
 			return MOVE_TASK;
@@ -245,8 +232,6 @@ public class State {
 		public static void setAREA(BikeArea aREA) {
 			AREA = aREA;
 		}
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 		
 		
 

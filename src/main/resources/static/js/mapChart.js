@@ -413,7 +413,6 @@
         }
 
     }
-<<<<<<< HEAD
     
     var siteChangeChart;
     var siteChangeOption = {
@@ -532,9 +531,6 @@
             }
 
         }
-=======
-
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
     var dailyChart;
 
@@ -683,7 +679,6 @@
         			rate:1,
         			flucSca:60,
         			countSca:30,
-<<<<<<< HEAD
         			poiSca:10,
         			clusterDist:200,
         	}
@@ -691,12 +686,6 @@
             loadSiteClusterData(siteInit,setSiteShow);
             
            
-=======
-        			poiSca:10	
-        	}
-            loadSiteScoreData(siteInit,setSiteShow);
-            loadSiteClusterData(siteInit);
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
             
             siteInited = true;
             
@@ -732,11 +721,8 @@
                 });
             });
             
-<<<<<<< HEAD
             $("#site-cluster-Dist").val(siteInit.clusterDist);
             
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
             $("#submit-site").click(function(){
             	var slidVal=$(siteSlider).val();
             	
@@ -745,25 +731,16 @@
             	var scale1=scaleVal[0];
             	var scale2=scaleVal[1]-scale1;
             	var scale3=100-scaleVal[1];
-<<<<<<< HEAD
             	
             	var clusterDist=$("#site-cluster-Dist").val();
             
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
             	var params={
             			rate:slidVal,
             			flucSca:scale1,
             			countSca:scale2,
-<<<<<<< HEAD
             			poiSca:scale3,
             			clusterDist:clusterDist
             	}
-=======
-            			poiSca:scale3	
-            	}
-            	console.log(params);
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
             	if(swit.element.checked){
             		loadSiteScoreData(params,setSiteShow);
             		loadSiteClusterData(params);
@@ -779,21 +756,14 @@
             	var scale1=scaleVal[0];
             	var scale2=scaleVal[1]-scale1;
             	var scale3=100-scaleVal[1];
-<<<<<<< HEAD
             	var clusterDist=$("#site-cluster-Dist").val();
                 
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
             	var params={
             			rate:slidVal,
             			flucSca:scale1,
             			countSca:scale2,
-<<<<<<< HEAD
             			poiSca:scale3,
             			clusterDist:clusterDist
-=======
-            			poiSca:scale3	
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
             	}
             	mapUtil.link.getData("/site/submit", true,params , function(data) {
             		if (data) {
@@ -1047,15 +1017,12 @@
         showSite: function() {
         	initSiteMap();
         },
-<<<<<<< HEAD
         showSiteChange: function(id) {
         	siteChangeOps.show(id);
         },
         showSiteChangeById: function(id) {
         	siteChangeOps.showByID(id);
         },
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
         showVaria: function(time) {
             initVariaMap();    
         },

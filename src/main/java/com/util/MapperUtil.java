@@ -7,15 +7,21 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.FormatFeature;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SequenceWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.type.MapLikeType;
+import com.fasterxml.jackson.databind.type.TypeBindings;
+import com.pojo.Varia;
 
 public class MapperUtil {
 	/**
@@ -99,7 +105,6 @@ public class MapperUtil {
 		return null;
 	}
 	
-
 	/**
 	 * 把栅格地图单车的结果写入文件
 	 * 
@@ -184,7 +189,6 @@ public class MapperUtil {
 			JavaType javaType = mapper.getTypeFactory().constructMapLikeType(HashMap.class, intType, mapType);
 			mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 		
-
 			ObjectWriter writer = mapper.writerFor(javaType);
 			SequenceWriter sequenceWriter = writer.writeValues(file);
 			sequenceWriter.write(data);
@@ -214,6 +218,7 @@ public class MapperUtil {
 		return null;
 		
 	}
+	
 	public static Map<Integer, Map<Integer, Object>> readIntMapIntMapData(String fileName) {
 		ObjectMapper mapper = new ObjectMapper();
 		Path path = Paths.get(fileName);
@@ -233,6 +238,7 @@ public class MapperUtil {
 		return null;
 		
 	}
+	
 	/**
 	 * 把栅格地图单车的结果写入文件
 	 * 

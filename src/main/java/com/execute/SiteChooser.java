@@ -1,6 +1,5 @@
 package com.execute;
 
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -11,9 +10,11 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.poi.ConnectManager;
 import com.pojo.AreaScore;
 import com.pojo.BikeArea;
 import com.pojo.BikeHeader;
@@ -30,6 +31,7 @@ import com.serviceImpl.PoiLocal;
 import com.util.CoordsUtil;
 import com.util.FilesUtil;
 import com.util.MapperUtil;
+import com.util.PoiNameDecoder;
 
 @Component
 public class SiteChooser {
@@ -297,8 +299,9 @@ public class SiteChooser {
 	 * 对根据分数阈值选取的若干个点进行组合，形成分散分布的点
 	 * @param sites
 	 */
-
-	public List<Point> mergeSites(Map<Double, Lnglat> sites,int compareDist,int divideDist) {
+	public List<Point> mergeSites(Map<Double, Lnglat> sites,int compareDist) {
+		int divideDist=50;
+		
 		MapHelper helper=new MapHelper();
 		BikeArea area=State.getArea();
 		List<BikePos> list= new ArrayList<>();
@@ -323,11 +326,13 @@ public class SiteChooser {
 		return centers;
 	}
 	
-	public boolean writeToDatabase(List<Point> sites) {
+	public List<Site> writeToDatabase(List<Point> sites) {
 		
+		PoiNameDecoder namer=new PoiNameDecoder();
+		CloseableHttpClient client=ConnectManager.getClient();
 		double[] lnglat=null;
 		if(sites.size()==0) {
-			return false;
+			return null;
 		}
 		List<Site>  lSites=new ArrayList<>();
 		for(Point p:sites) {
@@ -344,7 +349,7 @@ public class SiteChooser {
 		siteServ.clearTable();
 		siteServ.patchaddSites(lSites);
 		
-		return siteServ.patchaddSites(lSites);
+		return lSites;
 		
 	}
 

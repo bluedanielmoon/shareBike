@@ -1,9 +1,6 @@
 package com.serviceImpl;
 
-<<<<<<< HEAD
 import java.io.IOException;
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -11,31 +8,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-<<<<<<< HEAD
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.init.State;
-=======
-import org.springframework.stereotype.Service;
-
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 import com.init.Storage;
 import com.pojo.Dispatcher;
 import com.pojo.SimuTask;
 import com.pojo.Site;
-<<<<<<< HEAD
 import com.service.DispatcherServ;
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 import com.simu.Simulator;
 
 @Service
 public class SimuServImpl {
 
-<<<<<<< HEAD
 	@Autowired
 	private DispatcherServ dispatcherServ;
 	
@@ -55,40 +43,27 @@ public class SimuServImpl {
 	}
 
 	public Map<String, Object> initAndStart(String carPos) {
-=======
-	
-
-	public Map<String, Object> initAndStart() {
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 		Simulator simulator = new Simulator();
 		UUID sId = UUID.randomUUID();
 
 		List<Site> sites = new ArrayList<>();
-<<<<<<< HEAD
 		
 		List<Dispatcher> dispatchers=setDispatPos(carPos);
 		
-=======
-		List<Dispatcher> dispatchers = new ArrayList<>();
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 		Date startTime = new Date();
 		Date endTime = new Date();
 		int timeSpeed = 1;
 		List<SimuTask>  initTasks=simulator.init(sites, dispatchers, startTime, endTime, timeSpeed);
 
-<<<<<<< HEAD
 		new Thread(simulator).start();
 		
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 		Storage.simulers.put(sId.toString(), simulator);
 		Map<String, Object> result=new HashMap<>();
 		result.put("uuid", sId);
 		result.put("list", initTasks);
 		return result;
 	}
-<<<<<<< HEAD
 	
 	public SimuTask getNextJob(int dispID,String simuID) {
 		
@@ -101,18 +76,12 @@ public class SimuServImpl {
 		}
 		return null;
 	}
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 
 	public boolean pause(String id) {
 		if (Storage.simulers.containsKey(id)) {
 			Simulator sim = Storage.simulers.get(id);
-<<<<<<< HEAD
 			//sim.pause();
-=======
-			sim.pause();
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 			return true;
 		}
 		return false;
@@ -121,11 +90,7 @@ public class SimuServImpl {
 	public boolean resume(String id) {
 		if (Storage.simulers.containsKey(id)) {
 			Simulator sim = Storage.simulers.get(id);
-<<<<<<< HEAD
 			//sim.resume();
-=======
-			sim.resume();
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 			return true;
 		}
 		return false;
@@ -134,18 +99,13 @@ public class SimuServImpl {
 	public boolean stop(String id) {
 		if (Storage.simulers.containsKey(id)) {
 			Simulator sim = Storage.simulers.get(id);
-<<<<<<< HEAD
 			//sim.stop();
-=======
-			sim.stop();
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 			Storage.simulers.remove(id);
 			return true;
 		}
 		return false;
 	}
 
-<<<<<<< HEAD
 	
 	private List<Dispatcher> setDispatPos(String data) {
 		
@@ -192,6 +152,4 @@ public class SimuServImpl {
 
 
 	
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 }

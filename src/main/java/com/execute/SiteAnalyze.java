@@ -2,18 +2,12 @@ package com.execute;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-<<<<<<< HEAD
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-=======
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -32,11 +26,8 @@ import com.service.SiteServ;
 import com.util.CoordsUtil;
 import com.util.FilesUtil;
 import com.util.MapperUtil;
-<<<<<<< HEAD
 import com.util.MathUtil;
 
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 /**
  * 对于数据，提取工作日，天气，温度等信息
  * 
@@ -44,10 +35,7 @@ import com.util.MathUtil;
  *
  */
 
-<<<<<<< HEAD
 @Component
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 public class SiteAnalyze {
 
 	int workDay = 1;
@@ -77,11 +65,7 @@ public class SiteAnalyze {
 		}
 	}
 
-<<<<<<< HEAD
 	private CircumState analyzeHeader(BikeHeader header) {
-=======
-	public CircumState analyzeHeader(BikeHeader header) {
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 		Date date = header.getStartTime();
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(date);
@@ -107,11 +91,7 @@ public class SiteAnalyze {
 	 * @param sitesInfos
 	 * @param count
 	 */
-<<<<<<< HEAD
 	private void giteSiteBikes(List<BikePos> bikes, Map<Integer, Map<String, Object>> sitesInfos, int count) {
-=======
-	public void giteSiteBikes(List<BikePos> bikes, Map<Integer, Map<String, Object>> sitesInfos, int count) {
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 		for (BikePos bike : bikes) {
 
@@ -133,11 +113,7 @@ public class SiteAnalyze {
 	 * @param sitesInfos 包含site,area,bikes
 	 * @param sites
 	 */
-<<<<<<< HEAD
 	private void initSiteAreas(Map<Integer, Map<String, Object>> sitesInfos, List<Site> sites, int count) {
-=======
-	public void initSiteAreas(Map<Integer, Map<String, Object>> sitesInfos, List<Site> sites, int count) {
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 		int dist = 50;
 		for (Site s : sites) {
 			Lnglat lnglat = new Lnglat(s.getLng(), s.getLat());
@@ -161,11 +137,7 @@ public class SiteAnalyze {
 	 * @param check24 是否检查文件符合24个小时采集数量
 	 * @return
 	 */
-<<<<<<< HEAD
 	public Map<Date, List<Map<String, Object>>> produceSiteBikes() {
-=======
-	public Map<Date, List<Map<String, Object>>> getFileHeaders() {
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 		Date[] range = FilesUtil.getFileRange();
 		Date start = range[0];
 		Date enDate = range[1];
@@ -189,7 +161,6 @@ public class SiteAnalyze {
 
 		initSiteAreas(sitesInfos, allSites, paths.size());
 
-<<<<<<< HEAD
 		Map<Date, CircumState> circums = new TreeMap<>(new Comparator<Date>() {
 
 			@Override
@@ -198,20 +169,13 @@ public class SiteAnalyze {
 				return o1.compareTo(o2);
 			}
 		});
-=======
-		List<CircumState> circums = new ArrayList<>();
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 		for (int i = 0; i < paths.size(); i++) {
 			Map<String, Object> bikeFile = FilesUtil.readFileInfo(paths.get(i).toString());
 
 			BikeHeader header = (BikeHeader) bikeFile.get("header");
 			CircumState circum = analyzeHeader(header);
-<<<<<<< HEAD
 
 			circums.put(header.getStartTime(), circum);
-=======
-			circums.add(circum);
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 			List<BikePos> bikes = (List<BikePos>) bikeFile.get("bikes");
 			giteSiteBikes(bikes, sitesInfos, i);
@@ -221,7 +185,6 @@ public class SiteAnalyze {
 
 		MapperUtil.writeIntMapMapData("./siteBikes.txt", sitesInfos);
 
-<<<<<<< HEAD
 		MapperUtil.writeMapData("./circumList.txt", circums, Date.class, CircumState.class);
 
 		return dateFiles;
@@ -351,60 +314,6 @@ public class SiteAnalyze {
 
 	public static void main(String[] args) {
 
-=======
-		MapperUtil.writeListData("./circumList.txt", circums, CircumState.class);
-
-		return dateFiles;
-	}
-	
-	public List<Integer> getSitesCircums(CircumState circumState, int id) {
-		
-		Map<Integer, Map<String, Object>> sitesInfo = MapperUtil.readIntMapMapData("./siteBikes.txt");
-
-		List<CircumState> list = MapperUtil.readListData("./circumList.txt", CircumState.class);
-		
-		Map<String, Object> site=sitesInfo.get(id);
-		
-		List<Integer> bikes=(List<Integer>) site.get("bikes");
-
-		List<Integer> result=new ArrayList<>();
-		for(int i=0;i<list.size();i++) {
-			CircumState cState=list.get(i);
-			if(cState.equals(circumState)) {
-				result.add(bikes.get(i));
-			}
-		}
-		return result;
-	}
-	
-	public List<Integer> getEveryDaySitesCircums(int id,int hour) {
-		
-		Map<Integer, Map<String, Object>> sitesInfo = MapperUtil.readIntMapMapData("./siteBikes.txt");
-
-		
-		Map<String, Object> site=sitesInfo.get(id);
-		
-		List<Integer> bikes=(List<Integer>) site.get("bikes");
-
-		List<Integer> result=new ArrayList<>();
-		
-		for(int i=hour;i<bikes.size();i+=24) {
-			result.add(bikes.get(i));
-		}
-		
-		return result;
-	}
-	
-	public static void main(String[] args) {
-		SiteAnalyze siteAnalyze= new SiteAnalyze();
-		for(int i=0;i<24;i++) {
-			List<Integer> ls=siteAnalyze.getEveryDaySitesCircums(266,i);
-			System.out.println(ls);
-		}
-		
-
-		
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	}
 
 	public void createDefaultCircums() {

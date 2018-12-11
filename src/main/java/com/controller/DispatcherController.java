@@ -42,7 +42,6 @@ public class DispatcherController {
 	@ResponseBody
 	public boolean getDispatcher(@RequestParam String dispName,@RequestParam int dispType) {
 		return dispServ.addDispatcher(dispName,dispType);
-
 	}
 
 	@PostMapping(value = "/delete")

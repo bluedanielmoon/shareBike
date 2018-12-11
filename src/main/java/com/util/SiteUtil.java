@@ -21,9 +21,7 @@ public class SiteUtil {
 	private static String query = "https://restapi.amap.com/v3/direction/driving?key=66c21b9e3069ae987bf520de3460ddb6&"
 			+ "extensions=all&output=JSON&strategy=0&";
 
-
 	private static String buildUrl(Lnglat origin, Lnglat destination) {
-
 		String from = origin.getLng() + "," + origin.getLat();
 		String dest = destination.getLng() + "," + destination.getLat();
 		String url = query + "origin=" + from + "&destination=" + dest;
@@ -39,7 +37,6 @@ public class SiteUtil {
 	}
 	
 	private GaodePath decodeResult(String result) {
-
 		GaodePath gPath=new GaodePath();
 		if(result==null||result=="") {
 			return null;
@@ -104,6 +101,7 @@ public class SiteUtil {
 		GaodePath path=sUtil.decodeResult(result);
 		return path;
 	}
+	
 	public GaodePath getPath(Lnglat from, Site destination,CloseableHttpClient client) {
 		Lnglat to=new Lnglat(destination.getLng(), destination.getLat());
 		String url=SiteUtil.buildUrl(from,to);
@@ -113,6 +111,7 @@ public class SiteUtil {
 		GaodePath path=sUtil.decodeResult(result);
 		return path;
 	}
+	
 	public GaodePath getPath(Site origin, Dispatcher destination,CloseableHttpClient client) {
 		Lnglat from=new Lnglat(origin.getLng(), origin.getLat());
 		Lnglat to=new Lnglat(destination.getLng(), destination.getLat());
