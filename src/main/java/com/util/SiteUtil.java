@@ -21,22 +21,16 @@ public class SiteUtil {
 	private static String query = "https://restapi.amap.com/v3/direction/driving?key=66c21b9e3069ae987bf520de3460ddb6&"
 			+ "extensions=all&output=JSON&strategy=0&";
 
-<<<<<<< HEAD
+
 	private static String buildUrl(Lnglat origin, Lnglat destination) {
-=======
-	public static String buildUrl(Lnglat origin, Lnglat destination) {
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
+
 		String from = origin.getLng() + "," + origin.getLat();
 		String dest = destination.getLng() + "," + destination.getLat();
 		String url = query + "origin=" + from + "&destination=" + dest;
 		return url;
 	}
 
-<<<<<<< HEAD
 	private String queryResult(String url,CloseableHttpClient client) {
-=======
-	public String queryResult(String url,CloseableHttpClient client) {
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 		String result = null;
 
@@ -44,11 +38,8 @@ public class SiteUtil {
 		return result;
 	}
 	
-<<<<<<< HEAD
 	private GaodePath decodeResult(String result) {
-=======
-	public GaodePath decodeResult(String result) {
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
+
 		GaodePath gPath=new GaodePath();
 		if(result==null||result=="") {
 			return null;
@@ -113,8 +104,6 @@ public class SiteUtil {
 		GaodePath path=sUtil.decodeResult(result);
 		return path;
 	}
-	
-<<<<<<< HEAD
 	public GaodePath getPath(Lnglat from, Site destination,CloseableHttpClient client) {
 		Lnglat to=new Lnglat(destination.getLng(), destination.getLat());
 		String url=SiteUtil.buildUrl(from,to);
@@ -124,9 +113,6 @@ public class SiteUtil {
 		GaodePath path=sUtil.decodeResult(result);
 		return path;
 	}
-	
-=======
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	public GaodePath getPath(Site origin, Dispatcher destination,CloseableHttpClient client) {
 		Lnglat from=new Lnglat(origin.getLng(), origin.getLat());
 		Lnglat to=new Lnglat(destination.getLng(), destination.getLat());
@@ -149,13 +135,4 @@ public class SiteUtil {
 		return path;
 	}
 
-<<<<<<< HEAD
-=======
-	public static void main(String[] args) {
-		Site s1=new Site("1", 2, 1, 108.916655,34.28073);
-		Site s2=new Site("2", 2, 1, 108.911261,34.259334);
-		SiteUtil sUtil=new SiteUtil();
-		
-	}
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 }

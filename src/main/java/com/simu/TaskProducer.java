@@ -60,7 +60,6 @@ public class TaskProducer {
 	private List<Site> sites;
 	private SiteServ siteServ;
 	private DispatcherServ dispatcherServ;
-<<<<<<< HEAD
 	private RouteServ routeServ;
 	private SiteAnalyze analyze;
 	private CloseableHttpClient client;
@@ -69,11 +68,6 @@ public class TaskProducer {
 	private SiteHelper siteHelper;
 	
 	private int NEAR_SITE_DIST=3000;
-=======
-	private SiteAnalyze analyze;
-	private CloseableHttpClient client;
-	private Set<Integer> movedSites;
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 	// site(site),area(BikeArea),bikes(List),est(int),fake(List)
 	private Map<Integer, Map<String, Object>> siteInfos;
@@ -82,7 +76,6 @@ public class TaskProducer {
 		dayFiles = new ArrayList<>();
 		siteServ = ApplicationContextProvider.getBean(SiteServ.class);
 		dispatcherServ = ApplicationContextProvider.getBean(DispatcherServ.class);
-<<<<<<< HEAD
 		routeServ=ApplicationContextProvider.getBean(RouteServ.class);
 		analyze = new SiteAnalyze();
 		movedSites = new HashSet<>();
@@ -224,27 +217,11 @@ public class TaskProducer {
 	public void init(Date time) {
 		dayFiles = FilesUtil.ListFilesInDay(time);
 		sites = siteServ.getAllSites();
-=======
+
 		analyze = new SiteAnalyze();
 		movedSites= new HashSet<>();
 	}
 
-	public LoadTask assignLoadTask(int nowHour,int nowSeconds,Dispatcher dispatcher, MoveTask moveTask) {
-		LoadTask loadTask = new LoadTask();
-		loadTask.setSite(moveTask.getTarget());
-		Site site=moveTask.getTarget();
-		LoadPlan lPlan=new LoadPlan();
-		
-		//根据现在的时间，站点，该站点的调度车,分析出该车辆在该站点该如何装卸
-		analyzeLoad(nowHour,nowSeconds,site,dispatcher,lPlan);
-		
-		loadTask.setType(lPlan.moveType);
-		loadTask.setLoadNum(lPlan.moveCount);
-		movedSites.add(moveTask.getTarget().getId());
-		
-		return loadTask;
-	}
-	
 
 	
 	public void analyzeLoad(int nowHour,int nowSeconds,Site site,Dispatcher dispatcher,LoadPlan lPlan) {

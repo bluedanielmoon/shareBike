@@ -35,12 +35,8 @@ public class SiteController {
 	@Autowired
 	private SiteServ siteServ;
 	
-<<<<<<< HEAD
-	
-=======
 	@Autowired
 	private SiteChooser SiteChooser;
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	
 	@GetMapping(value = "/all")
 	@ResponseBody
@@ -53,23 +49,16 @@ public class SiteController {
 	public Map<Double, Lnglat> getSiteScore(@RequestParam int rate,@RequestParam double flucSca,@RequestParam double countSca,
 			@RequestParam double poiSca) {
 		
-<<<<<<< HEAD
-		return siteServ.getScores(rate, flucSca, countSca, poiSca);
-=======
+
 		MaxScore maxScore=SiteChooser.new MaxScore();
 		Map<String, Map<String, Object>> totalScore =SiteChooser.judgeScore(maxScore,flucSca,countSca,poiSca);
 		
 		return SiteChooser.chooseSite(totalScore,maxScore,rate,true);
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	}
 	
 	@GetMapping(value = "/cluster")
 	@ResponseBody
 	public List<Point> getClusterScore(@RequestParam int rate,@RequestParam double flucSca,@RequestParam double countSca,
-<<<<<<< HEAD
-			@RequestParam double poiSca,@RequestParam int clusterDist) {
-		return siteServ.mergeSites(rate, flucSca, countSca, poiSca, clusterDist);
-=======
 			@RequestParam double poiSca) {
 		
 		int divideDist=50;
@@ -80,13 +69,11 @@ public class SiteController {
 		Map<Double, Lnglat> choosed=SiteChooser.chooseSite(totalScore,maxScore,rate,false);
 		
 		return SiteChooser.mergeSites(choosed, minDist, divideDist);
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	}
 	
 	@GetMapping(value = "/submit")
 	@ResponseBody
 	public boolean submitSites(@RequestParam int rate,@RequestParam double flucSca,@RequestParam double countSca,
-<<<<<<< HEAD
 			@RequestParam double poiSca,@RequestParam int clusterDist) {
 		return siteServ.writeBase(rate, flucSca, countSca, poiSca, clusterDist);
 		
@@ -109,10 +96,7 @@ public class SiteController {
 	@GetMapping(value = "/updateInfo")
 	@ResponseBody
 	public boolean updateSiteInfo(@RequestParam int id,@RequestParam String siteName,@RequestParam int siteLimit,
-			@RequestParam int siteType) {
-		return siteServ.updateSite(id,siteName,siteLimit,siteType);
-=======
-			@RequestParam double poiSca) {
+			@RequestParam int siteType,@RequestParam double poiSca) {
 		
 		int divideDist=50;
 		int minDist=200;
@@ -123,7 +107,6 @@ public class SiteController {
 		List<Point> sites=SiteChooser.mergeSites(choosed, minDist, divideDist);
 		
 		return SiteChooser.writeToDatabase(sites);
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	}
 
 	@GetMapping(value = "/add")

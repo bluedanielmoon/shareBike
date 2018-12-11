@@ -87,7 +87,6 @@ public class CoordsUtil {
 		return lnglat;
 	}
 	
-<<<<<<< HEAD
 	
 	public static BikeArea getCenterArea(Lnglat center,int dist) {
 		BikeArea area=new BikeArea();
@@ -101,23 +100,6 @@ public class CoordsUtil {
 		area.setEndLat(latDown);
 		return area;
 	}
-	
-=======
-	
-	public static BikeArea getCenterArea(Lnglat center,int dist) {
-		BikeArea area=new BikeArea();
-		double LngRight=getLng(center.getLat(), center.getLng(), dist, true);
-		double LngLeft=getLng(center.getLat(), center.getLng(), dist, false);
-		double latDown=getLat(center.getLat(), dist, true);
-		double latUp=getLat(center.getLat(), dist, false);
-		area.setStartLng(LngLeft);
-		area.setStartLat(latUp);
-		area.setEndLng(LngRight);
-		area.setEndLat(latDown);
-		return area;
-	}
-	
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 	public static boolean isInArea(BikeArea area, double lng, double lat) {
 		double startLat = area.getStartLat();
@@ -186,7 +168,6 @@ public class CoordsUtil {
 		for (BikePos bk : ls) {
 			double pow=Double.parseDouble(bk.getBikeID());
 			total+=pow;
-<<<<<<< HEAD
 		}
 		double temp=0;
 		for (BikePos bk : ls) {
@@ -208,34 +189,8 @@ public class CoordsUtil {
 			totalLat += bk.getLat();
 		}
 		return new double[] { totalLng / ls.size(), totalLat / ls.size() };
-=======
-		}
-		double temp=0;
-		for (BikePos bk : ls) {
-			double pow=Double.parseDouble(bk.getBikeID());
-			temp=pow/total;
-			totalLng += bk.getLng()*temp;
-			totalLat += bk.getLat()*temp;
-		}
-		System.out.println(totalLng);
-		System.out.println(totalLat);
-		return new double[] { totalLng ,totalLat  };
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
-	}
-	
-	public static double[] calcuLngLatCenter(List<Lnglat> ls) {
-		double totalLng = 0, totalLat = 0;
-
-<<<<<<< HEAD
-=======
-		for (Lnglat bk : ls) {
-			totalLng += bk.getLng();
-			totalLat += bk.getLat();
-		}
-		return new double[] { totalLng / ls.size(), totalLat / ls.size() };
 	}
 
->>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	public static int calcuDist(double lng1, double lat1, double lng2, double lat2) {
 		lng1 = ConvertDegreesToRadians(lng1);
 		lat1 = ConvertDegreesToRadians(lat1);
