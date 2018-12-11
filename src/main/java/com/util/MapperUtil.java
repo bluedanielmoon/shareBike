@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +70,41 @@ public class MapperUtil {
 		}
 	}
 	
+	public static <T, K> void writeMapData(String path, Map<K,T> data,Class keyClas, Class<T> clas) {
+		ObjectMapper mapper = new ObjectMapper();
+		File file = new File(path);
+		try {
+			JavaType javaType = mapper.getTypeFactory().constructParametricType(Map.class, keyClas, clas);
+			mapper.setDateFormat(new SimpleDateFormat("yyyy_MM_dd HH:mm"));
+			mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+			ObjectWriter writer = mapper.writerFor(javaType);
+			SequenceWriter sequenceWriter = writer.writeValues(file);
+			sequenceWriter.write(data);
+			sequenceWriter.close();
+
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+	
+	public static <T, K> Map<K, T> readMapData(String pathFile,Class<K> keyClas, Class<T> clas) {
+		ObjectMapper mapper = new ObjectMapper();
+		Path path = Paths.get(pathFile);
+		if (!Files.exists(path)) {
+			return null;
+		}
+		try {
+			JavaType javaType = mapper.getTypeFactory().constructParametricType(Map.class, keyClas, clas);
+			mapper.setDateFormat(new SimpleDateFormat("yyyy_MM_dd HH:mm"));
+			Map<K, T> maps = mapper.readValue(path.toFile(), javaType);
+			return maps;
+
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		return null;
+	}
+	
 	/**
 	 * 把栅格地图单车的结果写入文件
 	 * 
@@ -124,6 +161,34 @@ public class MapperUtil {
 			JavaType intType=mapper.getTypeFactory().constructType(Integer.class);
 			JavaType javaType = mapper.getTypeFactory().constructMapLikeType(HashMap.class, intType, mapType);
 			mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+		
+			ObjectWriter writer = mapper.writerFor(javaType);
+			SequenceWriter sequenceWriter = writer.writeValues(file);
+			sequenceWriter.write(data);
+			sequenceWriter.close();
+
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+	
+	public static <T> void writeIntMapIntMapData(String fileName, Map data,Class<T> clas) {
+		ObjectMapper mapper = new ObjectMapper();
+		Path path=Paths.get(fileName);
+		if(!Files.exists(path)) {
+			try {
+				Files.createFile(path);
+			} catch (IOException e) {
+				System.out.println("创建文件 "+fileName+" 失败");
+			}
+		}
+		File file = path.toFile();
+		try {
+			JavaType mapType=mapper.getTypeFactory().constructMapLikeType(HashMap.class, Integer.class, Object.class);
+			JavaType intType=mapper.getTypeFactory().constructType(Integer.class);
+			JavaType javaType = mapper.getTypeFactory().constructMapLikeType(HashMap.class, intType, mapType);
+			mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+		
 			ObjectWriter writer = mapper.writerFor(javaType);
 			SequenceWriter sequenceWriter = writer.writeValues(file);
 			sequenceWriter.write(data);
@@ -146,6 +211,26 @@ public class MapperUtil {
 			JavaType intType=mapper.getTypeFactory().constructType(Integer.class);
 			JavaType javaType = mapper.getTypeFactory().constructMapLikeType(HashMap.class, intType, mapType);
 			Map<Integer, Map<String, Object>> maps = mapper.readValue(path.toFile(), javaType);
+			return maps;
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		return null;
+		
+	}
+	
+	public static Map<Integer, Map<Integer, Object>> readIntMapIntMapData(String fileName) {
+		ObjectMapper mapper = new ObjectMapper();
+		Path path = Paths.get(fileName);
+		if (!Files.exists(path)) {
+			return null;
+		}
+
+		try {
+			JavaType mapType=mapper.getTypeFactory().constructMapLikeType(HashMap.class, Integer.class, Object.class);
+			JavaType intType=mapper.getTypeFactory().constructType(Integer.class);
+			JavaType javaType = mapper.getTypeFactory().constructMapLikeType(HashMap.class, intType, mapType);
+			Map<Integer, Map<Integer, Object>> maps = mapper.readValue(path.toFile(), javaType);
 			return maps;
 		} catch (IOException e1) {
 			e1.printStackTrace();

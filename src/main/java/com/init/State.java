@@ -20,15 +20,24 @@ public class State {
 		public static int MAN_SPEED;
 		public static int MAN_CAPACITY=1;
 		
+		//任务类型，移动任务，搬运任务
 		public static int MOVE_TASK=1;
 		public static int LOAD_TASK=2;
 		
+		//对某一站点搬运的策略，load--搬走，unload--往下搬,ignore--不管
 		public static int LOAD=1;
 		public static int UNLOAD=2;
+		public static int IGNORE=3;
 		
+		//某个地点单车小于等于这个数，不搬走
 		public static int MIN_SITE_BIKE_COUNT=3;
 		
-		public static int LOAD_UNIT_TIME=10;
+		//单位单车的装卸在时间--秒
+		public static int LOAD_UNIT_TIME=30;
+		
+		//某个点的单车是增长还是减少
+		public static int GROW_TREND=1;
+		public static int REDUCE_TREND=2;
 		
 
 	    
@@ -146,6 +155,82 @@ public class State {
 
 		public static void setMAN_CAPACITY(int mAN_CAPACITY) {
 			MAN_CAPACITY = mAN_CAPACITY;
+		}
+
+		public static int getMOVE_TASK() {
+			return MOVE_TASK;
+		}
+
+		public static void setMOVE_TASK(int mOVE_TASK) {
+			MOVE_TASK = mOVE_TASK;
+		}
+
+		public static int getLOAD_TASK() {
+			return LOAD_TASK;
+		}
+
+		public static void setLOAD_TASK(int lOAD_TASK) {
+			LOAD_TASK = lOAD_TASK;
+		}
+
+		public static int getLOAD() {
+			return LOAD;
+		}
+
+		public static void setLOAD(int lOAD) {
+			LOAD = lOAD;
+		}
+
+		public static int getUNLOAD() {
+			return UNLOAD;
+		}
+
+		public static void setUNLOAD(int uNLOAD) {
+			UNLOAD = uNLOAD;
+		}
+
+		public static int getIGNORE() {
+			return IGNORE;
+		}
+
+		public static void setIGNORE(int iGNORE) {
+			IGNORE = iGNORE;
+		}
+
+		public static int getMIN_SITE_BIKE_COUNT() {
+			return MIN_SITE_BIKE_COUNT;
+		}
+
+		public static void setMIN_SITE_BIKE_COUNT(int mIN_SITE_BIKE_COUNT) {
+			MIN_SITE_BIKE_COUNT = mIN_SITE_BIKE_COUNT;
+		}
+
+		public static int getLOAD_UNIT_TIME() {
+			return LOAD_UNIT_TIME;
+		}
+
+		public static void setLOAD_UNIT_TIME(int lOAD_UNIT_TIME) {
+			LOAD_UNIT_TIME = lOAD_UNIT_TIME;
+		}
+
+		public static int getGROW_TREND() {
+			return GROW_TREND;
+		}
+
+		public static void setGROW_TREND(int gROW_TREND) {
+			GROW_TREND = gROW_TREND;
+		}
+
+		public static int getREDUCE_TREND() {
+			return REDUCE_TREND;
+		}
+
+		public static void setREDUCE_TREND(int rEDUCE_TREND) {
+			REDUCE_TREND = rEDUCE_TREND;
+		}
+
+		public static void setAREA(BikeArea aREA) {
+			AREA = aREA;
 		}
 		
 		

@@ -19,6 +19,8 @@ public class CoordsUtil {
 //	private static double ConvertRadiansToDegrees(double radian) {
 //		return radian * 180.0 / Math.PI;
 //	}
+	
+	
 
 	public static void main(String[] args) {
 		//108.898072,34.275492

@@ -1,6 +1,5 @@
 package com.execute;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -11,15 +10,12 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.stereotype.Component;
-import org.springframework.test.context.junit4.SpringRunner;
 
+import com.poi.ConnectManager;
 import com.pojo.AreaScore;
-import com.pojo.Bike;
 import com.pojo.BikeArea;
 import com.pojo.BikeHeader;
 import com.pojo.BikePos;
@@ -32,12 +28,10 @@ import com.pojo.Varia;
 import com.service.PoiServ;
 import com.service.SiteServ;
 import com.serviceImpl.PoiLocal;
-import com.serviceImpl.PoiServImpl;
-import com.sun.org.apache.xerces.internal.impl.xpath.XPath.Step;
 import com.util.CoordsUtil;
 import com.util.FilesUtil;
 import com.util.MapperUtil;
-import com.xju.App;
+import com.util.PoiNameDecoder;
 
 @Component
 public class SiteChooser {
@@ -305,7 +299,9 @@ public class SiteChooser {
 	 * 对根据分数阈值选取的若干个点进行组合，形成分散分布的点
 	 * @param sites
 	 */
-	public List<Point> mergeSites(Map<Double, Lnglat> sites,int compareDist,int divideDist) {
+	public List<Point> mergeSites(Map<Double, Lnglat> sites,int compareDist) {
+		int divideDist=50;
+		
 		MapHelper helper=new MapHelper();
 		BikeArea area=State.getArea();
 		List<BikePos> list= new ArrayList<>();
@@ -330,20 +326,30 @@ public class SiteChooser {
 		return centers;
 	}
 	
-	public boolean writeToDatabase(List<Point> sites) {
+	public List<Site> writeToDatabase(List<Point> sites) {
 		
+		PoiNameDecoder namer=new PoiNameDecoder();
+		CloseableHttpClient client=ConnectManager.getClient();
 		double[] lnglat=null;
 		if(sites.size()==0) {
-			return false;
+			return null;
 		}
 		List<Site>  lSites=new ArrayList<>();
 		for(Point p:sites) {
 			lnglat=p.getLnglat();
 			lnglat=CoordsUtil.turnGaodeCoord(lnglat[0], lnglat[1]);
-			Site site=new Site("123", 20, 1, lnglat[0], lnglat[1]);
+			String siteName=namer.getPoiName(lnglat, client);
+			if(siteName==null) {
+				siteName="未知";
+			}
+			Site site=new Site(siteName, 20, 1, lnglat[0], lnglat[1]);
+			
 			lSites.add(site);
 		}
-		return siteServ.patchaddSites(lSites);
+		siteServ.clearTable();
+		siteServ.patchaddSites(lSites);
+		
+		return lSites;
 		
 	}
 

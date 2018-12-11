@@ -36,11 +36,13 @@ public class MoveTask extends SimuTask{
 	public void setTarget(Site target) {
 		this.target = target;
 	}
-	
-	
-	public static void main(String[] args) {
-		MoveTask moveTask=new MoveTask();
-		moveTask.getWorkTime();
+
+	@Override
+	public String toString() {
+		return "MoveTask [start=" + start + ", end=" + end + ", target=" + target + ", path=" + path + "]";
 	}
+	
+	
+	
 	
 }

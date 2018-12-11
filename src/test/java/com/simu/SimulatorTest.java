@@ -1,11 +1,8 @@
 package com.simu;
 
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,28 +17,9 @@ import com.xju.App;
 @SpringBootTest(classes = App.class)
 public class SimulatorTest {
 
-//	@Test
-//	public void testRun() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testPause() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testResume() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testStop() {
-//		fail("Not yet implemented");
-//	}
-
+	
 	@Test
-	public void testInit() {
+	public void testStartSimu() {
 		Simulator simulator = new Simulator();
 
 		List<Site> sites = new ArrayList<>();
@@ -50,8 +28,8 @@ public class SimulatorTest {
 		Date endTime = new Date();
 		int timeSpeed = 1;
 		simulator.init(sites, dispatchers, startTime, endTime, timeSpeed);
-		new Thread(simulator).start();
-	}
 
+		simulator.startSimu();		
+	}
 
 }

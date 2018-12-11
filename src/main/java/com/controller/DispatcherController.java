@@ -40,8 +40,8 @@ public class DispatcherController {
 
 	@GetMapping(value = "/add")
 	@ResponseBody
-	public boolean getDispatcher(@RequestParam String name,@RequestParam int type) {
-		return dispServ.addDispatcher(name,type);
+	public boolean getDispatcher(@RequestParam String dispName,@RequestParam int dispType) {
+		return dispServ.addDispatcher(dispName,dispType);
 	}
 
 	@PostMapping(value = "/delete")
@@ -50,5 +50,10 @@ public class DispatcherController {
 		return dispServ.deleteDispatcher(id);
 	}
 
+	@PostMapping(value = "/deletePatch")
+	@ResponseBody
+	public boolean postUser(@RequestParam List<String> names) {
+		return dispServ.patchDeleteDispatchers(names);
+	}
 
 }

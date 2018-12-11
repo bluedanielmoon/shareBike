@@ -413,7 +413,124 @@
         }
 
     }
+    
+    var siteChangeChart;
+    var siteChangeOption = {
+    	    xAxis: {
+    	        type: 'category',
+    	        data: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
+    	    },
+    	    yAxis: {
+    	        type: 'value'
+    	    },
+    	    series: [{
+    	        data: [],
+    	        type: 'line'
+    	    }]
+    	};
+    var siteChangeTable = $("#siteChange-list");
+    var siteChangeOps = {
+            inited: false,
+            showByID:function(id){
+            	if (!this.inited) {
+            		this.show(id);
+            	}else{
+            		this.loadData(id);
+            	}
+            },
+            loadData:function(id){
+            	mapUtil.link.getData("/site/change", true, {
+              		 siteID:id
+              	 	}, function(data) {
+                       if (data) {
+                      	 siteChangeChart.setOption({                           
+                             series: [{
+                                 name: '单车总数',
+                                 data: data
+                             }]
+                         });
+                       }
+                   });
+            },
+            getRow:function(row,ele){
+            	siteChangeOps.loadData(row.id);
+            },
+            show: function(id) {
+                if (!this.inited) {
+                    console.log('加载折线图');
+                    siteChangeChart = echarts.init($("#chart-siteChange")[0]);
+                    siteChangeChart.setOption(siteChangeOption);
+                    if(id){
+                    	this.loadData(id);
+                    }
+                    siteChangeTable.bootstrapTable({
+                        striped: true, // 是否显示行间隔色
+                        cache: false, // 是否使用缓存，默认为true，所以一般情况下需要设置一下这个属性（*）
+                        sortable: false, // 是否启用排序
+                        sortOrder: "asc", // 排序方式
+                        sidePagination: "client", // 分页方式：client///server,大爷的，如果服务器分页，数据要放到rows
+                        pageSize: 5, // 每页的记录行数（*）
+                        pagination: true, // 是否显示分页（*）
+                        minimumCountColumns: 2, // 最少允许的列数
+                        clickToSelect: true, // 是否启用点击选中行
+                        checkboxHeader: false, // 隐藏前面的复选框
+                        uniqueId: "name", // 每一行的唯一标识，一般为主键列
+                        icons: {
+                            refresh: 'glyphicon-refresh icon-refresh',
+                            toggle: 'glyphicon-list-alt icon-list-alt',
+                            columns: 'glyphicon-th icon-th'
+                        },
+                        onClickRow: siteChangeOps.getRow,
+                        columns: [{
+                            field: 'name',
+                            title: '站点名称'
+                        }, {
+                            field: 'volume',
+                            title: '容量'
+                        }],
+                    });
+                    mapUtil.link.getData("/site/all", true, {}, function(data) {
+                        if (data) {
+                            var list = [];
+                            data.forEach(function(ele, index) {
+                                list.push({
+//                                	 "index":count++,
+                                    "id": ele.id,
+                                    "name": ele.name,
+                                    "type": ele.type,
+                                    "volume":ele.volume,
+                                });
+                            });
+                            siteChangeTable.bootstrapTable('load', list);
+                        }
+                    });
+                   
+                    
+//                    $("#submit-site-change").click(function(){
+//                    	 var siteID=$("#site-change-id").val();
+//                    	 console.log(siteID);
+//                    	 mapUtil.link.getData("/site/change", true, {
+//                    		 siteID:siteID
+//                    	 }, function(data) {
+//                             console.log(data);
+//
+//                    		 siteChangeChart.setOption({                           
+//                                 series: [{
+//                                     // 根据名字对应到相应的系列
+//                                     name: '单车总数',
+//                                     data: data
+//                                 }]
+//                             });
+//
+//
+//                         });
+//                    });
+                    this.inited = true;
+                }
 
+            }
+
+        }
 
     var dailyChart;
 
@@ -562,10 +679,13 @@
         			rate:1,
         			flucSca:60,
         			countSca:30,
-        			poiSca:10	
+        			poiSca:10,
+        			clusterDist:200,
         	}
-            loadSiteScoreData(siteInit,setSiteShow);
-            loadSiteClusterData(siteInit);
+            loadSiteScoreData(siteInit);
+            loadSiteClusterData(siteInit,setSiteShow);
+            
+           
             
             siteInited = true;
             
@@ -601,6 +721,8 @@
                 });
             });
             
+            $("#site-cluster-Dist").val(siteInit.clusterDist);
+            
             $("#submit-site").click(function(){
             	var slidVal=$(siteSlider).val();
             	
@@ -609,13 +731,16 @@
             	var scale1=scaleVal[0];
             	var scale2=scaleVal[1]-scale1;
             	var scale3=100-scaleVal[1];
+            	
+            	var clusterDist=$("#site-cluster-Dist").val();
+            
             	var params={
             			rate:slidVal,
             			flucSca:scale1,
             			countSca:scale2,
-            			poiSca:scale3	
+            			poiSca:scale3,
+            			clusterDist:clusterDist
             	}
-            	console.log(params);
             	if(swit.element.checked){
             		loadSiteScoreData(params,setSiteShow);
             		loadSiteClusterData(params);
@@ -631,11 +756,14 @@
             	var scale1=scaleVal[0];
             	var scale2=scaleVal[1]-scale1;
             	var scale3=100-scaleVal[1];
+            	var clusterDist=$("#site-cluster-Dist").val();
+                
             	var params={
             			rate:slidVal,
             			flucSca:scale1,
             			countSca:scale2,
-            			poiSca:scale3	
+            			poiSca:scale3,
+            			clusterDist:clusterDist
             	}
             	mapUtil.link.getData("/site/submit", true,params , function(data) {
             		if (data) {
@@ -888,6 +1016,12 @@
         },
         showSite: function() {
         	initSiteMap();
+        },
+        showSiteChange: function(id) {
+        	siteChangeOps.show(id);
+        },
+        showSiteChangeById: function(id) {
+        	siteChangeOps.showByID(id);
         },
         showVaria: function(time) {
             initVariaMap();    

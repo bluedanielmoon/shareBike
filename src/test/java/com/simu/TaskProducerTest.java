@@ -3,14 +3,13 @@ package com.simu;
 import static org.junit.Assert.fail;
 
 import java.util.Date;
-import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.pojo.SimuTask;
+import com.init.State;
 import com.pojo.Site;
 import com.util.DateUtil;
 import com.xju.App;
@@ -18,6 +17,8 @@ import com.xju.App;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = App.class)
 public class TaskProducerTest {
+	
+	
 
 	@Test
 	public void testTaskProducer() {
@@ -30,9 +31,13 @@ public class TaskProducerTest {
 		
 		Date oneDay=DateUtil.parseToDay("2018_11_1");
 		int startHour=7;
-		tasker.initJobs(oneDay);
-		List<SimuTask> tasks= tasker.produceStartJobs(startHour);
-		System.out.println(tasks);
+		
+	}
+	@Test
+	public void testCalcuTimeSpan() {
+		TaskProducer tProducer=new TaskProducer();
+		int sends=tProducer.calcuTimeSpan(1000, State.TRUCK_TYPE);
+		System.out.println(sends);
 	}
 
 	@Test
@@ -64,10 +69,9 @@ public class TaskProducerTest {
 	public void testEstimate() {
 		Date oneDay=DateUtil.parseToDay("2018_11_1");
 		TaskProducer producer=new TaskProducer();
-		producer.initJobs(oneDay);
+//		producer.initJobs(oneDay);
 		Site site= new Site();
 		site.setId(279);
-		producer.estimate(site,7);
 	}
 
 	@Test

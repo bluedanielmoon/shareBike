@@ -322,6 +322,9 @@ share.chart = {
         $("#console-chart a[href='#tab-site']").click(function(event) {
         	mapChart.showSite();
         });
+        $("#console-site a[href='#tab-siteChange']").click(function(event) {
+        	mapChart.showSiteChange();
+        });
         $("#console-chart a[href='#tab-daily']").click(function(event) {
         	mapChart.showDaily();
         });
@@ -433,6 +436,8 @@ $(document).ready(function() {
     mapLayer.showMod("bikePos");
 
     share.chart.bindTab();
+    
+    mapChart.showSiteChange();
 
 
     map.on('hotspotclick', function(argus) {

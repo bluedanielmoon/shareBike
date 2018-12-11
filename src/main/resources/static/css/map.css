@@ -9,6 +9,15 @@
 #poi-map{
 	height:400px;
 }
+#forbid-map{
+	height:500px;
+}
+#siteMan-map{
+	height:500px;
+}
+.siteMan-table{
+	height:400px;
+}
 .chart-varia{
 	width:800px;
 	height:600px;

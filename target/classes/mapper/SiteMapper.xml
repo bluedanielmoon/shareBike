@@ -46,16 +46,18 @@
 		lat = #{lat}  where id = #{id}
 	</update>
 	
-	
+	<update id="truncateSite">
+		truncate table sites
+	</update>
 
 	<delete id="deleteSite" parameterType="int">
 		delete from sites where id = #{id}
 	</delete>
 	
 	<delete id="deleteSites" parameterType="java.util.List">
-		delete from sites where name in 
-        <foreach collection="list" item="name" separator="," open="(" close=")">
-            #{name}
+		delete from sites where id in 
+        <foreach collection="list" item="id" separator="," open="(" close=")">
+            #{id}
         </foreach>
 	</delete>
 

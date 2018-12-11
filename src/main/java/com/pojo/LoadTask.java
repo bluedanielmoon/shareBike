@@ -41,6 +41,11 @@ public class LoadTask extends SimuTask{
 	public void setWorkTime(int workTime) {
 		this.workTime = workTime;
 	}
+
+	@Override
+	public String toString() {
+		return "LoadTask [site=" + site + ", type=" + type + ", loadNum=" + loadNum + ", workTime=" + workTime + "]";
+	}
 	
 	
 	

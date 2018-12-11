@@ -20,34 +20,32 @@ public class SiteAnalyzeTest {
 	@Autowired
 	private SiteAnalyze siteAna;
 
-	@Test
-	public void testGetFileHeaders() {
-		siteAna.getFileHeaders();
-	}
-//
+	
 //	@Test
-//	public void testGo() {
-//		siteAna.go();
-//	}
-//	
-//	@Test
-//	public void testCreateDefaultCircums() {
-//		siteAna.createDefaultCircums();
+//	public void testProduce() {
+//		siteAna.produceSiteBikes();
 //	}
 	
 	@Test
-	public void testCreateSitesCircums() {
-		CircumState circumState = new CircumState();
-		circumState.setHour(12);
-		circumState.setWorkDay(10);
-		circumState.setWeather(1);
-		circumState.setTemp(1);
-		
-		int id=9;
-		List<Integer> ls= siteAna.getSitesCircums(circumState,id);
-		
-		System.out.println(ls);
+	public void testanalyzeSiteChange() {
+		siteAna.analyzeSiteChange(1);
 	}
+	
+	
+
+//	@Test
+//	public void testCreateSitesCircums() {
+//		CircumState circumState = new CircumState();
+//		circumState.setHour(12);
+//		circumState.setWorkDay(10);
+//		circumState.setWeather(1);
+//		circumState.setTemp(1);
+//		
+//		int id=9;
+//		List<Integer> ls= siteAna.getSitesCircums(circumState,id);
+//		
+//		System.out.println(ls);
+//	}
 	
 
 }

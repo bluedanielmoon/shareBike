@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dao.ForbidDao">
+
+	<resultMap id="forbidMap" type="com.pojo.ForbidArea">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="name" property="name" jdbcType="VARCHAR" />
+		<result column="path" property="path"
+		jdbcType="VARCHAR"/>
+	</resultMap>
+
+	<select id="getArea" parameterType="int" resultMap="forbidMap">
+		SELECT * FROM forbid_area WHERE id = #{id}
+	</select>
+
+	<select id="getAll" resultMap="forbidMap">
+		SELECT * FROM forbid_area
+	</select>
+
+	<!-- 因为ID是自增长的，在插入中可以省略ID，通过useGenerated keyProperty来指定id 使用自增长策略 -->
+	<insert id="addArea" useGeneratedKeys="true" keyProperty="id"
+		parameterType="com.pojo.ForbidArea">
+		insert into forbid_area (name,path)
+		values
+		(#{name},#{path})
+	</insert>
+	
+	<insert id="addAreaList" parameterType="java.util.List">
+		insert into forbid_area (name,path)
+         values
+		<foreach collection ="list" item="area" separator =",">
+			(
+			#{area.name},
+			#{area.path}
+			)
+             </foreach >
+	</insert>
+
+	<update id="updateArea" parameterType="com.pojo.ForbidArea">
+		update forbid_area set
+		name = #{name},
+		path = #{path} where id = #{id}
+	</update>
+
+	<delete id="deleteArea" parameterType="int">
+		delete from forbid_area where id = #{id}
+	</delete>
+
+	<delete id="deleteAreas" parameterType="java.util.List">
+		delete from forbid_area where id in
+		<foreach collection="list" item="id" separator="," open="("
+			close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>

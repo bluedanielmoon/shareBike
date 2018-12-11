@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.dao.RouteDao">
+
+	<resultMap id="RouteMap" type="com.pojo.Route">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="from_id" property="fromId"
+			jdbcType="INTEGER" />
+		<result column="to_id" property="toId"
+			jdbcType="INTEGER" />
+		<result column="distance" property="distance"
+			jdbcType="INTEGER"/>
+		<result column="duration" property="duration"
+		jdbcType="INTEGER"/>
+		<result column="path" property="path"
+		jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<select id="getRoute" parameterType="int" resultMap="RouteMap">
+		SELECT * FROM routes WHERE from_id = #{fromId} and to_id =#{toId}
+	</select>
+	
+	<update id="truncateRoute">
+		truncate table routes
+	</update>
+	
+	<insert id="addRoutes" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.List">
+		insert into routes (from_id,to_id,distance,duration,path) values 
+		<foreach collection="list" item="rt" separator=",">
+           	(#{rt.fromId},#{rt.toId},#{rt.distance},#{rt.duration},#{rt.path})
+           	
+        </foreach>
+		 
+	</insert>
+
+</mapper>

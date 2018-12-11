@@ -85,6 +85,23 @@ public class CircumState {
 			return false;
 		return true;
 	}
+	
+	public boolean equalsNoTemp(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		CircumState other = (CircumState) obj;
+		if (hour != other.hour)
+			return false;
+		if (weather != other.weather)
+			return false;
+		if (workDay != other.workDay)
+			return false;
+		return true;
+	}
 
 	@Override
 	public String toString() {

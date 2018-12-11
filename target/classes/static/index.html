@@ -253,8 +253,8 @@ desired effect
 							<li><a href="#anaylyze_site"><i class="fa fa-circle-o"></i>站点生成</a></li>
 						</ul></li>
 					<li><a href="#manage"><i class="fa fa-link"></i> <span>资源管理</span></a></li>
-					<li><a href="#simuler"><i class="fa fa-link"></i> <span>调度模拟</span></a></li>
-					<li class="treeview"><a href="#"><i class="fa fa-link"></i>
+					<li><a href="#simuler"><i class="fa fa-plane"></i> <span>调度模拟</span></a></li>
+					<li class="treeview"><a href="#"><i class="fa fa-wrench"></i>
 							<span>设置</span> <span class="pull-right-container"> <i
 								class="fa fa-angle-left pull-right"></i>
 						</span> </a>
@@ -371,7 +371,8 @@ desired effect
 						<!-- Custom Tabs -->
 						<div class="nav-tabs-custom ">
 							<ul class="nav nav-tabs">
-								<li class="active"><a href="#tab-site" data-toggle="tab">站点分析</a></li>
+								<li class="active"><a href="#tab-site" data-toggle="tab">站点生成</a></li>
+								<li><a href="#tab-siteChange" id="siteChange-Tab" data-toggle="tab">站点变化</a></li>
 							</ul>
 							<div class="tab-content">
 
@@ -404,7 +405,7 @@ desired effect
 														</div>
 
 														<div id="show-site-check" class="form-group">
-															<label>预选点</label> <input type="checkbox" checked
+															<label>站点</label> <input type="checkbox"
 																class="site-switch form-control" />
 
 														</div>
@@ -438,6 +439,54 @@ desired effect
 									</div>
 								</div>
 								<!-- /.tab-pane -->
+								<div class="tab-pane" id="tab-siteChange">
+									<div class="row">
+										<div class="col-md-9">
+											<div id="chart-siteChange"
+												style="width: 850px; height: 500px;"></div>
+										</div>
+										<div class="col-md-3">
+											<div class="box box-primary">
+												<div class="box-header with-border">
+													<h3 class="box-title">参数设置</h3>
+												</div>
+												<form role="form">
+													<div class="box-body">
+														<div class="form-group">
+															<label>站点id</label>
+
+															<table id="siteChange-list">
+
+															</table>
+
+
+															<!-- <div class="input-group">
+																<div class="input-group-addon">
+																	<i class="fa fa-clock-o"></i>
+																</div>
+																<input type="text" class="form-control pull-right"
+																	id="site-change-id">
+															</div> -->
+														</div>
+
+														<div class="form-group">
+															<button id="submit-site-change" type="button"
+																class="btn btn-block btn-primary btn-lg">确认</button>
+														</div>
+
+
+													</div>
+												</form>
+											</div>
+										</div>
+
+
+
+
+
+									</div>
+
+								</div>
 							</div>
 							<!-- /.tab-content -->
 						</div>
@@ -647,6 +696,7 @@ desired effect
 								<li><a href="#tab-POI" data-toggle="tab">POI管理</a></li>
 								<li><a href="#tab-siteManage" data-toggle="tab">站点管理</a></li>
 								<li><a href="#tab-disp" data-toggle="tab">调度管理</a></li>
+								<li><a href="#tab-forbid" data-toggle="tab">禁停管理</a></li>
 							</ul>
 							<div class="tab-content">
 								<div class="tab-pane active " id="tab-user">
@@ -715,30 +765,232 @@ desired effect
 										</div>
 									</div>
 								</div>
+
 								<div class="tab-pane " id="tab-siteManage">
+									<div class="row">
+										<div class="col-xs-8">
 
-									<div id="toolbar-site" class="btn-group">
-										<button id="btn-add-site" type="button" data-toggle="modal"
-											data-target="#modal-add-site" class="btn btn-default">
-											<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>新增
-										</button>
-										<div class="modal modal-info fade" id="modal-add-site">
-											<div class="modal-dialog">
-												<div class="modal-content"></div>
-												/.modal-content
-											</div>
-											/.modal-dialog
+											<div id="siteMan-map"></div>
 										</div>
-										<button id="btn-delete-site" type="button"
-											class="btn btn-default">
-											<span class="glyphicon glyphicon-minus" aria-hidden="true"></span>删除
-										</button>
+										<div class="col-xs-4 ">
 
+											<div class="siteMan-table">
+												<div id="toolbar-site" class="btn-group">
+													<button id="btn-add-site" type="button" data-toggle="modal"
+														data-target="#modal-add-site" class="btn btn-default">
+														<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>新增
+													</button>
+													<div class="modal modal-info fade" id="modal-add-site">
+														<div class="modal-dialog">
+															<div class="modal-content">
+																<div class="modal-header">
+																	<button type="button" class="close"
+																		data-dismiss="modal" aria-label="Close">
+																		<span aria-hidden="true">&times;</span>
+																	</button>
+																	<h4 class="modal-title">增加站点</h4>
+																</div>
+																<div class="modal-body">
+																	<form id="siteAdd-form" role="form">
+																		<div class="box-body">
+																			<div class="form-group">
+																				<label for="siteNameAdd">站点名</label> <input
+																					type="text" class="form-control"
+																					id="modal-siteNameAdd" placeholder="填写站点名">
+																			</div>
+																			<div class="form-group">
+																				<label for="siteLimitAdd">容量</label> <input
+																					class="form-control" id="modal-siteLimitAdd"
+																					placeholder="容量">
+																			</div>
+																			<div class="form-group">
+																				<label for="modal-siteTypeAdd">类型</label> <select
+																					id="modal-siteTypeAdd" class="form-control">
+																					<option>调度站</option>
+																					<option>维修站</option>
+																				</select>
+																			</div>
+																			<div class="form-group">
+																				<label for="modal-sitePosAdd">选定位置</label>
+																				<button id="modal-sitePosAdd" type="button"
+																					class="btn btn-outline" data-dismiss="modal">在地图上选取</button>
+																			</div>
+
+																		</div>
+
+																	</form>
+																</div>
+																<div class="modal-footer">
+																	<button id="modal-siteAdd-close" type="button"
+																		class="btn btn-outline pull-left" data-dismiss="modal">关闭</button>
+																	<button id="modal-siteAdd-submit" type="button"
+																		class="btn btn-outline" data-dismiss="modal">提交</button>
+																</div>
+															</div>
+
+														</div>
+													</div>
+													<div class="modal modal-info fade" id="modal-update-site">
+														<div class="modal-dialog">
+															<div class="modal-content">
+																<div class="modal-header">
+																	<button type="button" class="close"
+																		data-dismiss="modal" aria-label="Close">
+																		<span aria-hidden="true">&times;</span>
+																	</button>
+																	<h4 class="modal-title">修改站点</h4>
+																</div>
+																<div class="modal-body">
+																	<form id="siteUpdate-form" role="form">
+																		<div class="box-body">
+																			<div class="form-group">
+																				<label for="siteName">站点名</label> <input type="text"
+																					class="form-control" id="modal-siteName"
+																					placeholder="填写站点名">
+																			</div>
+																			<div class="form-group">
+																				<label for="siteLimit">容量</label> <input
+																					class="form-control" id="modal-siteLimit"
+																					placeholder="容量">
+																			</div>
+																			<div class="form-group">
+																				<label for="modal-siteType">类型</label> <select
+																					id="modal-siteType" class="form-control">
+																					<option>调度站</option>
+																					<option>维修站</option>
+																				</select>
+																			</div>
+
+																		</div>
+
+																	</form>
+																</div>
+																<div class="modal-footer">
+																	<button id="modal-siteUpdate-close" type="button"
+																		class="btn btn-outline pull-left" data-dismiss="modal">关闭</button>
+																	<button id="modal-siteUpdate-submit" type="button"
+																		class="btn btn-outline" data-dismiss="modal">提交</button>
+																</div>
+															</div>
+
+														</div>
+													</div>
+													<button id="btn-delete-site" type="button"
+														class="btn btn-default">
+														<span class="glyphicon glyphicon-minus" aria-hidden="true"></span>删除
+													</button>
+
+												</div>
+												<table id="table-site">
+
+												</table>
+											</div>
+										</div>
 									</div>
-									<table id="table-site">
 
-									</table>
 								</div>
+
+								<div class="tab-pane " id="tab-forbid">
+									<div class="row">
+										<div class="col-xs-8">
+
+											<div id="forbid-map"></div>
+										</div>
+										<div class="col-xs-4 ">
+
+											<div class="forbid-table">
+												<div id="toolbar-forbid" class="btn-group">
+													<button id="btn-add-forbid" type="button" data-toggle="modal"
+														data-target="#modal-add-forbid" class="btn btn-default">
+														<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>新增
+													</button>
+													<div class="modal modal-info fade" id="modal-add-forbid">
+														<div class="modal-dialog">
+															<div class="modal-content">
+																<div class="modal-header">
+																	<button type="button" class="close"
+																		data-dismiss="modal" aria-label="Close">
+																		<span aria-hidden="true">&times;</span>
+																	</button>
+																	<h4 class="modal-title">增加禁停区域</h4>
+																</div>
+																<div class="modal-body">
+																	<form id="forbidAdd-form" role="form">
+																		<div class="box-body">
+																			<div class="form-group">
+																				<label for="forbidNameAdd">禁停区域名</label> <input
+																					type="text" class="form-control"
+																					id="modal-forbidNameAdd" placeholder="填写区域名">
+																			</div>
+																			<div class="form-group">
+																				<label for="modal-forbidAreaAdd">勾选区域</label>
+																				<button id="modal-forbidAreaAdd" type="button"
+																					class="btn btn-outline" data-dismiss="modal">在地图上勾选</button>
+																			</div>
+
+																		</div>
+
+																	</form>
+																</div>
+																<div class="modal-footer">
+																	<button id="modal-forbidAdd-close" type="button"
+																		class="btn btn-outline pull-left" data-dismiss="modal">关闭</button>
+																	<button id="modal-forbidAdd-submit" type="button"
+																		class="btn btn-outline" data-dismiss="modal">提交</button>
+																</div>
+															</div>
+
+														</div>
+													</div>
+													<div class="modal modal-info fade" id="modal-update-forbid">
+														<div class="modal-dialog">
+															<div class="modal-content">
+																<div class="modal-header">
+																	<button type="button" class="close"
+																		data-dismiss="modal" aria-label="Close">
+																		<span aria-hidden="true">&times;</span>
+																	</button>
+																	<h4 class="modal-title">修改禁停区域</h4>
+																</div>
+																<div class="modal-body">
+																	<form id="forbidUpdate-form" role="form">
+																		<div class="box-body">
+																			<div class="form-group">
+																				<label for="forbidName">站点名</label> <input type="text"
+																					class="form-control" id="modal-forbidName"
+																					placeholder="填写区域名">
+																			</div>
+
+																		</div>
+
+																	</form>
+																</div>
+																<div class="modal-footer">
+																	<button id="modal-forbidUpdate-close" type="button"
+																		class="btn btn-outline pull-left" data-dismiss="modal">关闭</button>
+																	<button id="modal-forbidUpdate-submit" type="button"
+																		class="btn btn-outline" data-dismiss="modal">提交</button>
+																</div>
+															</div>
+
+														</div>
+													</div>
+													<button id="btn-delete-forbid" type="button"
+														class="btn btn-default">
+														<span class="glyphicon glyphicon-minus" aria-hidden="true"></span>删除
+													</button>
+
+												</div>
+												<table id="table-forbid">
+
+												</table>
+											</div>
+										</div>
+									</div>
+
+								</div>
+
+
 								<div class="tab-pane " id="tab-disp">
 									<div id="toolbar-disp" class="btn-group">
 										<button id="btn-add-disp" type="button" data-toggle="modal"
@@ -747,7 +999,41 @@ desired effect
 										</button>
 										<div class="modal modal-info fade" id="modal-add-disp">
 											<div class="modal-dialog">
-												<div class="modal-content"></div>
+												<div class="modal-content">
+													<div class="modal-header">
+														<button type="button" class="close" data-dismiss="modal"
+															aria-label="Close">
+															<span aria-hidden="true">&times;</span>
+														</button>
+														<h4 class="modal-title">添加调度单位</h4>
+													</div>
+													<div class="modal-body">
+														<form id="disp-form" role="form">
+															<div class="box-body">
+																<div class="form-group">
+																	<label for="modal-dispName">名称</label> <input
+																		type="text" class="form-control" id="modal-dispName"
+																		placeholder="填写单位的名称">
+																</div>
+																<div class="form-group">
+																	<label for="modal-dispType">类型</label> <select
+																		id="modal-dispType" class="form-control">
+																		<option>卡车</option>
+																		<option>三轮车</option>
+																		<option>调度员</option>
+																	</select>
+																</div>
+															</div>
+
+														</form>
+													</div>
+													<div class="modal-footer">
+														<button id="modal-disp-close" type="button"
+															class="btn btn-outline pull-left" data-dismiss="modal">关闭</button>
+														<button id="modal-disp-submit" type="button"
+															class="btn btn-outline" data-dismiss="modal">提交</button>
+													</div>
+												</div>
 												<!-- /.modal-content -->
 											</div>
 											<!-- /.modal-dialog -->
@@ -774,6 +1060,17 @@ desired effect
 					<div class="col-xs-9">
 						<div id="simu-map"></div>
 					</div>
+
+					<!-- 			<div id="simu-siteWindow" class="box box-default">
+						<div class="box-header with-border">
+							<h3 class="box-title">站点窗口</h3>
+							
+						</div>
+						<div class="box-body">
+						qqqqqqqqqqqqqq
+						</div> 
+						
+					</div> -->
 
 					<div class="col-xs-3">
 						<div class="box box-default">
@@ -807,6 +1104,15 @@ desired effect
 																id="simu-init-date">
 														</div>
 													</div>
+													<div class="form-group">
+
+														<label>初始位置</label>
+														<table id="simu-disp-pos">
+
+														</table>
+													</div>
+
+
 													<!-- <div class="form-group">
 														<label>模拟时段</label> <input id="simu-init-timeRange"
 															type="checkbox" class="js-switch form-control" checked />
@@ -833,8 +1139,7 @@ desired effect
 														<button id="btn-simu-pause" type="button"
 															class="btn btn-default">
 															<span class="glyphicon glyphicon-pause"
-																aria-hidden="true"></span>
-															<span class="simu-pause">暂停</span>
+																aria-hidden="true"></span> <span class="simu-pause">暂停</span>
 														</button>
 														<button id="btn-simu-stop" type="button"
 															class="btn btn-default">

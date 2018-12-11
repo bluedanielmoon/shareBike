@@ -21,14 +21,14 @@ public class SiteUtil {
 	private static String query = "https://restapi.amap.com/v3/direction/driving?key=66c21b9e3069ae987bf520de3460ddb6&"
 			+ "extensions=all&output=JSON&strategy=0&";
 
-	public static String buildUrl(Lnglat origin, Lnglat destination) {
+	private static String buildUrl(Lnglat origin, Lnglat destination) {
 		String from = origin.getLng() + "," + origin.getLat();
 		String dest = destination.getLng() + "," + destination.getLat();
 		String url = query + "origin=" + from + "&destination=" + dest;
 		return url;
 	}
 
-	public String queryResult(String url,CloseableHttpClient client) {
+	private String queryResult(String url,CloseableHttpClient client) {
 
 		String result = null;
 
@@ -36,7 +36,7 @@ public class SiteUtil {
 		return result;
 	}
 	
-	public GaodePath decodeResult(String result) {
+	private GaodePath decodeResult(String result) {
 		GaodePath gPath=new GaodePath();
 		if(result==null||result=="") {
 			return null;
@@ -102,6 +102,16 @@ public class SiteUtil {
 		return path;
 	}
 	
+	public GaodePath getPath(Lnglat from, Site destination,CloseableHttpClient client) {
+		Lnglat to=new Lnglat(destination.getLng(), destination.getLat());
+		String url=SiteUtil.buildUrl(from,to);
+		SiteUtil sUtil=new SiteUtil();
+		
+		String result=sUtil.queryResult(url,client);
+		GaodePath path=sUtil.decodeResult(result);
+		return path;
+	}
+	
 	public GaodePath getPath(Site origin, Dispatcher destination,CloseableHttpClient client) {
 		Lnglat from=new Lnglat(origin.getLng(), origin.getLat());
 		Lnglat to=new Lnglat(destination.getLng(), destination.getLat());
@@ -124,10 +134,4 @@ public class SiteUtil {
 		return path;
 	}
 
-	public static void main(String[] args) {
-		Site s1=new Site("1", 2, 1, 108.916655,34.28073);
-		Site s2=new Site("2", 2, 1, 108.911261,34.259334);
-		SiteUtil sUtil=new SiteUtil();
-		
-	}
 }
