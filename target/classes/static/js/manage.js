@@ -7,8 +7,11 @@
 
     var dispTable=$('#table-disp');
 
+<<<<<<< HEAD
     var forbidTable=$('#table-forbid');
     
+=======
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
     var userOps = {
         init: function() {
             userTable.bootstrapTable({
@@ -141,7 +144,11 @@
     			if(data){
     				var types = new Set(); // 空Set
     				console.log(data);
+<<<<<<< HEAD
     				// 将数据按类型分开
+=======
+    				//将数据按类型分开
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
     				data.forEach(function(ele, index) {
     					var nameType=null;
     					if(ele.type==1){
@@ -181,6 +188,7 @@
     }
 
     var siteOps = {
+<<<<<<< HEAD
 		init:function(){
 			this.initTable();
 			this.initMap();
@@ -271,6 +279,9 @@
                 	mapChart.showSiteChangeById(row.id);
                 }
             };
+=======
+        init: function() {
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
             siteTable.bootstrapTable({
             	toolbar: '#toolbar-site', // 工具按钮用哪个容器
                 toolbarAlign: 'left',
@@ -282,12 +293,24 @@
                 sidePagination: "client", // 分页方式：client///server,大爷的，如果服务器分页，数据要放到rows
                 pageNumber: 1, // 初始化加载第一页，默认第一页
                 pageSize: 10, // 每页的记录行数（*）
+<<<<<<< HEAD
+=======
+                pageList: [10, 25, 50, 100], // 可供选择的每页的行数（*）
+                search: true, // 是否显示表格搜索，此搜索是客户端搜索，不会进服务端，所以，个人感觉意义不大
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
                 strictSearch: true,
                 showColumns: true, // 是否显示所有的列
                 showRefresh: true, // 是否显示刷新按钮
                 minimumCountColumns: 2, // 最少允许的列数
                 clickToSelect: true, // 是否启用点击选中行
+<<<<<<< HEAD
                 uniqueId: "id", // 每一行的唯一标识，一般为主键列
+=======
+                height: 500, // 行高，如果没有设置height属性，表格自动根据记录条数觉得表格高度
+                uniqueId: "name", // 每一行的唯一标识，一般为主键列
+                showToggle: true, // 是否显示详细视图和列表视图的切换按钮
+                cardView: false, // 是否显示详细视图
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
                 detailView: false, // 是否显示父子表
                 icons: {
                     refresh: 'glyphicon-refresh icon-refresh',
@@ -295,6 +318,7 @@
                     columns: 'glyphicon-th icon-th'
                 },
                 columns: [{
+<<<<<<< HEAD
                 	checkbox:true,
                 },{
                     field: 'name',
@@ -333,10 +357,30 @@
 					}
 				}
 			}
+=======
+                    checkbox: true
+                }, {
+                    field: 'name',
+                    title: '站点名称'
+                }, {
+                    field: 'volume',
+                    title: '站点容量'
+                }, {
+                    field: 'type',
+                    title: '站点类型'
+                },{
+                    field: 'coords',
+                    title: '经纬度'
+                }],
+            });
+        },
+        loadData: function() {
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
             mapUtil.link.getData("/site/all", true, {}, function(data) {
             	
                 var list = [];
                 if (data) {
+<<<<<<< HEAD
                 	siteOps.siteList=data;
                 	var count=0;
                      data.forEach(function(element, index) {
@@ -356,6 +400,14 @@
                              "volume":element.volume,
                              "type": element.type,
                              // "coords": [element.lng, element.lat]
+=======
+                     data.forEach(function(element, index) {
+                         list.push({
+                             "name": element.name,
+                             "volume":element.volume,
+                             "type": element.type,
+                             "coords": [element.lng, element.lat]
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
                          });
                      });
                 }
@@ -365,6 +417,7 @@
         },
 
         bindControl: function() {
+<<<<<<< HEAD
     	    var addSite = $("#modal-add-site");
 // addSite.on('show.bs.modal', function() {
 // $("#siteAdd-form")[0].reset();
@@ -431,11 +484,29 @@
                 }, function(data) {
                     if (data && data == true) {
                     	siteOps.loadData();
+=======
+            var addUser = $("#modal-add-user");
+            addUser.on('show.bs.modal', function() {
+                $("#user-form")[0].reset();
+            });
+            addUser.find("#modal-user-submit").click(function() {
+
+                var username = addUser.find("#modal-userName").val();
+                var password = addUser.find("#modal-userPass").val();
+
+                mapUtil.link.getData("/user/add", true, {
+                    userName: username,
+                    password: password
+                }, function(data) {
+                    if (data && data == true) {
+                        userOps.loadData();
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
                     }
                 });
 
             });
 
+<<<<<<< HEAD
             $("#btn-delete-site").click(function() {
                 var list = siteTable.bootstrapTable('getSelections');
                 if (list.length > 0) {
@@ -449,6 +520,21 @@
                     }, function(data) {
                         if (data && data == true) {
                         	siteOps.loadData();
+=======
+            $("#btn-delete-user").click(function() {
+                var list = userTable.bootstrapTable('getSelections');
+                if (list.length > 0) {
+                    var delList = [];
+                    list.forEach(function(element, index) {
+                        delList.push(element.name);
+
+                    });
+                    mapUtil.link.postList("/user/delete", true, {
+                        'names': delList
+                    }, function(data) {
+                        if (data && data == true) {
+                            userOps.loadData();
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
                         }
 
                     });
@@ -458,6 +544,7 @@
         },
     }
 
+<<<<<<< HEAD
 
     var forbidOps = {
         init:function(){
@@ -761,6 +848,8 @@
         },
     }
 
+=======
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
     var dispOps = {
         init: function() {
             dispTable.bootstrapTable({
@@ -793,11 +882,22 @@
                 },
                 columns: [{
                     checkbox: true
+<<<<<<< HEAD
                 },{
                     field: 'name',
                     title: '调度名称'
                 }, {
                     field: 'typeName',
+=======
+                }, {
+                    field: 'id',
+                    title: '调度ID'
+                }, {
+                    field: 'name',
+                    title: '调度名称'
+                }, {
+                    field: 'type',
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
                     title: '调度类型'
                 }],
             });
@@ -807,6 +907,7 @@
 
                 var list = [];
                 if (data) {
+<<<<<<< HEAD
                 	
                      data.forEach(function(element, index) {
                     	 var typeName;
@@ -822,6 +923,13 @@
                              "name": element.name,
                              "type": element.type,
                              "typeName": typeName
+=======
+                     data.forEach(function(element, index) {
+                         list.push({
+                        	 "id": element.id,
+                             "name": element.name,
+                             "type": element.type
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
                          });
                      });
                 }
@@ -831,6 +939,7 @@
         },
 
         bindControl: function() {
+<<<<<<< HEAD
             var addDisp = $("#modal-add-disp");
             addDisp.on('show.bs.modal', function() {
                 $("#disp-form")[0].reset();
@@ -853,24 +962,54 @@
                 }, function(data) {
                     if (data && data == true) {
                     	dispOps.loadData();
+=======
+            var addUser = $("#modal-add-user");
+            addUser.on('show.bs.modal', function() {
+                $("#user-form")[0].reset();
+            });
+            addUser.find("#modal-user-submit").click(function() {
+
+                var username = addUser.find("#modal-userName").val();
+                var password = addUser.find("#modal-userPass").val();
+
+                mapUtil.link.getData("/user/add", true, {
+                    userName: username,
+                    password: password
+                }, function(data) {
+                    if (data && data == true) {
+                        userOps.loadData();
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
                     }
                 });
 
             });
 
+<<<<<<< HEAD
             $("#btn-delete-disp").click(function() {
                 var list = dispTable.bootstrapTable('getSelections');
+=======
+            $("#btn-delete-user").click(function() {
+                var list = userTable.bootstrapTable('getSelections');
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
                 if (list.length > 0) {
                     var delList = [];
                     list.forEach(function(element, index) {
                         delList.push(element.name);
 
                     });
+<<<<<<< HEAD
                     mapUtil.link.postList("/disp/deletePatch", true, {
                         'names': delList
                     }, function(data) {
                         if (data && data == true) {
                         	dispOps.loadData();
+=======
+                    mapUtil.link.postList("/user/delete", true, {
+                        'names': delList
+                    }, function(data) {
+                        if (data && data == true) {
+                            userOps.loadData();
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
                         }
 
                     });
@@ -897,6 +1036,7 @@
             poiOps.init();
             siteOps.init();
             siteOps.loadData();
+<<<<<<< HEAD
             siteOps.bindControl();
             
             dispOps.init();
@@ -905,6 +1045,10 @@
             forbidOps.init();
             forbidOps.loadData();
             forbidOps.bindControl();
+=======
+            dispOps.init();
+            dispOps.loadData();
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
         },
         initUser: function() {
             userOps.init();

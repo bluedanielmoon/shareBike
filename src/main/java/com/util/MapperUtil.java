@@ -5,9 +5,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+<<<<<<< HEAD
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+=======
+import java.util.ArrayList;
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +74,7 @@ public class MapperUtil {
 		}
 	}
 	
+<<<<<<< HEAD
 	public static <T, K> void writeMapData(String path, Map<K,T> data,Class keyClas, Class<T> clas) {
 		ObjectMapper mapper = new ObjectMapper();
 		File file = new File(path);
@@ -105,6 +110,8 @@ public class MapperUtil {
 		return null;
 	}
 	
+=======
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	/**
 	 * 把栅格地图单车的结果写入文件
 	 * 
@@ -161,6 +168,7 @@ public class MapperUtil {
 			JavaType intType=mapper.getTypeFactory().constructType(Integer.class);
 			JavaType javaType = mapper.getTypeFactory().constructMapLikeType(HashMap.class, intType, mapType);
 			mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+<<<<<<< HEAD
 		
 			ObjectWriter writer = mapper.writerFor(javaType);
 			SequenceWriter sequenceWriter = writer.writeValues(file);
@@ -189,6 +197,8 @@ public class MapperUtil {
 			JavaType javaType = mapper.getTypeFactory().constructMapLikeType(HashMap.class, intType, mapType);
 			mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 		
+=======
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 			ObjectWriter writer = mapper.writerFor(javaType);
 			SequenceWriter sequenceWriter = writer.writeValues(file);
 			sequenceWriter.write(data);
@@ -219,6 +229,7 @@ public class MapperUtil {
 		
 	}
 	
+<<<<<<< HEAD
 	public static Map<Integer, Map<Integer, Object>> readIntMapIntMapData(String fileName) {
 		ObjectMapper mapper = new ObjectMapper();
 		Path path = Paths.get(fileName);
@@ -239,6 +250,8 @@ public class MapperUtil {
 		
 	}
 	
+=======
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	/**
 	 * 把栅格地图单车的结果写入文件
 	 * 

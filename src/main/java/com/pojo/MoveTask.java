@@ -36,6 +36,7 @@ public class MoveTask extends SimuTask{
 	public void setTarget(Site target) {
 		this.target = target;
 	}
+<<<<<<< HEAD
 
 	@Override
 	public String toString() {
@@ -44,5 +45,13 @@ public class MoveTask extends SimuTask{
 	
 	
 	
+=======
+	
+	
+	public static void main(String[] args) {
+		MoveTask moveTask=new MoveTask();
+		moveTask.getWorkTime();
+	}
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	
 }

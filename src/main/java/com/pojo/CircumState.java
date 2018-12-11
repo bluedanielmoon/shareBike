@@ -85,6 +85,7 @@ public class CircumState {
 			return false;
 		return true;
 	}
+<<<<<<< HEAD
 	
 	public boolean equalsNoTemp(Object obj) {
 		if (this == obj)
@@ -102,6 +103,8 @@ public class CircumState {
 			return false;
 		return true;
 	}
+=======
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 	@Override
 	public String toString() {

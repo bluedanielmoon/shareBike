@@ -18,8 +18,14 @@ public interface SiteDao{
 	
 	int addSites(List<Site> sites);
 	
+<<<<<<< HEAD
 	int deleteSites(List<Integer> names);
 
 	int truncateSite();
+=======
+	int deleteSites(List<String> names);
+
+	
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 }

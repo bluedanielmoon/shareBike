@@ -3,10 +3,15 @@ package com.simu;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Comparator;
+<<<<<<< HEAD
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+=======
+import java.util.LinkedList;
+import java.util.List;
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 import com.init.State;
 import com.pojo.Dispatcher;
@@ -14,11 +19,15 @@ import com.pojo.Lnglat;
 import com.pojo.LoadTask;
 import com.pojo.MoveTask;
 import com.pojo.SimuTask;
+<<<<<<< HEAD
 import com.pojo.Site;
+=======
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 
 public class TaskRunner {
 	private LinkedList<SimuTask> states=new LinkedList<>();
+<<<<<<< HEAD
 	private Map<Integer, LinkedList<SimuTask>> recorder=new HashMap<>();
 	private int nowSeconds=0;
 	private int startHour=0;
@@ -32,17 +41,32 @@ public class TaskRunner {
 			@Override
 			public int compare(SimuTask o1, SimuTask o2) {		
 				return Integer.compare(o2.getWorkTime(), o1.getWorkTime());
+=======
+	private int nowSeconds=0;
+	private int startHour=0;
+	private int nowHour=0;
+	private TaskProducer tasker;
+	public void init(List<SimuTask> tasks,TaskProducer tasker,int startHour) {
+		tasks.sort(new Comparator<SimuTask>() {
+			@Override
+			public int compare(SimuTask o1, SimuTask o2) {		
+				return Integer.compare(o1.getWorkTime(), o2.getWorkTime());
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 			}
 		});
 		for(SimuTask task:tasks) {
 			states.push(task);
+<<<<<<< HEAD
 			LinkedList<SimuTask> dispTask=new LinkedList<>();
 //			dispTask.add(task);
 			recorder.put(task.getDispatcher().getId(), dispTask);
+=======
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 		}
 		this.tasker=tasker;
 		this.startHour=startHour;
 		nowHour=startHour;
+<<<<<<< HEAD
 		endSeconds=(endHour-startHour)*3600;
 		return states;
 	}
@@ -64,11 +88,22 @@ public class TaskRunner {
 	private boolean refreshTime(int secondsPast) {
 		nowSeconds+=secondsPast;
 		
+=======
+	}
+	
+	public void moveNext() {
+		setNextTime();
+	}
+	
+	private void refreshTime(int secondsPast) {
+		nowSeconds+=secondsPast;
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 		nowHour=nowSeconds/3600+startHour;
 		for(SimuTask task:states) {
 			task.getWorkTime();
 			task.setWorkTime(task.getWorkTime()-secondsPast);
 		}
+<<<<<<< HEAD
 		if(nowSeconds<endSeconds) {
 			return true;
 		}else {
@@ -127,6 +162,39 @@ public class TaskRunner {
 				
 			}
 		}
+=======
+	}
+
+	private int setNextTime() {
+		//取出任务列表中第一个完成的
+		printState();
+		SimuTask task=states.poll();
+		refreshTime(task.getWorkTime());
+		if(task.getType()==State.MOVE_TASK) {
+			MoveTask moveTask=(MoveTask) task;
+			
+			Dispatcher dispatcher=moveTask.getDispatcher();
+			
+			//更新disp位置
+			Lnglat finishLocat=moveTask.getEnd();
+			dispatcher.setLng(finishLocat.getLng());
+			dispatcher.setLat(finishLocat.getLat());
+			
+			//安排装卸任务
+			LoadTask loadTask=tasker.assignLoadTask(nowHour,nowSeconds,dispatcher,moveTask);
+			pushTaskByWorkTime(loadTask);
+		}else {
+			LoadTask loadTask=(LoadTask) task;
+			
+			//因为存在单车数量变化，必须对地图所有有影响的站点进行更新
+			tasker.refreshSites(nowHour,nowSeconds,loadTask);
+			//安排移动任务
+			MoveTask moveTask=tasker.assignMoveTask(nowHour,loadTask);
+			pushTaskByWorkTime(moveTask);
+		}
+		
+		return 0;
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	}
 	
 	private void printState() {
@@ -134,7 +202,11 @@ public class TaskRunner {
 		int moveCount=0;
 		int LoadCount=0;
 		for(SimuTask task:states) {
+<<<<<<< HEAD
 			if(task.getTaskType()==State.MOVE_TASK) {
+=======
+			if(task.getType()==State.MOVE_TASK) {
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 				moveCount++;
 			}else {
 				LoadCount++;
@@ -150,6 +222,7 @@ public class TaskRunner {
 		calendar.set(Calendar.MINUTE, minute);
 		calendar.set(Calendar.SECOND, seconds);
 		SimpleDateFormat simpleDat=new SimpleDateFormat("HH:mm:ss");
+<<<<<<< HEAD
 //		System.out.println("当前时间"+simpleDat.format(calendar.getTime()));
 //		System.out.println("共有任务："+states.size()+" ,移动任务："+moveCount+" ,装卸任务："+LoadCount);
 //		
@@ -162,10 +235,19 @@ public class TaskRunner {
 		int dispId=task.getDispatcher().getId();
 		LinkedList<SimuTask> lists=recorder.get(dispId);
 		lists.add(task);
+=======
+		System.out.println("当前时间"+simpleDat.format(calendar.getTime()));
+		System.out.println("共有任务："+states.size()+" ,移动任务："+moveCount+" ,装卸任务："+LoadCount);
+		
+	}
+	
+	private void pushTaskByWorkTime(SimuTask task) {
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 		int time=task.getWorkTime();
 		
 		for(int i=0;i<states.size();i++) {
 			
+<<<<<<< HEAD
 			if(time>=states.get(i).getWorkTime()) {
 				if(i==(states.size()-1)) {
 					states.add(task);
@@ -207,6 +289,16 @@ public class TaskRunner {
 	}
 
 	
+=======
+			if(states.get(i).getWorkTime()>=time) {
+				states.add(task);
+				return ;
+			}
+		}
+		states.add(task);
+	}
+	
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	private void calcuLoadWorkTime(LoadTask loadTask) {
 		int loadNum=loadTask.getLoadNum();
 		int loadTime=State.LOAD_UNIT_TIME*loadNum;
@@ -225,8 +317,11 @@ public class TaskRunner {
 		}
 		return distance;
 	}
+<<<<<<< HEAD
 
 	
+=======
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	
 //	/**
 //	 * 对任务中的每个调度力量，根据其行进线路和当前位置，时钟，模拟出下一个行进到的位置

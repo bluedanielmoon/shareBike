@@ -3,13 +3,21 @@ package com.simu;
 import static org.junit.Assert.fail;
 
 import java.util.Date;
+<<<<<<< HEAD
+=======
+import java.util.List;
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+<<<<<<< HEAD
 import com.init.State;
+=======
+import com.pojo.SimuTask;
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 import com.pojo.Site;
 import com.util.DateUtil;
 import com.xju.App;
@@ -17,8 +25,11 @@ import com.xju.App;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = App.class)
 public class TaskProducerTest {
+<<<<<<< HEAD
 	
 	
+=======
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 
 	@Test
 	public void testTaskProducer() {
@@ -31,6 +42,7 @@ public class TaskProducerTest {
 		
 		Date oneDay=DateUtil.parseToDay("2018_11_1");
 		int startHour=7;
+<<<<<<< HEAD
 		
 	}
 	@Test
@@ -38,6 +50,11 @@ public class TaskProducerTest {
 		TaskProducer tProducer=new TaskProducer();
 		int sends=tProducer.calcuTimeSpan(1000, State.TRUCK_TYPE);
 		System.out.println(sends);
+=======
+		tasker.initJobs(oneDay);
+		List<SimuTask> tasks= tasker.produceStartJobs(startHour);
+		System.out.println(tasks);
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	}
 
 	@Test
@@ -69,9 +86,16 @@ public class TaskProducerTest {
 	public void testEstimate() {
 		Date oneDay=DateUtil.parseToDay("2018_11_1");
 		TaskProducer producer=new TaskProducer();
+<<<<<<< HEAD
 //		producer.initJobs(oneDay);
 		Site site= new Site();
 		site.setId(279);
+=======
+		producer.initJobs(oneDay);
+		Site site= new Site();
+		site.setId(279);
+		producer.estimate(site,7);
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	}
 
 	@Test

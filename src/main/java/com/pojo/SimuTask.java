@@ -4,7 +4,11 @@ public class SimuTask {
 	
 	private Dispatcher dispatcher;
 	private int workTime;
+<<<<<<< HEAD
 	private int taskType;
+=======
+	private int type;
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	
 	
 
@@ -24,6 +28,7 @@ public class SimuTask {
 		this.workTime = workTime;
 	}
 
+<<<<<<< HEAD
 	public int getTaskType() {
 		return taskType;
 	}
@@ -33,5 +38,15 @@ public class SimuTask {
 	}
 
 
+=======
+	public int getType() {
+		return type;
+	}
+
+	public void setType(int type) {
+		this.type = type;
+	}
+	
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	
 }

@@ -79,10 +79,13 @@ public class InitState {
 			
 			String s_manC=(String) properties.get("manCapacity");
 			State.setMAN_CAPACITY(Integer.parseInt(s_manC));
+<<<<<<< HEAD
 			
 			String s_loadTime=(String) properties.get("loadBikeSeconds");
 			State.setLOAD_UNIT_TIME(Integer.parseInt(s_loadTime));
 			
+=======
+>>>>>>> 1111742a70d2946eb3ba3757488a034a11ddc91b
 	
 			
 		} catch (IOException e) {
