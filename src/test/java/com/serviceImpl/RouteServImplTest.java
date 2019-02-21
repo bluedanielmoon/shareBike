@@ -48,7 +48,7 @@ public class RouteServImplTest {
 		Route route=new Route();
 		route.setPath("[{\"lng\":108.914398,\"lat\":34.242435},{\"lng\":108.916878,\"lat\":34.241165}]");
 		list.add(route);
-		routeServ.patchAddPoi(list);
+		routeServ.patchAddRoute(list);
 	}
 
 }

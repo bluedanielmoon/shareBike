@@ -1,5 +1,6 @@
 package com.service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +38,19 @@ public interface SiteServ {
 
 	Map<Double, Lnglat> getScores(int rate, double flucSca, double countSca, double poiSca);
 
-	double[] getSiteChange(int siteID);
+	Map<String, Object> getSiteChange(String date,int siteID);
 
 	boolean produceSiteBikeData();
+
+	Map<String, Object> getAllSitesWithTypes();
+
+	Map<String, Object> getSitesFlow(int flowType);
+	
+	Map<Date,Integer> getDurationInactive(String startTime,int daysBefore,int checkDay);
+	
+	List<Integer> getDayInactiveBikes(String startTime,int checkDay);
+	
+	List<String> getInactiveBikes(String startTime,int checkDay);
+	
+	
 }

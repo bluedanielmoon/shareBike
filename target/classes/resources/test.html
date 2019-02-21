@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登陆页面</title>
+
+<link rel="stylesheet" type="text/css" href="css/login.css">
+</head>
+<body>
+	<div class="wrapper">
+		<div class="container">
+			<h1>hello,daniel</h1>
+			
+		</div>
+
+		<ul class="bg-bubbles">
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+		</ul>
+
+	</div>
+
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript">
+		$('#login-button').click(function(event) {
+			event.preventDefault();
+			$('form').fadeOut(500);
+			$('.wrapper').addClass('form-success');
+			console.log("234444");
+
+			var name = $("#loginName").val();
+			var passWord = $("#loginPass").val();
+			console.log(name)
+			console.log(passWord)
+			
+			$.ajax({
+					url: "/user/login",
+					async: false,
+					data: {
+						userName : name,
+						passWord : passWord
+					},
+					type: "GET",
+					success: function(result, status, xhr) {
+						if (result) {
+							console.log(result);
+						}
+					}
+				});
+		});
+	</script>
+
+</body>
+</html>

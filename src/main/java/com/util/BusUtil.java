@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.execute.State;
+import com.init.State;
 import com.pojo.BikeArea;
 import com.pojo.GaodeLine;
 import com.pojo.GaodeStop;
@@ -29,7 +29,7 @@ public class BusUtil {
 	
 	//提取二环内的公交站
 	public static void writeStopsInCircle2(){
-		BikeArea area=State.getArea();
+		BikeArea area=State.AREA;
 		String file=BASE_DIR+"stopsfilter15.txt";
 		List<GaodeStop> lgs=FilesUtil.readFromFile(file, GaodeStop.class);
 		List<GaodeStop> result=new ArrayList<GaodeStop>();
@@ -38,8 +38,8 @@ public class BusUtil {
 				result.add(s);
 			}
 		}
-		System.out.println("all stops"+lgs.size());
-		System.out.println("in circle"+result.size());
+//		System.out.println("all stops"+lgs.size());
+//		System.out.println("in circle"+result.size());
 		String outFile=BASE_DIR+"stopsfilter15Circle2.txt";
 		FilesUtil.writeListToFile(outFile, result, GaodeStop.class);
 		
@@ -79,7 +79,6 @@ public class BusUtil {
 		List<GaodeLine> lb = FilesUtil.readFromFile(file, GaodeLine.class);
 		for (GaodeLine line : lb) {
 			if(line.getCompany().equals("西安市地下铁道有限责任公司")) {
-				System.out.println(line);
 				continue;
 			}
 			GaodeStop[] stops = line.getVia_stops();
@@ -103,12 +102,11 @@ public class BusUtil {
 		List<GaodeStop> filterStops=new ArrayList<GaodeStop>();
 		for(String s:mp.keySet()){
 			List<GaodeStop> lp=mp.get(s);
-			System.out.println(s+lp.get(0).getName()+"----  "+lp.size());
+//			System.out.println(s+lp.get(0).getName()+"----  "+lp.size());
 			all+=lp.size();
 			filterStops.addAll(lp);
 		}
-		System.err.println("sites: "+mp.size());
-		System.out.println(all);
+//		System.err.println("sites: "+mp.size());
 		String fileOut=BASE_DIR+ "stopsfilter"+size+".txt";
 		FilesUtil.writeListToFile(fileOut, filterStops, GaodeStop.class);
 

@@ -5,8 +5,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import com.util.DateUtil;
-
 public class HoliDayHelper {
 
 	private static List<Date> specialsWorks;
@@ -117,10 +115,4 @@ public class HoliDayHelper {
 
 	}
 
-	public static void main(String[] args) {
-		Date date=new Date();
-		date=DateUtil.parseToDay("2019_2_5");
-		
-		System.out.println(isWorkDay(date));
-	}
 }

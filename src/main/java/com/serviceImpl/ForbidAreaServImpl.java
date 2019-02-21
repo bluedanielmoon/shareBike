@@ -60,7 +60,6 @@ public class ForbidAreaServImpl implements ForbidAreaServ {
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
-		System.out.println(area);
 		if (areaDao.addArea(area) == 1) {
 			return true;
 		}

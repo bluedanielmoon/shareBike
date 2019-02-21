@@ -1,5 +1,6 @@
 package com.controller;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.execute.SiteAnalyze;
 import com.pojo.Lnglat;
 import com.pojo.Point;
 import com.pojo.Site;
@@ -30,13 +30,19 @@ public class SiteController {
 	@Autowired
 	private SiteServ siteServ;
 	
-	
-	
 	@GetMapping(value = "/all")
 	@ResponseBody
 	public List<Site> getAll() {
 		return siteServ.getAllSites();
 	}
+	
+	@GetMapping(value = "/allTypes")
+	@ResponseBody
+	public Map<String, Object> getAllWithTypes() {
+		
+		return siteServ.getAllSitesWithTypes();
+	}
+	
 	
 	@GetMapping(value = "/score")
 	@ResponseBody
@@ -63,9 +69,9 @@ public class SiteController {
 	
 	@GetMapping(value = "/change")
 	@ResponseBody
-	public double[] getSite(@RequestParam int siteID) {
+	public Map<String, Object> getSite(@RequestParam String date,@RequestParam int siteID) {
 		
-		return siteServ.getSiteChange(siteID);
+		return siteServ.getSiteChange(date,siteID);
 		
 	}
 	
@@ -94,6 +100,32 @@ public class SiteController {
 	public boolean postSite(@RequestParam List<Integer> ids) {
 		return siteServ.patchDeleteSites(ids);
 	}
+	
+	@GetMapping(value = "/flow")
+	@ResponseBody
+	public Map<String, Object> getSiteFlow(@RequestParam int flowType) {
+		return siteServ.getSitesFlow(flowType);
+	}
+	
+	@GetMapping(value = "/inactiveDays")
+	@ResponseBody
+	public Map<Date,Integer> getDurationInactive(@RequestParam String startTime,
+			@RequestParam int daysBefore,@RequestParam int checkDay) {
+		return siteServ.getDurationInactive(startTime,daysBefore,checkDay);
+	}
+	
+	@GetMapping(value = "/inactiveCheck")
+	@ResponseBody
+	public List<Integer> getgetDayInactiveBikes(@RequestParam String startTime,@RequestParam int checkDay) {
+		return siteServ.getDayInactiveBikes(startTime,checkDay);
+	}
+	
+	@GetMapping(value = "/inactive/bikes")
+	@ResponseBody
+	public List<String> getInactiveBikes(@RequestParam String startTime,@RequestParam int checkDay) {
+		return siteServ.getInactiveBikes(startTime,checkDay);
+	}
+	
 
 
 }

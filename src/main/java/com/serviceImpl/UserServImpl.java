@@ -75,4 +75,15 @@ public class UserServImpl implements UserServ {
 		return false;
 	}
 
+	@Override
+	public boolean checkLogin(String userName,String passWord) {
+		User user=userDao.getUserByName(userName);
+		String rightPass=user.getPassword();
+		if (rightPass.equals(passWord)) {
+			return true;
+		}
+		
+		return false;
+	}
+
 }

@@ -1,8 +1,10 @@
 package com.execute;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
@@ -10,17 +12,21 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.helper.HoliDayHelper;
 import com.pojo.BikeArea;
 import com.pojo.BikeHeader;
 import com.pojo.BikePos;
 import com.pojo.CircumState;
 import com.pojo.Lnglat;
+import com.pojo.PredictResult;
 import com.pojo.Site;
 import com.service.SiteServ;
 import com.util.CoordsUtil;
@@ -114,10 +120,10 @@ public class SiteAnalyze {
 	 * @param sites
 	 */
 	private void initSiteAreas(Map<Integer, Map<String, Object>> sitesInfos, List<Site> sites, int count) {
-		int dist = 50;
+
 		for (Site s : sites) {
 			Lnglat lnglat = new Lnglat(s.getLng(), s.getLat());
-			BikeArea area = CoordsUtil.getCenterArea(lnglat, dist);
+			BikeArea area = CoordsUtil.getCenterArea(lnglat);
 
 			Map<String, Object> info = new HashMap<>();
 			info.put("site", s);
@@ -147,6 +153,7 @@ public class SiteAnalyze {
 
 		Map<Date, List<Map<String, Object>>> dateFiles = new TreeMap<>();
 		List<Path> paths = FilesUtil.listAllFiles(true);
+		FilesUtil.sortFiles(paths);
 		while (temp.before(enDate)) {
 			List<Map<String, Object>> ls = new ArrayList<>();
 			dateFiles.put(temp, ls);
@@ -179,7 +186,6 @@ public class SiteAnalyze {
 
 			List<BikePos> bikes = (List<BikePos>) bikeFile.get("bikes");
 			giteSiteBikes(bikes, sitesInfos, i);
-			System.out.println("finish" + paths.get(i).toString());
 
 		}
 
@@ -190,48 +196,213 @@ public class SiteAnalyze {
 		return dateFiles;
 	}
 
+	/**
+	 * 根据某一个日期和该日期之前的天数获取siteBikes里面关于单车信息的数据
+	 * 
+	 * @param askDate
+	 * @param daysBefore
+	 */
+	private Map<Integer, Map<Date, List<Integer>>> getDataByDateAndBefore(Date askDate, int daysBefore) {
+		List<Date> askDates = new ArrayList<>();
+		Calendar calendar = Calendar.getInstance();
+		Date startDate = null;
+		for (int i = 0; i <= daysBefore; i++) {
+
+			calendar.setTime(askDate);
+			calendar.set(Calendar.DAY_OF_YEAR, calendar.get(Calendar.DAY_OF_YEAR) - (daysBefore - i));
+			calendar.set(Calendar.HOUR_OF_DAY, 0);
+			calendar.set(Calendar.MINUTE, 0);
+			calendar.set(Calendar.SECOND, 0);
+			calendar.set(Calendar.MILLISECOND, 0);
+			askDates.add(calendar.getTime());
+			if (i == 0) {
+				startDate = calendar.getTime();
+			}
+		}
+
+		List<Site> sites = siteServ.getAllSites();
+		Map<Integer, Map<String, Object>> sitesInfo = getSiteBikes();
+		List<Date> dates = getDates();
+
+		int dateCount = 0;
+		for (int i = 0; i < dates.size(); i++) {
+			if (dates.get(i).compareTo(startDate) == 0) {
+				dateCount = i;
+				break;
+			}
+		}
+		Map<Integer, Map<Date, List<Integer>>> sitesNeed = new HashMap<>();
+		for (Site site : sites) {
+			Map<String, Object> siteData = sitesInfo.get(site.getId());
+			List<Integer> bikes = (List<Integer>) siteData.get("bikes");
+
+			Map<Date, List<Integer>> dailyInfo = new TreeMap<>();
+			int count = 0;
+			for (int i = dateCount; i <= dateCount + daysBefore; i++, count++) {
+				List<Integer> ls = bikes.subList(i * 24, (i + 1) * 24);
+				dailyInfo.put(askDates.get(count), ls);
+			}
+			sitesNeed.put(site.getId(), dailyInfo);
+		}
+		return sitesNeed;
+	}
+
+	public List<Integer> estimate(Date askDate, int siteID) {
+		int daysBefore = 2;
+		Map<Integer, Map<Date, List<Integer>>> sitesNeed = getDataByDateAndBefore(askDate, daysBefore);
+
+		Map<Date, List<Integer>> siteBefore = sitesNeed.get(siteID);
+		List<Integer> result = siteBefore.get(askDate);
+
+		return result;
+
+	}
+
+	/**
+	 * 给定一个日期，以及日期之前的天数，计算该日期前面若干天相同时段的活跃度
+	 * 
+	 * @param askDate    日期不管小时数
+	 * @param daysBefore 表示最近 x 天
+	 * @return
+	 */
+	public Map<Integer, double[]> siteActives(Date askDate, int daysBefore) {
+		Map<Integer, Map<Date, List<Integer>>> sitesNeed = getDataByDateAndBefore(askDate, daysBefore);
+		Map<Integer, double[]> sitesRates = new HashMap<>();
+
+		for (Integer siteId : sitesNeed.keySet()) {
+			Map<Date, List<Integer>> dailyInfo = sitesNeed.get(siteId);
+			double[] dayRates = new double[24];
+
+			for (Date date : dailyInfo.keySet()) {
+				List<Integer> dayList = dailyInfo.get(date);
+				List<Double> dayRate = analyzeActive(dayList);
+				for (int i = 0; i < dayRate.size(); i++) {
+					dayRates[i] += dayRate.get(i);
+				}
+			}
+			for (int i = 0; i < dayRates.length; i++) {
+				dayRates[i] /= dailyInfo.size();
+				dayRates[i] = (int) (dayRates[i] * 100) / 100.0;
+			}
+			sitesRates.put(siteId, dayRates);
+		}
+		return sitesRates;
+	}
+
+	private List<Double> analyzeActive(List<Integer> dayList) {
+		double temp = 0;
+		int max = dayList.get(0);
+		int min = dayList.get(0);
+		for (int i = 0; i < dayList.size(); i++) {
+			if (dayList.get(i) > max) {
+				max = dayList.get(i);
+			}
+			if (dayList.get(i) < min) {
+				min = dayList.get(i);
+			}
+		}
+		int lag = max - min;
+		List<Double> rates = new ArrayList<>();
+		for (int i = 0; i < dayList.size() - 1; i++) {
+			temp = (int) (Math.abs((double) (dayList.get(i) - dayList.get(i + 1))) / lag * 100) / 100.0;
+			rates.add(temp);
+		}
+		return rates;
+	}
+
+	/**
+	 * 给定一个站点ID，返回这个站点每一天的变化情况和平均变化情况的差
+	 * 
+	 * @param siteID
+	 * @return
+	 */
+	public double[] analyzeSiteSimilar(int siteID) {
+		// 对avg求取最大最小的差值，然后avgRatio代表每个值除以差值
+		double[] avgs = analyzeSiteChange(siteID);
+		double avgMax = MathUtil.maxVal(avgs);
+		double avgMin = MathUtil.minVal(avgs);
+		double avgLag = avgMax - avgMin;
+		double[] avgRatio = new double[avgs.length];
+		for (int i = 0; i < avgs.length; i++) {
+			avgRatio[i] = avgs[i] / avgLag;
+		}
+		Map<Integer, Map<String, Object>> sitesInfo = getSiteBikes();
+		Map<String, Object> siteData = sitesInfo.get(siteID);
+		List<Integer> bikes = (List<Integer>) siteData.get("bikes");
+		List<Date> dates = getDates();
+		Map<Date, List<Integer>> dailyInfo = new TreeMap<>();
+		for (int i = 0; i < dates.size(); i++) {
+			dailyInfo.put(dates.get(i), bikes.subList(i * 24, (i + 1) * 24));
+		}
+		int[] dayTemp = new int[24];
+		double[] dayRaio = new double[24];
+		double[] dayMinus = new double[24];
+
+		List<Double> similars = new ArrayList<>();
+		double daySimi = 0;
+		for (Date date : dailyInfo.keySet()) {
+			List<Integer> dayList = dailyInfo.get(date);
+			daySimi = 0;
+			Integer dayMax = dayList.get(0);
+			Integer dayMin = dayList.get(0);
+			for (int i = 0; i < dayList.size(); i++) {
+				dayTemp[i] = dayList.get(i);
+				if (dayTemp[i] > dayMax) {
+					dayMax = dayTemp[i];
+				}
+				if (dayTemp[i] < dayMin) {
+					dayMin = dayTemp[i];
+				}
+			}
+			double dayLag = dayMax - dayMin;
+			for (int i = 7; i < dayList.size(); i++) {
+				dayRaio[i] = dayTemp[i] / dayLag;
+				dayMinus[i] = Math.abs(dayRaio[i] - avgRatio[i]);
+				daySimi += dayMinus[i];
+
+			}
+			daySimi = ((int) (daySimi * 100)) / 100.0;
+			similars.add(daySimi);
+		}
+		return null;
+	}
+
+	/**
+	 * 给定一个站点ID，返回这个站点的历史平均变化率
+	 * 
+	 * @param siteID
+	 * @return
+	 */
 	public double[] analyzeSiteChange(int siteID) {
-
-		int starthour = 8;
-		List<Integer> startHistory = getEveryDaySitesCircums(siteID, starthour);
-
-		int maxStart = MathUtil.getListMax(startHistory);
 		Map<Integer, Map<String, Object>> sitesInfo = getSiteBikes();
 		Map<String, Object> siteData = sitesInfo.get(siteID);
 		List<Integer> bikes = (List<Integer>) siteData.get("bikes");
 
 		List<Date> dates = getDates();
 		int dayCount = dates.size();
-		System.out.println(dayCount);
 		Map<Date, List<Integer>> dailyInfo = new TreeMap<>();
 		for (int i = 0; i < dates.size(); i++) {
-			List<Integer> ls = new ArrayList<>();
-			ls = bikes.subList(i * 24, (i + 1) * 24);
-			dailyInfo.put(dates.get(i), ls);
+			dailyInfo.put(dates.get(i), bikes.subList(i * 24, (i + 1) * 24));
 		}
 
 		double[] dayAverage = new double[24];
 		for (Date date : dailyInfo.keySet()) {
 			List<Integer> dayList = dailyInfo.get(date);
-			int dayPlus = maxStart - dayList.get(0);
 			for (int i = 0; i < dayList.size(); i++) {
-				dayList.set(i, dayList.get(i) + dayPlus);
 				dayAverage[i] += dayList.get(i);
 			}
 		}
-		double min=dayAverage[0];
+		double min = dayAverage[0];
 		for (int i = 0; i < 24; i++) {
 			dayAverage[i] /= dayCount;
 			dayAverage[i] = ((int) (dayAverage[i] * 10)) / 10.0;
-			if(dayAverage[i]<min) {
-				min=dayAverage[i];
+			if (dayAverage[i] < min) {
+				min = dayAverage[i];
 			}
 		}
 		for (int i = 0; i < 24; i++) {
-			dayAverage[i]-=min;
-			
-			dayAverage[i]=((int) (dayAverage[i] * 10)) / 10.0;
-			System.out.print( dayAverage[i] + " ");
+			dayAverage[i] -= min;
+			dayAverage[i] = ((int) (dayAverage[i] * 10)) / 10.0;
 		}
 
 		return dayAverage;
@@ -263,16 +434,37 @@ public class SiteAnalyze {
 	}
 
 	/**
+	 * 返回一天的环境情况，输入参数无视小时
+	 * 
+	 * @param date
+	 * @return
+	 */
+	public List<CircumState> getDayCircums(Date date) {
+		Map<Date, CircumState> allCircums = getCircums();
+
+		List<CircumState> oneDay = new ArrayList<>();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		Date temp = null;
+		for (int i = 0; i < 24; i++) {
+			temp = calendar.getTime();
+			oneDay.add(allCircums.get(temp));
+			calendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY) + 1);
+		}
+		return oneDay;
+	}
+
+	public Map<Integer, Map<String, Object>> getSiteBikes() {
+		return MapperUtil.readIntMapMapData("./siteBikes.txt");
+	}
+
+	/**
 	 * 返回24小时乘以天数的环境状况文件
 	 * 
 	 * @return
 	 */
 	public Map<Date, CircumState> getCircums() {
 		return MapperUtil.readMapData("./circumList.txt", Date.class, CircumState.class);
-	}
-
-	public Map<Integer, Map<String, Object>> getSiteBikes() {
-		return MapperUtil.readIntMapMapData("./siteBikes.txt");
 	}
 
 	public List<Date> getDates() {
@@ -312,10 +504,6 @@ public class SiteAnalyze {
 		return result;
 	}
 
-	public static void main(String[] args) {
-
-	}
-
 	public void createDefaultCircums() {
 		Map<Integer, List<CircumState>> allCircums = new HashMap<>();
 
@@ -339,5 +527,51 @@ public class SiteAnalyze {
 		}
 		MapperUtil.writeMapListData("./defaultCircums.txt", allCircums, Integer.class, CircumState.class);
 	}
+	
+	public PredictResult getSitePredict(int siteID) {
+		List<PredictResult> results=readPredict();
+		for(PredictResult pre:results) {
+			if (pre.getId()==siteID) {
+				return pre;
+			}
+		}
+		return null;
+	}
+	
+	public List<PredictResult> readPredict() {
 
+		String fileName = "/Users/daniel/softs/pythonWorks/predict.json";
+		Path path = Paths.get(fileName);
+		if (Files.exists(path)) {
+			List<PredictResult> results=new ArrayList<>();
+			ObjectMapper mapper = new ObjectMapper();
+			try {
+
+				JsonNode root = mapper.readTree(path.toFile()).findValue("0");
+				Iterator<Entry<String, JsonNode>> iterator = root.fields();
+				while (iterator.hasNext()) {
+					Entry<String, JsonNode> site = iterator.next();
+
+					PredictResult pre = new PredictResult();
+					pre.setId(Integer.parseInt(site.getKey()) + 1);
+					Iterator<JsonNode> vals=site.getValue().elements();
+					List<Integer> nums=new ArrayList<>();
+					while(vals.hasNext()) {
+						nums.add(vals.next().asInt());
+					}
+					pre.setResults(nums);
+					results.add(pre);
+				}
+				return results;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+
+	public static void main(String[] args) {
+		SiteAnalyze aSiteAnalyze = new SiteAnalyze();
+		aSiteAnalyze.readPredict();
+	}
 }

@@ -26,14 +26,18 @@
         triCap: null,
         manCap: null,
         loadUnitTime: null,
+        speedRatio:10,
+        loadRatio:200,
         getSpeedByType: function(type) {
+        	var initSpeed;
             if (type == this.truckType) {
-                return this.truckSpeed;
+            	initSpeed=this.truckSpeed;
             } else if (type == this.triType) {
-                return this.triSpeed;
+            	initSpeed=this.triSpeed;
             } else {
-                return this.manSpeed;
+            	initSpeed=this.manSpeed;
             }
+            return initSpeed*this.speedRatio;
         },
         setConfig: function() {
             mapUtil.link.getData("/simu/config", true, {}, function(data) {
@@ -98,6 +102,7 @@
                     carPos: carPos
                 }, function(data) {
                     if (data) {
+                    	console.log(data);
                         simuID = data.uuid;
                         markerOps.initJobs(data.list);
                     }
@@ -155,16 +160,17 @@
                 var timeSet = $("#simu-init-date").val(function() {
                     return moment("2018-11-01", "YYYY_MM_DD").format("YYYY-MM-DD");
                 }).datetimepicker({
-                    format: "yyyy-mm-dd",
+                    format: "yyyy-mm-dd hh:00",
                     autoclose: true,
-                    minView: 2,
+                    minView: 1,
                     todayBtn: true,
                     initialDate: "2018-11-01"
                 });
 
                 timeSet.on('changeDate', function(ev) {
-
+                	
                     var input = ev.date;
+                    console.log(input)
                     var formed = moment(input, "dddd MMMM DD YYYY").format("YYYY_MM_DD");
                     simuSet.date = formed;
                 });
@@ -299,9 +305,9 @@
 
         },
         initMapMark: function() {
-            mapUtil.link.getData("/site/all", true, {}, function(data) {
+            mapUtil.link.getData("/site/allTypes", true, {}, function(data) {
                 if (data) {
-                    markerOps.addMarkers(data, markerOps.siteIcon);
+                    markerOps.addMarkers(data);
                 }
             });
         },
@@ -366,16 +372,16 @@
                 dispID: carID
             }, function(data) {
                 if (data) {
-                    if (data.taskType == 1) { // 移动任务
+                    if (data.taskType == 1) { // 移动装卸任务
 
-                        markerOps.setMoveTask(carID, data.path.paths);
-                    } else if (data.taskType == 2) { // 装卸任务
-                        markerOps.setLoadTask(carID, data);
+                        markerOps.setLoadTask(carID, data.path.paths);
+                    } else if (data.taskType == 2) { // 其他任务
+                        
                     }
                 }
             });
         },
-        setMoveTask: function(carID, carPath) {
+        setLoadTask: function(carID, carPath) {
             var carMark = this.getMark(carID);
             var arrayPath = [];
 
@@ -398,17 +404,6 @@
 
 
         },
-        setLoadTask: function(carID, data) {
-            var loadNum = data.loadNum;
-            var waitTime = loadNum * configs.loadUnitTime * 1000;
-            console.log("需要等待canshu：" + configs.loadUnitTime + "    " + loadNum);
-            console.log("需要等待：" + waitTime);
-            setTimeout(function() {
-                console.log("装载结束");
-                markerOps.getNextTask(carID);
-            }, waitTime);
-
-        },
         getMark: function(carID) {
             var carData = this.dispats.find(function(current, index, arr) {
                 if (current.id == carID) {
@@ -419,7 +414,8 @@
         },
         initJobs: function(jobList) {
             var cars = this.dispats;
-            console.log("初始化一次----------");
+            console.log("初始化工作");
+            
             cars.forEach(function(ele, index) {
                 var carID = ele.id;
                 var carData = jobList.find(function(current, index, arr) {
@@ -427,25 +423,31 @@
                         return current;
                     }
                 }, carID);
+                
                 var carPath = carData.path.paths;
                 var carMark = markerOps.getMark(carID);
-                markerOps.setMoveTask(carID, carPath);
+                markerOps.setLoadTask(carID, carPath);
                 carMark.marker.on('movealong', function() {
                     simuMap.remove(carMark.moveLine);
-                    console.log("移动结束");
-                    markerOps.getNextTask(carID);
+                    console.log("移动结束，准备装载");
+                    var loadNum = carData.loadNum;
+                    var waitTime = parseInt(loadNum * configs.loadUnitTime * 1000 / configs.loadRatio);
+                    setTimeout(function() {
+                        console.log("装载结束");
+                        markerOps.getNextTask(carID);
+                    }, waitTime);
 
                 });
                 carMark.marker.on('moving', function(ev) {
-                	carMark.infoDisp.setPosition(this.getPosition());
-
+                	if(carMark.infoDisp){
+                		carMark.infoDisp.setPosition(this.getPosition());
+                	}
                 });
                 
             });
         },
         // 只能选择一个路径展示
         toggleRoute: function() {
-
 
             var passedPolyline = new AMap.Polyline({
                 map: simuMap,
@@ -476,7 +478,12 @@
             }
         },
         siteIcon: {
-            image: "image/simu/house.ico",
+            image: "image/simu/house.png",
+            imageSize: new AMap.Size(24, 24),
+            offset: new AMap.Pixel(-12, -24)
+        },
+        redSiteIcon: {
+            image: "image/simu/houseRed.png",
             imageSize: new AMap.Size(24, 24),
             offset: new AMap.Pixel(-12, -24)
         },
@@ -507,19 +514,26 @@
             
         },
 
-        addMarkers: function(list, icon) {
-            for (var i in list) {
-                list[i].marker = new AMap.Marker({
+        addMarkers: function(data) {
+        	var list=data.sites;
+        	var types=data.types;
+        	console.log(data);
+        	var icon;
+        	list.forEach(function(ele,index) {
+        		if(types[index]==1){
+        			icon=markerOps.siteIcon;
+        		}else{
+        			icon=markerOps.redSiteIcon;
+        		}
+        		ele.marker = new AMap.Marker({
                     icon: new AMap.Icon(icon),
-                    position: [list[i].lng, list[i].lat],
+                    position: [ele.lng, ele.lat],
                     map: simuMap,
                 });
-                var site=list[i];
-                list[i].marker.on('click', function (ev) {
-                    markInfo.siteInfo(this,site);
+                ele.marker.on('click', function (ev) {
+                    markInfo.siteInfo(this,ele);
                 });
-
-            }
+			});
         },
         clearMarer: function(marker) {
             if (marker) {

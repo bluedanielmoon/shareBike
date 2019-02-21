@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登陆页面</title>
+
+<link rel="stylesheet" type="text/css" href="css/login.css">
+</head>
+<body>
+	<div class="wrapper">
+		<div class="container">
+			<h1>Welcome</h1>
+			<form class="form">
+				<input id="loginName" type="text" placeholder="Username"> <input
+					id="loginPass" type="password" placeholder="Password">
+				<button type="submit" id="login-button">Login</button>
+			</form>
+		</div>
+
+		<ul class="bg-bubbles">
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+		</ul>
+
+	</div>
+
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript">
+		$('#login-button').click(function(event) {
+			event.preventDefault();
+
+			var name = $("#loginName").val();
+			var pass = $("#loginPass").val();
+
+			$.ajax({
+				type : 'POST',
+				url : "/user/login",
+				async : false,
+				data : {
+					loginName : $("#loginName").val(),
+					loginPass : $("#loginPass").val()
+				},
+				success : function(result, status, xhr) {
+					if (result) {
+						if (result == name) {
+							console.log("login success");
+
+							$('form').fadeOut(500, function() {
+								window.location.href = '/index.html?name='+name;
+							});
+							$('.wrapper').addClass('form-success');
+							//
+						} else {
+							alert('登陆失败！');
+						}
+					}
+
+				}
+			});
+		});
+	</script>
+
+</body>
+</html>

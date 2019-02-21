@@ -4,29 +4,28 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.catalina.mapper.Mapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SequenceWriter;
+import com.init.State;
 import com.pojo.BikeArea;
 import com.pojo.BikeHeader;
 import com.pojo.BikePos;
 import com.pojo.Lnglat;
 import com.pojo.MapSize;
 import com.pojo.Varia;
+import com.service.SiteServ;
 import com.util.CoordsUtil;
 import com.util.DateUtil;
 import com.util.FilesUtil;
@@ -35,24 +34,18 @@ import com.util.MapperUtil;
 @Component
 public class Heater {
 
+	@Autowired
+	SiteServ siteServ;
+
 	private static MapHelper helper = new MapHelper();
 	private static String DEFAULT_HEAT = "/Users/daniel/projects/heatData/";
 
-	public static void main(String[] args) {
-
-		String date = "2018_10_31";
-		int dist = 50;
-		int type = 2;
-		Heater heater = new Heater();
-		heater.checkOrProduce(date, dist, type);
-
-	}
 
 	public List<Varia> calcuFlucByChance(Map<String, Varia> data, List<Double> bkCounts) {
 
 		List<Varia> result = new ArrayList<>();
-	
-		int size=bkCounts.size()-1;
+
+		int size = bkCounts.size() - 1;
 
 		double[] avgChange = new double[size];
 		int[] changed = new int[size];
@@ -126,7 +119,7 @@ public class Heater {
 		List<Map<String, Object>> bikes = FilesUtil.ListFilesInDay(date);
 
 		Map<String, Varia> data = getBikesData(day, dist);
-		
+
 		List<Double> bkCounts = new ArrayList<>();
 		for (Map<String, Object> b : bikes) {
 			BikeHeader header = (BikeHeader) b.get("header");
@@ -259,12 +252,11 @@ public class Heater {
 	 * @return
 	 */
 	private Map<String, Varia> getGridBikesList(String day, int dist) {
-		BikeArea area = State.getArea();
+		BikeArea area = State.AREA;
 
 		MapSize size = new MapSize();
 		Map<String, Map<String, Object>> map = helper.divideMapToGrid(area, dist, size);
 
-		System.out.println(size);
 		Date date = DateUtil.parseToDay(day);
 
 		List<Map<String, Object>> bikes = FilesUtil.ListFilesInDay(date);
@@ -280,7 +272,7 @@ public class Heater {
 	 * @return
 	 */
 	public Map<String, Varia> getGridBikesList(Date date, int dist) {
-		BikeArea area = State.getArea();
+		BikeArea area = State.AREA;
 
 		MapSize size = new MapSize();
 		Map<String, Map<String, Object>> map = helper.divideMapToGrid(area, dist, size);
@@ -291,6 +283,7 @@ public class Heater {
 
 	/**
 	 * 为了避免单次读入文件过多，对一个已经有的Varia，进行单车数据的补充
+	 * 
 	 * @param parent
 	 * @param area
 	 * @param dist
@@ -322,15 +315,6 @@ public class Heater {
 		return null;
 	}
 
-	/**
-	 * 把单车的数据放入栅格地图
-	 * 
-	 * @param area
-	 * @param dist
-	 * @param map
-	 * @param bikes
-	 * @return Map<String, Varia> 键值为地图方块ID，代表横纵信息，Varia代表里面的信息
-	 */
 	public Map<String, Varia> addRecBikesCount(BikeArea area, int dist, Map<String, Map<String, Object>> map,
 			List<Map<String, Object>> bikes) {
 
@@ -353,8 +337,6 @@ public class Heater {
 		int recCount = 0;
 		for (int i = 0; i < bikes.size(); i++) {
 			Map<String, Object> b = bikes.get(i);
-			BikeHeader header = (BikeHeader) b.get("header");
-			System.out.println(header.getStartTime());
 			List<BikePos> ls = (List<BikePos>) b.get("bikes");
 			helper.pubBikesToGrid(ls, area, map, dist);
 			if (i == 0) {

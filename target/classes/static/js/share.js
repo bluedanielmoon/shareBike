@@ -156,6 +156,7 @@ share.params = {
     },
     init: function() {
         $("#clusterDist").val(mapLayer.config.clusterDist);
+        $("#inActiveHours").val(mapLayer.config.inactHours);
         mapUtil.link.getData("/map/daterange", "true", {}, function(timerange) {
             var start = mapUtil.utils.parser(timerange[0]);
             var end = mapUtil.utils.parser(timerange[1], 23);
@@ -205,12 +206,15 @@ share.params = {
                 var pick = share.params.getPicker();
                 var start = pick.startDate;
                 var end = pick.endDate;
+                
+                var inact=$("#inActiveHours").val();
                 if (start.isSame(end)) {
                     console.log("准备加载单文件数据" + start);
                     mapLayer.config.setParam("startTime", start
                         .format(share.params.format));
                     mapLayer.config.setParam("endTime", start
                         .format(share.params.format));
+                    mapLayer.config.setParam("inactHours",inact);
                     mapLayer.resetMods();
                 } else {
                     console.log("准备加载区间数据" + start + "--" + end);
@@ -322,12 +326,24 @@ share.chart = {
         $("#console-chart a[href='#tab-site']").click(function(event) {
         	mapChart.showSite();
         });
+        $("#console-active a[href='#tab-duration']").click(function(event) {
+            mapChart.showInactiveTrend();
+        });
+        $("#console-active a[href='#tab-avtivePie']").click(function(event) {
+            mapChart.showActive();
+        });
+        
         $("#console-site a[href='#tab-siteChange']").click(function(event) {
         	mapChart.showSiteChange();
         });
         $("#console-chart a[href='#tab-daily']").click(function(event) {
         	mapChart.showDaily();
         });
+ 		$("#console-site a[href='#tab-siteFlow']").click(function(event) {
+        	mapChart.showFlow();
+        });  
+ 		
+ 		
 
     }
 }
@@ -364,22 +380,36 @@ share.console = {
     },
     change: function() {
         var link = window.location.hash;
+        
+        
         if (link == "") {
             this.show("map");
+            $("#modelTitle").text("控制台");
         }  else { // 其他页面
             link = link.substring(1, link.length);
            if(link == "manage"){
             	this.show("manage");
+            	$("#modelTitle").text("资源管理");
             	manage.init();
             }else if (link == "anaylyze_data") {
                 this.show("chart");
+                $("#modelTitle").text("数据分析");
                 mapChart.showVaria();
+            }else if (link == "anaylyze_active") {
+                this.show("active");
+                $("#modelTitle").text("活跃度分析");
+                mapChart.showInactiveTrend();
             }else if (link == "anaylyze_site") {
                 this.show("site");
+                $("#modelTitle").text("站点分析");
                 mapChart.showSite();
             }else if(link == "simuler"){
             	this.show("simuler");
+            	$("#modelTitle").text("调度模拟");
             	mapSimu.init();
+            }else if(link == "plan"){
+            	this.show("plan");
+            	mapPlan.test();
             }
         }
     },
@@ -390,6 +420,13 @@ share.console = {
 $(document).ready(function() {
     // 先有界面后有天,反手神仙也难堪
     share.console.change();
+    
+    //设置用户名字
+    var userName=window.location.search;
+    userName=userName.substring(6,userName.length);
+    $("#userProfile .info p").text(userName);
+    
+   
 
     // 地图加载放到这里，放在别的地方在2d时速度快，在3d时就出现问题
     var map = new AMap.Map('container', {

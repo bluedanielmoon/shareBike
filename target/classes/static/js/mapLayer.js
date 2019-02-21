@@ -6,9 +6,10 @@
 	var mapLayer;
 
 	var config = {
-		clusterDist: 20,
+		clusterDist: 100,
 		startTime: "latest",
 		endTime: "latest",
+		inactHours: 24,
 		// share.config.setParam("clusterDist", 20);
 		setParam: function(param, value) {
 			this[param] = value;
@@ -28,6 +29,11 @@
 	var styles = {
 		massMark: [{
 			url: "image/little.png",
+			anchor: new AMap.Pixel(4, 4),
+			size: new AMap.Size(7, 7)
+
+		},{
+			url: "image/littleRed.png",
 			anchor: new AMap.Pixel(4, 4),
 			size: new AMap.Size(7, 7)
 
@@ -367,11 +373,15 @@
 			bikePos: function(modName, func) {
 				var start = config.getParam("startTime");
 				var end = config.getParam("endTime");
+				
+				var inAct = config.getParam("inactHours");
 				start = this.checkTime(start);
 				end = this.checkTime(end);
 				if (start == "latest" || end == "latest" || start == end) {
-					mapUtil.link.getData("/map/bikePos", true, {
-						time: start
+					
+					mapUtil.link.getData("/map/bikePosInact", true, {
+						time: start,
+						inAct:inAct
 					}, function(data) {
 						if (data && data.header) {
 							// {"lnglat":[116.258446,37.686622],"name":"景县","style":2}
@@ -380,7 +390,6 @@
 							mass.hasData = true;
 							var header = data.header;
 							func(modName);
-							console.log(header);
 							var panel = {
 								bikesCount: header.bikeCount,
 								startTime: share.params.formTime(header.startTime),
@@ -394,6 +403,7 @@
 							share.infoPanel.setData(panel);
 							share.params.setRange(header.startTime, header.startTime);
 						}
+						
 					});
 				} else {
 					mapUtil.link.getData("/map/rangebikePos", true, {

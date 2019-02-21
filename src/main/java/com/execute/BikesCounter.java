@@ -20,7 +20,7 @@ public class BikesCounter {
 	
 	
 	public Map<Integer, List<Map<String, Object>>> countByDay() {
-		List<Path> all = FilesUtil.listAllFiles(false);
+		List<Path> all = FilesUtil.listAllFiles(true);
 		Map<Integer, List<Map<String, Object>>> result = new TreeMap<>();
 
 		BikeHeader bk = null;

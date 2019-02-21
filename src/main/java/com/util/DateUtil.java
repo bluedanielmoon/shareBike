@@ -2,6 +2,7 @@ package com.util;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 import org.springframework.stereotype.Component;
@@ -31,7 +32,7 @@ public class DateUtil {
 		return date;
 	}
 	/**
-	 * 解析yyyy_MM_dd格式的文件名到日期
+	 * 解析yyyy_MM_dd格式的日期
 	 * @param fileName
 	 * @return
 	 */
@@ -90,5 +91,37 @@ public class DateUtil {
 	
 	public static String getLatestDay() {
 		return "2018_11_14";
+	}
+	
+	public static boolean isSameDay(Date date1,Date date2) {
+		Calendar calendar=Calendar.getInstance();
+		calendar.setTime(date1);
+		Calendar calendar2=Calendar.getInstance();
+		calendar2.setTime(date2);
+		if(calendar.get(Calendar.YEAR)==calendar2.get(Calendar.YEAR)) {
+			if(calendar.get(Calendar.MONTH)==calendar2.get(Calendar.MONTH)) {
+				if(calendar.get(Calendar.DATE)==calendar2.get(Calendar.DATE)) {
+					return true;
+				}
+			}	
+		}
+		return false;
+	}
+	
+	public static boolean isSameDayHour(Date date1,Date date2) {
+		Calendar calendar=Calendar.getInstance();
+		calendar.setTime(date1);
+		Calendar calendar2=Calendar.getInstance();
+		calendar2.setTime(date2);
+		if(calendar.get(Calendar.YEAR)==calendar2.get(Calendar.YEAR)) {
+			if(calendar.get(Calendar.MONTH)==calendar2.get(Calendar.MONTH)) {
+				if(calendar.get(Calendar.DATE)==calendar2.get(Calendar.DATE)) {
+					if(calendar.get(Calendar.HOUR_OF_DAY)==calendar2.get(Calendar.HOUR_OF_DAY)) {
+						return true;
+					}
+				}
+			}	
+		}
+		return false;
 	}
 }

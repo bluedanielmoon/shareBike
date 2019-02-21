@@ -1,11 +1,10 @@
 package com.pojo;
 
 public class SimuTask {
-	
+	private int id;
 	private Dispatcher dispatcher;
 	private int workTime;
 	private int taskType;
-	
 	
 
 	public Dispatcher getDispatcher() {

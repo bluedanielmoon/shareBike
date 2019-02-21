@@ -5,7 +5,6 @@ import java.util.List;
 import com.pojo.BikeArea;
 import com.pojo.BikePos;
 import com.pojo.Lnglat;
-import com.pojo.Varia;
 
 public class CoordsUtil {
 	private static final double EARTH_RADIUS = 6378137;// m
@@ -19,23 +18,7 @@ public class CoordsUtil {
 //	private static double ConvertRadiansToDegrees(double radian) {
 //		return radian * 180.0 / Math.PI;
 //	}
-	
-	
 
-	public static void main(String[] args) {
-		//108.898072,34.275492
-		//t: 108.9046604697586,34.28116261508937
-	//	turnBaiDuCoord(108.898072,34.275492);
-		
-		
-		int dist=CoordsUtil.calcuDist(108.91663,34.280733, 108.922183,34.280826);
-		
-		
-//		Lnglat aLnglat=new Lnglat(108.902508,34.286365);
-//		Lnglat bLnglat=new Lnglat(108.921948,34.286436);
-//		Lnglat xLnglat=getRatioPos(aLnglat, bLnglat, 0.1);
-		System.out.println(dist);
-	}
 	/**
 	 * 手里拿着高德坐标，现在要往百度地图画。百度相当于把坐标往左下角挪了，现在要挪回去
 	 */
@@ -88,7 +71,8 @@ public class CoordsUtil {
 	}
 	
 	
-	public static BikeArea getCenterArea(Lnglat center,int dist) {
+	public static BikeArea getCenterArea(Lnglat center) {
+		int dist=50;
 		BikeArea area=new BikeArea();
 		double LngRight=getLng(center.getLat(), center.getLng(), dist, true);
 		double LngLeft=getLng(center.getLat(), center.getLng(), dist, false);
@@ -100,6 +84,7 @@ public class CoordsUtil {
 		area.setEndLat(latDown);
 		return area;
 	}
+
 	
 
 	public static boolean isInArea(BikeArea area, double lng, double lat) {
@@ -177,8 +162,6 @@ public class CoordsUtil {
 			totalLng += bk.getLng()*temp;
 			totalLat += bk.getLat()*temp;
 		}
-		System.out.println(totalLng);
-		System.out.println(totalLat);
 		return new double[] { totalLng ,totalLat  };
 	}
 	

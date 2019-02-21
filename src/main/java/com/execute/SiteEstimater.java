@@ -1,7 +1,6 @@
 package com.execute;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
@@ -9,7 +8,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,7 +16,6 @@ import com.init.State;
 import com.pojo.CircumState;
 import com.pojo.Site;
 import com.service.SiteServ;
-import com.util.MathUtil;
 
 @Component
 public class SiteEstimater {
@@ -33,7 +30,7 @@ public class SiteEstimater {
 	
 	
 	/**
-	 * 给一组数字，给一个分割数，将该组数字最大值最小值分割为divide个，然后
+	 * 将一组数字划分为若干组，然后
 	 * 计算每个区间的分布数量，求取最大分布的数量，然后将numList的属于该区间的
 	 * 数求平均数
 	 * @param numList
@@ -44,6 +41,9 @@ public class SiteEstimater {
 		if(numList.size()==0) {
 			return 0;
 		}		
+		if(numList.size()==1) {
+			return numList.get(0);
+		}
 		numList.sort(new Comparator<Double>() {
 			@Override
 			public int compare(Double o1, Double o2) {
@@ -51,19 +51,25 @@ public class SiteEstimater {
 				return o1.compareTo(o2);
 			}
 		});
-		int divide=(numList.size()+1)/2;
+		int divide=numList.size()-1;
+		
 		double max=numList.get(numList.size()-1);
 		double min=numList.get(0);
 		double unitLag=(max-min)/divide;
-		int[] distri=new int[divide+1];
+		int[] distri=new int[divide];
 		if(unitLag<=0) {
 			return 0;
 		}
 		for(Double  d:numList) {
 			int index=(int) ((d-min)/unitLag);
-			distri[index]++;
+			if(index>=distri.length) {
+				distri[distri.length-1]++;
+			}else {
+				distri[index]++;
+			}
+			
 		}
-		int maxDistri=0;
+		int maxDistri=0;//数量最多的组的序号
 		int comp=0;
 		for(int i=0;i<distri.length;i++) {
 			if(distri[i]>comp) {
@@ -76,7 +82,7 @@ public class SiteEstimater {
 		List<Double> inRange=new ArrayList<>();
 		double totalInrange=0;
 		for(Double d:numList) {
-			if((d-rangeLeft)>0.00001&&(rangeRight-d)>0.00001) {
+			if((d-rangeLeft)>=0.00001&&(rangeRight-d)>=0.00001||d==rangeLeft||d==rangeRight) {
 				inRange.add(d);
 				totalInrange+=d;
 			}
@@ -99,13 +105,31 @@ public class SiteEstimater {
 		}
 		return result;
 	}
-
+	
 	/**
-	 * 
-	 * @param site
+	 * 为了预测这个小时
 	 * @param theHour
 	 * @param date
-	 * @param circum
+	 * @return
+	 */
+	public Map<Integer, Map<String, Object>> estimateAllSites(int theHour,Date date) {
+		List<Site> allSites=siteServ.getAllSites();
+		Map<Integer, Map<String, Object>> result=new HashMap<>();
+		
+		for(int i=0;i<allSites.size();i++) {
+			Site xSite=allSites.get(i);
+			Map<String, Object> estResult=estimateByHistory(xSite, theHour, date, null);
+			result.put(xSite.getId(), estResult);
+		}
+		return result;
+	}
+
+	/**
+	 * 根据历史数据预测下一个小时单车的变化率,当前忽略温度因素，还是因为数据太少
+	 * @param site
+	 * @param theHour
+	 * @param date 只考虑某个日期之前的数据
+	 * @param circum 只考虑与这个输入的环境相等的环境
 	 * @return Map<String, Object> trend(增还是减),rate(变化的大小),confidence(自信程度)
 	 */
 	public Map<String, Object> estimateByHistory(Site site,int theHour,Date date,CircumState circum) {
@@ -134,6 +158,9 @@ public class SiteEstimater {
 		Date temp=null;
 		for (int i = 0; i < count; i++) {
 			int hourCount = HourHistory.get(i);
+			if(hourCount==0) {
+				hourCount=1;
+			}
 			int nextCount = nextHourHistory.get(i);
 			CircumState nowCircum=null;
 			boolean goOn=true;
@@ -159,6 +186,7 @@ public class SiteEstimater {
 			}
 			//是否考虑环境因素
 			if(docircum) {
+				//忽略温度，如果考虑，就没数据了
 				if(nowCircum.equalsNoTemp(circum)) {
 					if(hourCount<nextCount) {
 						growList.add(i);

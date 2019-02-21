@@ -9,12 +9,13 @@ import java.util.Set;
 
 import org.springframework.stereotype.Component;
 
-import com.pojo.Bike;
+import com.init.State;
 import com.pojo.BikeArea;
 import com.pojo.BikeHeader;
 import com.pojo.BikePos;
 import com.pojo.MapSize;
 import com.pojo.Point;
+import com.pojo.Site;
 import com.util.CoordsUtil;
 
 /**
@@ -249,7 +250,7 @@ public class MapHelper {
 			bigArea=area[0];
 		}else {
 			int bigSize = 400;
-			bigArea = getBiggerArea(State.getArea(), bigSize);
+			bigArea = getBiggerArea(State.AREA, bigSize);
 		}
 		
 
@@ -261,7 +262,6 @@ public class MapHelper {
 		// 判断每个单车属于哪一个网格，并添加进去
 		pubBikesToGrid(bikes, bigArea, maps, mapDivideDist);
 
-		System.out.println(pool.size() + "     开始聚类");
 		// 开始聚类s
 		List<Map<String, BikePos>> result = new ArrayList<Map<String, BikePos>>();
 		while (pool.size() > 0) {
@@ -298,7 +298,6 @@ public class MapHelper {
 			// System.out.println("pack size:"+pack.size());
 			// System.out.println("剩余pool size:"+pool.size()+"\n");
 		}
-		System.out.println("聚类结果：" + result.size());
 		return result;
 	}
 
@@ -311,7 +310,7 @@ public class MapHelper {
 	 * @return
 	 */
 	public List<BikePos> getNearBikes(BikePos bike, Map<String, Map<String, Object>> maps, MapSize size) {
-		BikeArea area = State.getArea();
+		BikeArea area = State.AREA;
 		double lng = area.getStartLng();
 		double lat = area.getStartLat();
 		String findID = "";
@@ -387,6 +386,41 @@ public class MapHelper {
 			if (i <= row + border) {
 				if (j <= col + border) {
 					if (i >= 0 && j >= 0 && i < rows && j < cols) {
+						around.add(i + "_" + j);
+					}
+					j++;
+				} else {
+					j = col - border;
+					i++;
+				}
+			} else {
+				break;
+			}
+		}
+		return around;
+
+	}
+	
+	public List<String> getSiteAroundAreas(BikeArea area,Site site,MapSize size,int divideDist) {
+		double lng = area.getStartLng();
+		double lat = area.getStartLat();
+		String findID = "";
+		int lngDist = CoordsUtil.calcuDist(lng, lat, site.getLng(), lat);
+		int latDist = CoordsUtil.calcuDist(lng, lat, lng, site.getLat());
+		int lngPos = lngDist / divideDist;
+
+		int latPos = latDist / divideDist;
+		findID = latPos + "_" + lngPos;
+		int border=1;
+		
+		String strPos[] = findID.split("_");
+		int row = Integer.parseInt(strPos[0]);
+		int col = Integer.parseInt(strPos[1]);
+		List<String> around = new ArrayList<String>();
+		for (int i = row - border, j = col - border;;) {
+			if (i <= row + border) {
+				if (j <= col + border) {
+					if (i >= 0 && j >= 0 && i < size.getRow() && j < size.getCol()) {
 						around.add(i + "_" + j);
 					}
 					j++;

@@ -28,9 +28,4 @@ public class RegexUtil {
 		}
 		return input.matches("\\d{4}_\\d{1,2}_\\d{1,2}\\s\\d{1,2}");
 	}
-	public static void main(String[] args) {
-		boolean falg=matchHour("2018_10_22 12");
-		System.out.println(falg);
-		
-	}
 }

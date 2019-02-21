@@ -2,28 +2,36 @@ package com.pojo;
 
 public class LoadTask extends SimuTask{
 	
-	private Site site;
+	private Site targetSite;
 	//0--upload,1--download
-	private int type;
+	private int loadType;
 	
 	private int loadNum;
 	
-	private int workTime;
+	private int loadTime;
+	
+	private Lnglat start;
+	
+	private Lnglat end;
+	
+	private GaodePath path;
+	
+	private int moveTime;
 
-	public Site getSite() {
-		return site;
+	public Site getTargetSite() {
+		return targetSite;
 	}
 
-	public void setSite(Site site) {
-		this.site = site;
+	public void setTargetSite(Site targetSite) {
+		this.targetSite = targetSite;
 	}
 
-	public int getType() {
-		return type;
+	public int getLoadType() {
+		return loadType;
 	}
 
-	public void setType(int type) {
-		this.type = type;
+	public void setLoadType(int loadType) {
+		this.loadType = loadType;
 	}
 
 	public int getLoadNum() {
@@ -34,17 +42,50 @@ public class LoadTask extends SimuTask{
 		this.loadNum = loadNum;
 	}
 
-	public int getWorkTime() {
-		return workTime;
+	public int getLoadTime() {
+		return loadTime;
 	}
 
-	public void setWorkTime(int workTime) {
-		this.workTime = workTime;
+	public void setLoadTime(int loadTime) {
+		this.loadTime = loadTime;
+	}
+
+	public Lnglat getStart() {
+		return start;
+	}
+
+	public void setStart(Lnglat start) {
+		this.start = start;
+	}
+
+	public Lnglat getEnd() {
+		return end;
+	}
+
+	public void setEnd(Lnglat end) {
+		this.end = end;
+	}
+
+	public GaodePath getPath() {
+		return path;
+	}
+
+	public void setPath(GaodePath path) {
+		this.path = path;
+	}
+
+	public int getMoveTime() {
+		return moveTime;
+	}
+
+	public void setMoveTime(int moveTime) {
+		this.moveTime = moveTime;
 	}
 
 	@Override
 	public String toString() {
-		return "LoadTask [site=" + site + ", type=" + type + ", loadNum=" + loadNum + ", workTime=" + workTime + "]";
+		return "LoadTask [targetSite=" + targetSite + ", loadType=" + loadType + ", loadNum=" + loadNum + ", loadTime="
+				+ loadTime + ", start=" + start + ", end=" + end + ", path=" + path + ", moveTime=" + moveTime + "]";
 	}
 	
 	

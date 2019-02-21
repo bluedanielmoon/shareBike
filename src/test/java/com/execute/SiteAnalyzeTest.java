@@ -2,6 +2,7 @@ package com.execute;
 
 import static org.junit.Assert.*;
 
+import java.util.Date;
 import java.util.List;
 
 import org.junit.Test;
@@ -11,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.pojo.CircumState;
+import com.util.DateUtil;
 import com.xju.App;
 
 @RunWith(SpringRunner.class)
@@ -20,15 +22,33 @@ public class SiteAnalyzeTest {
 	@Autowired
 	private SiteAnalyze siteAna;
 
-	
-//	@Test
-//	public void testProduce() {
-//		siteAna.produceSiteBikes();
-//	}
+	/**
+	 * 生产出需要的站点环境和站点单车文件
+	 */
+	@Test
+	public void testProduce() {
+		siteAna.produceSiteBikes();
+	}
 	
 	@Test
 	public void testanalyzeSiteChange() {
 		siteAna.analyzeSiteChange(1);
+	}
+	
+	@Test
+	public void testsiteActives() {
+		Date date=DateUtil.pareToHour("2018_11_3 12");
+		siteAna.siteActives(date,2);
+	}
+	
+	@Test
+	public void testEstimate() {
+//		siteAna.estimate();
+	}
+	
+	@Test
+	public void testanalyzeSiteSimilar() {
+		siteAna.analyzeSiteSimilar(1);
 	}
 	
 	

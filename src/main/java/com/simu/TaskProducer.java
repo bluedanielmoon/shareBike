@@ -1,14 +1,11 @@
 package com.simu;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -16,6 +13,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 
 import com.execute.SiteAnalyze;
 import com.execute.SiteEstimater;
+import com.execute.SiteTypeJudger;
 import com.helper.SiteHelper;
 import com.init.State;
 import com.poi.ConnectManager;
@@ -24,12 +22,12 @@ import com.pojo.BikePos;
 import com.pojo.Dispatcher;
 import com.pojo.GaodePath;
 import com.pojo.Lnglat;
-import com.pojo.LoadPlan;
 import com.pojo.LoadTask;
-import com.pojo.MoveTask;
 import com.pojo.Route;
 import com.pojo.SimuTask;
 import com.pojo.Site;
+import com.pojo.SitePlan;
+import com.pojo.WaitTask;
 import com.service.DispatcherServ;
 import com.service.RouteServ;
 import com.service.SiteServ;
@@ -37,7 +35,6 @@ import com.util.ApplicationContextProvider;
 import com.util.CoordsUtil;
 import com.util.FilesUtil;
 import com.util.MathUtil;
-import com.util.PathUtil;
 import com.util.SiteUtil;
 
 public class TaskProducer {
@@ -49,11 +46,14 @@ public class TaskProducer {
 	private RouteServ routeServ;
 	private SiteAnalyze analyze;
 	private CloseableHttpClient client;
-	private Set<Integer> movedSites;
 	private SiteEstimater estimate;
 	private SiteHelper siteHelper;
-	
-	private int NEAR_SITE_DIST=3000;
+	private SiteTypeJudger judger;
+	private Map<Integer, Map<String, Object>> ests;
+	private Map<Integer, Set<Integer>> visitedSites;
+	private Date time;
+	private int startHour;
+	private int endHour;
 
 	// site(site),area(BikeArea),bikes(List),est(int),fake(List)
 	private Map<Integer, Map<String, Object>> siteInfos;
@@ -62,217 +62,281 @@ public class TaskProducer {
 		dayFiles = new ArrayList<>();
 		siteServ = ApplicationContextProvider.getBean(SiteServ.class);
 		dispatcherServ = ApplicationContextProvider.getBean(DispatcherServ.class);
-		routeServ=ApplicationContextProvider.getBean(RouteServ.class);
+		routeServ = ApplicationContextProvider.getBean(RouteServ.class);
 		analyze = new SiteAnalyze();
-		movedSites = new HashSet<>();
 		estimate = ApplicationContextProvider.getBean(SiteEstimater.class);
-		siteHelper=ApplicationContextProvider.getBean(SiteHelper.class);
-	}
-	
-	public List<Site> findSitesWithinDist(Site site,int dist){
-		List<Site> list=new ArrayList<>();
-		for(Site toSite:sites) {
-			Route rout=routeServ.getRoute(site.getId(), toSite.getId());
-			if(rout!=null) {
-				if(rout.getDistance()<dist) {
-					list.add(toSite);
-				}
-			}
-		}
-		return list;
-		
+		siteHelper = ApplicationContextProvider.getBean(SiteHelper.class);
+		judger = ApplicationContextProvider.getBean(SiteTypeJudger.class);
 	}
 
-	public LoadTask assignLoadTask(int nowHour, int nowSeconds, Dispatcher dispatcher, MoveTask moveTask) {
-		LoadTask loadTask = new LoadTask();
-		loadTask.setSite(moveTask.getTarget());
-		Site site = moveTask.getTarget();
-		LoadPlan lPlan = new LoadPlan();
-
-		// 根据现在的时间，站点，该站点的调度车,分析出该车辆在该站点该如何装卸
-		analyzeLoad(nowHour, nowSeconds, site, dispatcher, lPlan);
-
-		int loadCount=lPlan.getLoadCount();
-		loadTask.setType(lPlan.getLoadType());
-		loadTask.setLoadNum(loadCount);
-		loadTask.setDispatcher(dispatcher);
-		
-		int workTime=getLoadTime(loadCount);
-		loadTask.setWorkTime(workTime);
-		loadTask.setTaskType(State.LOAD_TASK);
-		movedSites.add(moveTask.getTarget().getId());
-
-		return loadTask;
-	}
-	
-	private int getLoadTime(int loadCount) {
-		return loadCount*State.LOAD_UNIT_TIME;
-	}
-
-	public void analyzeLoad(int nowHour, int nowSeconds, Site site, Dispatcher dispatcher, LoadPlan lPlan) {
-		Map<String, Object> siteInfo = siteInfos.get(site.getId());
-		List<Integer> ls = (List<Integer>) siteInfo.get("bikes");
-		int nowCount = ls.get(nowHour);
-		int nextCount = ls.get(nowHour + 1);
-
-		int nowGuess = guessNowSiteBikes(nowCount, nextCount, nowSeconds);
-		LoadPlan plan = new LoadPlan();
-		int nextEst = estimate(site, nowHour, plan);
-		int volume = site.getVolume();
-		int storage = dispatcher.getStorage();
-		int loadLimit = 0;
-
-		boolean moveAway = true;
-		int result = 0;
-		if (dispatcher.getType() == State.TRUCK_TYPE) {
-			loadLimit = State.TRUCK_CAPACITY;
-		} else {
-			loadLimit = State.TRICYCLE_CAPACITY;
-		}
-		int canLoad = loadLimit - storage;
-
-		// 目前的站点数量>站点允许数量,要进行转移
-		if (nowGuess > volume) {
-			moveAway = true;
-			// 超出站点承受力的数量
-			int overSize = nowGuess - volume;
-			// 超出承受力>可以装载量，就把卡车装满
-			if (overSize > canLoad) {
-				result = canLoad;
-			} else {
-				// 否则，只把多出承载能力的数量搬走
-				result = overSize;
-			}
-		} else {
-			// 如果当前数量少于站点允许数
-			// 如果当前数量少于站点的最小单车数，就不用搬了
-			if (nowGuess < State.MIN_SITE_BIKE_COUNT) {
-				result = 0;
-
-				// 如果预测未来单车数增长
-			} else if (nextEst > nowGuess) {
-				moveAway = true;
-				if (nextEst > volume) {
-					result = nextEst - volume;
-				} else {
-					result = 0;
-				}
-				// 如果预测未来单车数减少
-			} else {
-				moveAway = false;
-				// 如果调度车有单车
-				if (storage > 0) {
-					int need = nowGuess - nextEst;
-					// 如果库存比需要的大，就给该站点补充需要的
-					if (storage > need) {
-						result = need;
-					} else {
-						// 否则，就全部卸载库存
-						result = storage;
-					}
-				} else {
-					result = 0;
-				}
-			}
-		}
-		if (moveAway) {
-			lPlan.setLoadType(State.LOAD);
-		} else {
-			lPlan.setLoadType(State.UNLOAD);
-		}
-		lPlan.setLoadCount(result);
-
-//		System.out.println("nowHour" + nowHour);
-//		System.out.println("nowCount" + nowCount);
-//		System.out.println("nextCount" + nextCount);
-//		System.out.println("nowGuess" + nowGuess);
-//		System.out.println("nextEst" + nextEst);
-	}
-
-	public int guessNowSiteBikes(int now, int next, int seconds) {
-		int left = 0;
-		while (seconds >= 3600) {
-			seconds -= 3600;
-		}
-		left = seconds;
-		double ratio = ((double) left) / 3600;
-		int result = (int) (ratio * (next - now) + now);
-		return result;
-	}
-
-	public void init(Date time) {
+	public void init(Date time, int nowHour, int endHour) {
+		this.time = time;
+		this.startHour = nowHour;
+		this.endHour = endHour;
 		dayFiles = FilesUtil.ListFilesInDay(time);
 		sites = siteServ.getAllSites();
-		// 初始化siteInfos
 		siteInfos = initSiteInfos();
+		ests = estimate.estimateAllSites(nowHour, time);
+		visitedSites = new HashMap<Integer, Set<Integer>>();
 	}
 
-	public List<SimuTask> produceStartJobs(int nowHour,List<Dispatcher> dispatchers) {
-		// 预测
-		Map<Integer, Map<String, Object>> ests = estimate.estimateAllSites(nowHour);
-		
-		//根据预测数分析站点需求情况　
-		Map<Integer, LoadPlan> siteNeeds = anayLizeSiteNeed(sites, ests, siteInfos, nowHour);
-	
-		// 根据评分，求出离各个站点最近的调度车并给出他们向该站点靠拢的命令
-		List<SimuTask> startJobs = initMoveJobs(siteNeeds,dispatchers);
+	public List<SimuTask> getStartJobs(List<Dispatcher> dispatchers, int startHour) {
+		List<SimuTask> startJobs = new ArrayList<>();
+		for (Dispatcher dispatcher : dispatchers) {
+			SimuTask task = assignTask(startHour, 0, dispatcher, null,1);
+			startJobs.add(task);
+		}
 		return startJobs;
 	}
 
-	
+	private Map<Integer, Map<String, Object>> initSiteInfos() {
+		Map<Integer, Map<String, Object>> sitesInfos = new HashMap<>();
+		for (Site s : sites) {
 
-	public List<SimuTask> initMoveJobs(Map<Integer, LoadPlan> siteNeeds,List<Dispatcher> dispatchers) {
-		client = ConnectManager.getClient();
-		List<SimuTask> tasks = new ArrayList<>();
-		SiteUtil siteUtil = new SiteUtil();
+			Lnglat lnglat = new Lnglat(s.getLng(), s.getLat());
+			BikeArea area = CoordsUtil.getCenterArea(lnglat);
 
-		for (int i = 0; i < dispatchers.size(); i++) {
-			Dispatcher disp = dispatchers.get(i);
-			int siteID = findNeedSite(siteNeeds, disp, State.LOAD);
-			Site site = (Site) siteInfos.get(siteID).get("site");
-			GaodePath path = siteUtil.getPath(disp, site, client);
-			MoveTask task = new MoveTask();
-			task.setDispatcher(disp);
-			task.setPath(path);
-			task.setTarget(site);
+			Map<String, Object> info = new HashMap<>();
+			info.put("site", s);
+			info.put("area", area);
 
-			List<Lnglat> paths = path.getPaths();
-			task.setStart(paths.get(0));
-			task.setEnd(paths.get(paths.size() - 1));
-			int distace = task.getPath().getDistance();
-			int seconds = calcuTimeSpan(distace, task.getDispatcher().getType());
-			task.setWorkTime(seconds);
-			task.setTaskType(State.MOVE_TASK);
-			tasks.add(task);
+			List<Integer> list = new ArrayList<>(24);
+			for (int i = 0; i < 24; i++) {
+				list.add(0);
+			}
+			info.put("bikes", list);
+			double[] changes = analyze.analyzeSiteChange(s.getId());
+			info.put("changes", changes);
+			int type = judger.getSiteType(changes);
+			info.put("type", type);
+
+			sitesInfos.put(s.getId(), info);
 		}
+		int hourCount = 0;
+		for (Map<String, Object> hourFile : dayFiles) {
+			List<BikePos> bikes = (List<BikePos>) hourFile.get("bikes");
 
-		return tasks;
+			for (BikePos bike : bikes) {
+				for (Integer i : sitesInfos.keySet()) {
+					Map<String, Object> info = sitesInfos.get(i);
+					BikeArea area = (BikeArea) info.get("area");
+					if (CoordsUtil.isInArea(area, bike.getLng(), bike.getLat())) {
+						List<Integer> list = (List<Integer>) info.get("bikes");
+						list.set(hourCount, list.get(hourCount) + 1);
+						break;
+					}
+				}
+			}
+			hourCount++;
+		}
+		for (Integer i : sitesInfos.keySet()) {
+			Map<String, Object> info = sitesInfos.get(i);
+			List<Integer> list = (List<Integer>) info.get("bikes");
+
+			List<Integer> fake = new ArrayList<>();
+			for (Integer item : list) {
+				fake.add(item);
+			}
+			info.put("fake", fake);
+			// change代表记录由于调度带来的每一次单车站点的变化
+			List<Integer> dispChange = new ArrayList<>();
+			info.put("change", dispChange);
+		}
+		return sitesInfos;
 	}
-	
-	public int findNeedSite(Map<Integer, LoadPlan> siteNeeds, Dispatcher dispatcher, int putOrGet) {
 
-		double ratio = 0.1;
+	private int guessNowSiteBikes(int now, int next, int seconds) {
+		if (seconds > 3600) {
+			throw new RuntimeException("时间超出了");
+		}
+		double ratio = ((double) seconds) / 3600;
+		int lag = Math.abs((now - next));
+		int result = 0;
+		if (now <= next) {
+			result = (int) (ratio * lag) + now;
+		} else {
+			result = now - (int) (ratio * lag);
+		}
+		return result;
+	}
+
+	/**
+	 * 根据装载量的多少和站点的距离对站点进行打分，返回得分最高的站点
+	 * 
+	 * @param siteNeeds
+	 * @param dispatcher
+	 * @param putOrGet
+	 * @return
+	 */
+	public int scoreSitesByDispatcher(Map<Integer, SitePlan> siteNeeds, Dispatcher dispatcher, double loadRatio) {
+
+		client = ConnectManager.getClient();
 		SiteUtil sUtil = new SiteUtil();
 
-		List<Integer> countList = new ArrayList<>();
-		List<Integer> distList = new ArrayList<>();
-		List<Integer> siteList = new ArrayList<>();
+		List<Integer> loadCountList = new ArrayList<>();
+		List<Integer> loadDistList = new ArrayList<>();
+		List<Integer> loadIDList = new ArrayList<>();
+
+		List<Integer> unloadCountList = new ArrayList<>();
+		List<Integer> unloadDistList = new ArrayList<>();
+		List<Integer> unloadIDList = new ArrayList<>();
 
 		for (Integer i : siteNeeds.keySet()) {
-			LoadPlan plan = siteNeeds.get(i);
+			SitePlan plan = siteNeeds.get(i);
 			Site site = (Site) siteInfos.get(i).get("site");
-			if (plan.getLoadType() == putOrGet) {
+			if (plan.getLoadType() == State.LOAD) {
 				int count = plan.getLoadCount();
-
 				GaodePath gaodePath = sUtil.getPath(dispatcher, site, client);
 				int dist = gaodePath.getDistance();
-				countList.add(count);
-				distList.add(dist);
-				siteList.add(i);
+				loadCountList.add(count);
+				loadDistList.add(dist);
+				loadIDList.add(i);
+			} else if (plan.getLoadType() == State.UNLOAD) {
+				int count = plan.getLoadCount();
+				GaodePath gaodePath = sUtil.getPath(dispatcher, site, client);
+				int dist = gaodePath.getDistance();
+				unloadCountList.add(count);
+				unloadDistList.add(dist);
+				unloadIDList.add(i);
 			}
 		}
-		int SiteIndex = MathUtil.calcuMaxScore(countList, distList, true, false, ratio);
-		return siteList.get(SiteIndex);
+		double[] loadIndexScore = MathUtil.calcuMaxScore(loadCountList, loadDistList, true, false,
+				State.SITE_CHOOSE_RATIO);
+		double[] unloadIndexScore = MathUtil.calcuMaxScore(unloadCountList, unloadDistList, true, false,
+				State.SITE_CHOOSE_RATIO);
+		if (loadIndexScore[1] >= 0 && unloadIndexScore[1] >= 0) {
+			double loadScore = loadIndexScore[1] * loadRatio;
+			double unloadScore = unloadIndexScore[1] * (1 - loadRatio);
+			if (loadScore > unloadScore) {
+				return loadIDList.get((int) loadIndexScore[0]);
+			} else {
+				return unloadIDList.get((int) unloadIndexScore[0]);
+			}
+		}
+		return -1;
+	}
+
+	public int scoreSitesBySite(Map<Integer, SitePlan> siteNeeds, Site fromSite, double loadRatio) {
+		List<Integer> loadCountList = new ArrayList<>();
+		List<Integer> loadDistList = new ArrayList<>();
+		List<Integer> loadIDList = new ArrayList<>();
+
+		List<Integer> unloadCountList = new ArrayList<>();
+		List<Integer> unloadDistList = new ArrayList<>();
+		List<Integer> unloadIDList = new ArrayList<>();
+
+		for (Integer i : siteNeeds.keySet()) {
+			SitePlan plan = siteNeeds.get(i);
+			Site site = (Site) siteInfos.get(i).get("site");
+			
+			if (plan.getLoadCount()<=0) {
+				continue;
+			}
+			if (plan.getLoadType() == State.LOAD) {
+				int count = plan.getLoadCount();
+				Route route = routeServ.getRoute(fromSite.getId(), site.getId());
+				GaodePath gaodePath = routeServ.turnRoute2Path(route);
+				int dist = gaodePath.getDistance();
+				loadCountList.add(count);
+				loadDistList.add(dist);
+				loadIDList.add(i);
+			} else if (plan.getLoadType() == State.UNLOAD) {
+				int count = plan.getLoadCount();
+				Route route = routeServ.getRoute(fromSite.getId(), site.getId());
+				GaodePath gaodePath = routeServ.turnRoute2Path(route);
+				int dist = gaodePath.getDistance();
+				unloadCountList.add(count);
+				unloadDistList.add(dist);
+				unloadIDList.add(i);
+			}
+		}
+		if (loadCountList.size() == 0 && unloadCountList.size() != 0) {
+			double[] unloadIndexScore = MathUtil.calcuMaxScore(unloadCountList, unloadDistList, true, false,
+					State.SITE_CHOOSE_RATIO);
+			return unloadIDList.get((int) unloadIndexScore[0]);
+		} else if (unloadCountList.size() == 0 && loadCountList.size() != 0) {
+			double[] loadIndexScore = MathUtil.calcuMaxScore(loadCountList, loadDistList, true, false,
+					State.SITE_CHOOSE_RATIO);
+			return loadIDList.get((int) loadIndexScore[0]);
+		} else if (unloadCountList.size() != 0 && loadCountList.size() != 0) {
+			double[] loadIndexScore = MathUtil.calcuMaxScore(loadCountList, loadDistList, true, false,
+					State.SITE_CHOOSE_RATIO);
+			double[] unloadIndexScore = MathUtil.calcuMaxScore(unloadCountList, unloadDistList, true, false,
+					State.SITE_CHOOSE_RATIO);
+
+			if (loadIndexScore[1] >= 0 && unloadIndexScore[1] >= 0) {
+				double loadScore = loadIndexScore[1] * loadRatio;
+				double unloadScore = unloadIndexScore[1] * (1 - loadRatio);
+				if (loadScore > unloadScore) {
+					return loadIDList.get((int) loadIndexScore[0]);
+				} else {
+					return unloadIDList.get((int) unloadIndexScore[0]);
+				}
+			}
+		}
+		return -1;
+	}
+
+	private LoadTask arrangeLoadTask(Site site, Dispatcher dispatcher, SitePlan needPlan) {
+		LoadTask loadTask = new LoadTask();
+		loadTask.setTargetSite(site);
+
+		int loadCount = needPlan.getLoadCount();
+		loadTask.setLoadType(needPlan.getLoadType());
+		loadTask.setLoadNum(loadCount);
+		loadTask.setDispatcher(dispatcher);
+
+		int loadTime = loadCount * State.LOAD_UNIT_TIME;
+
+		loadTask.setTaskType(State.LOAD_TASK);
+		loadTask.setLoadTime(loadTime);
+
+		client = ConnectManager.getClient();
+		SiteUtil siteUtil = new SiteUtil();
+
+		GaodePath path = siteUtil.getPath(dispatcher, site, client);
+
+		loadTask.setPath(path);
+		List<Lnglat> paths = path.getPaths();
+		loadTask.setStart(paths.get(0));
+		loadTask.setEnd(new Lnglat(site.getLng(), site.getLat()));
+		int distace = path.getDistance();
+		int seconds = calcuTimeSpan(distace, dispatcher.getType());
+		loadTask.setMoveTime(seconds);
+		
+		
+		loadTask.setWorkTime(loadTask.getMoveTime() + loadTask.getLoadTime());
+
+		return loadTask;
+	}
+
+	private LoadTask arrangeLoadTaskBySite(Site site, Site fromSite, Dispatcher dispatcher, SitePlan needPlan) {
+		LoadTask loadTask = new LoadTask();
+		loadTask.setTargetSite(site);
+
+		int loadCount = needPlan.getLoadCount();
+		loadTask.setLoadType(needPlan.getLoadType());
+		loadTask.setLoadNum(loadCount);
+		loadTask.setDispatcher(dispatcher);
+
+		int loadTime = loadCount * State.LOAD_UNIT_TIME;
+		
+		loadTask.setTaskType(State.LOAD_TASK);
+		loadTask.setLoadTime(loadTime);
+
+		Route route = routeServ.getRoute(fromSite.getId(), site.getId());
+		GaodePath path = routeServ.turnRoute2Path(route);
+
+		loadTask.setPath(path);
+		List<Lnglat> paths = path.getPaths();
+		loadTask.setStart(paths.get(0));
+		loadTask.setEnd(new Lnglat(site.getLng(), site.getLat()));
+		int distace = path.getDistance();
+		int seconds = calcuTimeSpan(distace, dispatcher.getType());
+		loadTask.setMoveTime(seconds);
+		loadTask.setWorkTime(loadTask.getMoveTime() + loadTask.getLoadTime());
+
+		return loadTask;
 	}
 
 	/**
@@ -282,58 +346,57 @@ public class TaskProducer {
 	 * @param nowSeconds
 	 * @param loadTask
 	 */
-	public void refreshSites(int nowHour, int nowSeconds, LoadTask loadTask) {
+	public void refreshSites(int nowHour, int pastNowSeconds, LoadTask loadTask) {
 
-		Iterator<Integer> moved = movedSites.iterator();
-		int type = loadTask.getType();
-		Site site = loadTask.getSite();
+		int type = loadTask.getLoadType();
+		Site loadSite = loadTask.getTargetSite();
 		int siteID = 0;
-		while (moved.hasNext()) {
-			siteID = moved.next();
-			Map<String, Object> siteInfo = siteInfos.get(siteID);
-			List<Integer> fakeList = (List<Integer>) siteInfo.get("fake");
-			List<Integer> bikes = (List<Integer>) siteInfo.get("bikes");
-			int original = fakeList.get(nowHour);
+		// 对所有的站点都进行更新
+		for (Site site : sites) {
+			Map<String, Object> siteInfo = siteInfos.get(site.getId());
+//			// bikes表示没有调度，原始的变化量，用于计算变化量
+//			List<Integer> bikes = (List<Integer>) siteInfo.get("bikes");
+//
+//			// 计算如果没有调度，这一时间点的单车数量
+//			int nowCount = bikes.get(nowHour);
+//			int nextCount = bikes.get(nowHour + 1);
+//			int nowGuess = guessNowSiteBikes(nowCount, nextCount, pastNowSeconds);
+			List<Integer> change = (List<Integer>) siteInfo.get("change");
 
-			// 计算如果没有调度，这一时间点的单车数量
-			int nowCount = bikes.get(nowHour);
-			int nextCount = bikes.get(nowHour + 1);
-			int nowGuess = guessNowSiteBikes(nowCount, nextCount, nowSeconds);
-			int nowChange = nowGuess - nowCount;
-
-			// 将变化量添加到有调度的列表中
-			if (nowChange > 0) {
-				original += nowChange;
-			} else {
-				original -= nowChange;
-			}
-
-			if (siteID == site.getId()) {
+			// 如果某一站是本次调度任务的目标站
+			if (siteID == loadSite.getId()) {
+				int count = 0;
 				// 再加上此刻调度的结果
 				if (type == State.LOAD) {
-					original -= loadTask.getLoadNum();
+					count = -loadTask.getLoadNum();
 				} else {
-					original += loadTask.getLoadNum();
+					count = loadTask.getLoadNum();
 				}
+				change.add(count);
 			}
-			fakeList.set(nowHour, original);
+//
+//			for (int i = 0; i < change.size(); i++) {
+//				nowGuess += change.get(i);
+//			}
+//			System.out.println(nowGuess);
 		}
 
 	}
 
-	public  int calcuTimeSpan(int distance, int type) {
+	public int calcuTimeSpan(int distance, int type) {
 		int seconds = 0;
-		double secondSpeed=0;
+		double secondSpeed = 0;
 		if (type == State.TRUCK_TYPE) {
-			secondSpeed=State.TRUCK_SPEED/3.6;
+			secondSpeed = State.TRUCK_SPEED / 3.6;
 			seconds = (int) (distance / secondSpeed);
 		} else if (type == State.TRICYCLE_TYPE) {
-			secondSpeed=State.TRICYCLE_SPEED/3.6;
+			secondSpeed = State.TRICYCLE_SPEED / 3.6;
 			seconds = (int) (distance / secondSpeed);
 		} else if (type == State.MAN_TYPE) {
-			secondSpeed=State.MAN_TYPE/3.6;
+			secondSpeed = State.MAN_TYPE / 3.6;
 			seconds = (int) (distance / secondSpeed);
 		}
+		seconds=(int) (seconds*State.WASTETIME_MOVE_RATIO)+State.WASTETIME_LOAD;
 		return seconds;
 	}
 
@@ -362,59 +425,74 @@ public class TaskProducer {
 		return minSite;
 	}
 
-	private Dispatcher findMostNearDispatcher(List<Dispatcher> dispatchers, Site site, GaodePath targetPath,
-			int... types) {
-		SiteUtil sUtil = new SiteUtil();
-		int minDist = 0;
-		Dispatcher minDispatcher = null;
-
-		boolean needCheck = true;
-		for (Dispatcher dispatcher : dispatchers) {
-			for (int i = 0; i < types.length; i++) {
-				if (dispatcher.getType() == types[i]) {
-					needCheck = true;
-					break;
-				}
-				if (i == types.length - 1) {
-					needCheck = false;
-				}
-			}
-			if (!needCheck) {
-				continue;
-			}
-			if (dispatcher.getType() == 1 || dispatcher.getType() == 2) {
-				GaodePath path = sUtil.getPath(dispatcher, site, client);
-				if (minDist == 0 || minDist < path.getDistance()) {
-					minDist = path.getDistance();
-					minDispatcher = dispatcher;
-					targetPath.setDistance(path.getDistance());
-					targetPath.setDuration(path.getDuration());
-					targetPath.setPaths(path.getPaths());
-				}
-			}
-
+	/**
+	 * 根据实际变化的数据和模拟调度的数据叠加起来，形成这一时刻的数据
+	 * 
+	 * @param bikes
+	 * @param nowHour
+	 * @param siteInfo
+	 * @param pastSeconds
+	 * @return
+	 */
+	public int guessNowBikes(List<Integer> bikes, int nowHour, Map<String, Object> siteInfo, int pastSeconds) {
+		// 计算如果没有调度，这一时间点的单车数量
+		int nowCount = bikes.get(nowHour);
+		int nextCount = bikes.get(nowHour + 1);
+		int nowGuess = guessNowSiteBikes(nowCount, nextCount, pastSeconds);
+		List<Integer> change = (List<Integer>) siteInfo.get("change");
+		// 将调度所产生的变化叠加上去，这样的结果表示调度的单车完全没有利用
+		for (int i = 0; i < change.size(); i++) {
+			nowGuess += change.get(i);
 		}
-		return minDispatcher;
+		return nowGuess;
 	}
 
 	/**
-	 * 通过预测下次的站点数量来分析所有站
+	 * 通过预测下次的站点数量来分析所有站 分析包括：基于fake单车数据（基于模拟的数据）进行下一时段的预测
+	 * 
+	 * 在给定的站点中，选择出
 	 * 
 	 * @param sites
 	 * @param ests
 	 * @param siteInfos
 	 * @param nowHour
 	 */
-	public Map<Integer, LoadPlan> anayLizeSiteNeed(List<Site> sites, Map<Integer, Map<String, Object>> ests,
-			Map<Integer, Map<String, Object>> siteInfos, int nowHour) {
+	public Map<Integer, SitePlan> collectSites(List<Site> sites, Map<Integer, Map<String, Object>> ests,
+			Map<Integer, Map<String, Object>> siteInfos, int nowHour, int pastSeconds, Dispatcher dispatcher) {
 
-		Map<Integer, LoadPlan> siteScores = new HashMap<>();
+		Map<Integer, SitePlan> siteScores = new HashMap<>();
+
+		// 调度目前装的数量
+		int storage = dispatcher.getStorage();
+		// 调度车可以装的数量
+		int loadLimit = 0;
+		if (dispatcher.getType() == State.TRUCK_TYPE) {
+			loadLimit = State.TRUCK_CAPACITY;
+		} else {
+			loadLimit = State.TRICYCLE_CAPACITY;
+		}
+		int canLoad = loadLimit - storage;
+		int dispID = dispatcher.getId();
+		Set<Integer> visits = null;
+		if (visitedSites.containsKey(dispID)) {
+			visits = visitedSites.get(dispID);
+
+		} else {
+			visitedSites.get(dispID);
+			visits = new HashSet<>();
+			visitedSites.put(dispID, visits);
+		}
+
 		for (Site site : sites) {
+			// 每个调度车只去每个站点一次
+			if (visits.contains(site.getId())) {
+				continue;
+			}
 			int volume = site.getVolume();
-			Map<String, Object> sInfo = siteInfos.get(site.getId());
-			List<Integer> list = (List<Integer>) sInfo.get("bikes");
-			int nowCount = list.get(nowHour);
-
+			Map<String, Object> siteInfo = siteInfos.get(site.getId());
+			// bikes表示没有调度，原始的变化量，用于计算变化量
+			List<Integer> bikes = (List<Integer>) siteInfo.get("bikes");
+			int nowCount = guessNowBikes(bikes, nowHour, siteInfo, pastSeconds);
 			// trend(增还是减),rate(变化的大小),confidence(自信程度)
 			Map<String, Object> estInfo = ests.get(site.getId());
 			int trend = (int) estInfo.get("trend");
@@ -425,13 +503,37 @@ public class TaskProducer {
 			} else {
 				nextEst = (int) (nowCount * (1 - rate));
 			}
-			LoadPlan plan = analyzeSiteNeed(nowCount, nextEst, volume, trend);
-
+			// 当预测的趋势和需要的趋势相同时，考虑该站点
+			SitePlan plan = analyzeSiteNeed(nowCount, nextEst, volume, trend, storage, canLoad);
+			plan.setNextEst(nextEst);
+			if(plan.getLoadCount()<0) {
+				System.out.println("----------------");
+				System.out.println(nowCount);
+				System.out.println(nextEst);
+				System.out.println(volume);
+				System.out.println(trend);
+				System.out.println(storage);
+				System.out.println(canLoad);
+			}
+//			System.out.println(site.getId() + " ----  " + nowCount + " ----  " + nextEst + " ----  " + trend);
 			siteScores.put(site.getId(), plan);
+
 		}
 		return siteScores;
 	}
 
+	
+	public static void main(String[] args) {
+		 TaskProducer taskProducer=new TaskProducer();
+		 int nowCount=12;
+		 int nextEst=15;
+		 int volume=20;
+		 int trend= 1;
+		 int carHave=10;
+		 int canLoad=10;
+		 SitePlan plan=taskProducer.analyzeSiteNeed(nowCount, nextEst, volume, trend, carHave, canLoad);
+		 System.out.println(plan.getLoadCount());
+	}
 	/**
 	 * 通过容量、预测、当前值来总结该站点的供需关系
 	 * 
@@ -441,9 +543,9 @@ public class TaskProducer {
 	 * @param trend
 	 * @return
 	 */
-	public LoadPlan analyzeSiteNeed(int nowCount, int nextEst, int volume, int trend) {
-		LoadPlan plan = new LoadPlan();
-		// 当前库存大于限制
+	public SitePlan analyzeSiteNeed(int nowCount, int nextEst, int volume, int trend, int carHave, int canLoad) {
+		SitePlan plan = new SitePlan();
+		// 当前站点的数量大于限制
 		if (nowCount > volume) {
 			// 未来会增加
 			if (trend == State.GROW_TREND) {
@@ -460,13 +562,13 @@ public class TaskProducer {
 					plan.setLoadCount((nextEst - volume));
 				}
 			}
-		} else {
+		} else {// 当前库存小于限制
 			// 未来会增加
 			if (trend == State.GROW_TREND) {
 				if (nextEst <= volume) {
 					plan.setLoadType(State.IGNORE);
 				} else {
-					// 未来减少的量没有到容量之下
+					// 未来增加的量超出了容量
 					plan.setLoadType(State.LOAD);
 					plan.setLoadCount((nextEst - volume));
 				}
@@ -476,10 +578,30 @@ public class TaskProducer {
 				plan.setLoadCount(nowCount - nextEst);
 			}
 		}
+
+		int needLoadNum = plan.getLoadCount();
+		int readLoadNum = 0;
+		if (plan.getLoadType() == State.LOAD) {
+			// 如果需要装的量大于调度车目前可以装的量,就只装能装的
+			if (needLoadNum >= canLoad) {
+				readLoadNum = canLoad;
+			} else {
+				readLoadNum = needLoadNum;
+			}
+
+		} else if (plan.getLoadType() == State.UNLOAD) {
+			// 如果需要卸载的量大于调度车目前的存量,就卸掉所有的，否则，卸掉它需要的
+			if (needLoadNum >= carHave) {
+				readLoadNum = carHave;
+			} else {
+				readLoadNum = needLoadNum;
+			}
+		}
+		plan.setLoadCount(readLoadNum);
 		return plan;
 	}
 
-	public int estimate(Site site, int theHour, LoadPlan loadPlan) {
+	public int estimate(Site site, int theHour, SitePlan sitePlan) {
 
 		List<Integer> HourHistory = analyze.getEveryDaySitesCircums(site.getId(), theHour);
 		List<Integer> nextHourHistory = analyze.getEveryDaySitesCircums(site.getId(), theHour + 1);
@@ -498,15 +620,15 @@ public class TaskProducer {
 		if (x > y) {
 			ratio = ((double) (x - y)) / x;
 			next = (int) (list.get(theHour) * ratio);
-			loadPlan.setLoadType(State.UNLOAD);
+			sitePlan.setLoadType(State.UNLOAD);
 
 		} else {
 			// 下一时间单车会增加
 			ratio = (double) (y) / (y - x);
 			next = (int) (list.get(theHour) * ratio);
-			loadPlan.setLoadType(State.LOAD);
+			sitePlan.setLoadType(State.LOAD);
 		}
-		loadPlan.setLoadCount(next);
+		sitePlan.setLoadCount(next);
 		return next;
 	}
 
@@ -533,103 +655,7 @@ public class TaskProducer {
 		}
 	}
 
-	public Map<Integer, Map<String, Object>> initSiteInfos() {
-		Map<Integer, Map<String, Object>> sitesInfos = new HashMap<>();
-		int dist = 50;
-		for (Site s : sites) {
-			Lnglat lnglat = new Lnglat(s.getLng(), s.getLat());
-			BikeArea area = CoordsUtil.getCenterArea(lnglat, dist);
-
-			Map<String, Object> info = new HashMap<>();
-			info.put("site", s);
-			info.put("area", area);
-
-			List<Integer> list = new ArrayList<>(24);
-			for (int i = 0; i < 24; i++) {
-				list.add(0);
-			}
-			info.put("bikes", list);
-			sitesInfos.put(s.getId(), info);
-		}
-
-		int hourCount = 0;
-		for (Map<String, Object> hourFile : dayFiles) {
-			List<BikePos> bikes = (List<BikePos>) hourFile.get("bikes");
-			for (BikePos bike : bikes) {
-
-				for (Integer i : sitesInfos.keySet()) {
-					Map<String, Object> info = sitesInfos.get(i);
-					BikeArea area = (BikeArea) info.get("area");
-
-					if (CoordsUtil.isInArea(area, bike.getLng(), bike.getLat())) {
-						List<Integer> list = (List<Integer>) info.get("bikes");
-						list.set(hourCount, list.get(hourCount) + 1);
-					}
-				}
-			}
-			hourCount++;
-		}
-		for (Integer i : sitesInfos.keySet()) {
-			Map<String, Object> info = sitesInfos.get(i);
-			List<Integer> list = (List<Integer>) info.get("bikes");
-
-			List<Integer> fake = new ArrayList<>();
-			for (Integer item : list) {
-				fake.add(item);
-			}
-			info.put("fake", fake);
-		}
-		return sitesInfos;
-	}
-
-	/**
-	 * 当调度车在某一个站点装卸完毕后，需要找到最近一个需要单车的站点进行卸货,或是装货
-	 * 
-	 * @param from     出发的那个站点
-	 * @param nowHour
-	 * @param needType State.load--需要找单车富足的点 State.unload--需要找单车不足的点
-	 * @return
-	 */
-	public Site findMostNeedSite(Site from, int nowHour, int needType) {
-		Map<Integer, int[]> siteScores = new HashMap<>();
-		for (Integer siteID : siteInfos.keySet()) {
-			Map<String, Object> siteInfo = siteInfos.get(siteID);
-			if(siteID==from.getId()) {
-				continue;
-			}
-
-			Site site = (Site) siteInfo.get("site");
-
-			int lineDist = CoordsUtil.calcuDist(from.getLng(), from.getLat(), site.getLng(), site.getLat());
-			if (lineDist > NEAR_SITE_DIST) {
-				continue;
-			}
-
-			Route route=routeServ.getRoute(from.getId(), site.getId());
-			if(route==null) {
-				continue;
-			}
-			List<Lnglat> path=siteHelper.readRoute(route);
-			if (path == null) {
-				continue;
-			}
-
-			int distance =route.getDistance();
-			LoadPlan plan = new LoadPlan();
-			int need = estimate(site, nowHour, plan);
-			// 如果这个站需要我们进行卸载，即该站的单车呈下降趋势
-			if (plan.getLoadType() == needType) {
-				siteScores.put(siteID, new int[] { distance, need });
-			}
-
-		}
-		int siteID = calcuSitesScore(siteScores);
-		Map<String, Object> siteNeed = siteInfos.get(siteID);
-		Site need = (Site) siteNeed.get("site");
-		return need;
-	}
-
-	public Site findMostNeedSite(Lnglat fromPoint, int nowHour, int needType) {
+	public Site findSite(Lnglat fromPoint, int nowHour, int needType) {
 
 		SiteUtil siteUtil = new SiteUtil();
 
@@ -640,7 +666,7 @@ public class TaskProducer {
 			Site site = (Site) siteInfo.get("site");
 
 			int lineDist = CoordsUtil.calcuDist(fromPoint.getLng(), fromPoint.getLat(), site.getLng(), site.getLat());
-			if (lineDist > NEAR_SITE_DIST) {
+			if (lineDist > State.NEAR_SITE_DIST) {
 				continue;
 			}
 
@@ -650,7 +676,7 @@ public class TaskProducer {
 			}
 
 			int distance = path.getDistance();
-			LoadPlan plan = new LoadPlan();
+			SitePlan plan = new SitePlan();
 			int need = estimate(site, nowHour, plan);
 			// 如果这个站需要我们进行卸载，即该站的单车呈下降趋势
 			if (plan.getLoadType() == needType) {
@@ -698,29 +724,230 @@ public class TaskProducer {
 		return resultID;
 	}
 
-	public MoveTask assignMoveTask(int nowHour, Site site,Dispatcher dispatcher,int nextSiteNeedtype) {
-		MoveTask task = new MoveTask();
-
-		Site needSite = findMostNeedSite(site, nowHour, nextSiteNeedtype);
-
-		Route route=routeServ.getRoute(site.getId(), needSite.getId());
-		
-		List<Lnglat> paths=siteHelper.readRoute(route);
-		GaodePath path=new GaodePath();
-		path.setDistance(route.getDistance());
-		path.setDuration(route.getDuration());
-		path.setPaths(paths);
-
+	private WaitTask createWaitTask(Dispatcher dispatcher) {
+		WaitTask task=new WaitTask();
 		task.setDispatcher(dispatcher);
-		task.setEnd(paths.get(paths.size() - 1));
-		task.setPath(path);
-		task.setStart(paths.get(0));
-		task.setTaskType(State.MOVE_TASK);
-		int distace = task.getPath().getDistance();
-		int seconds = calcuTimeSpan(distace, task.getDispatcher().getType());
-		task.setWorkTime(seconds);
-		task.setTarget(needSite);
+		task.setTaskType(State.WAIT_TASK);
+		task.setWorkTime(State.WAIT_TIME);
 		return task;
 	}
+	
+	public SimuTask assignTask(int nowHour, int pastHourSeconds, Dispatcher dispatcher, SimuTask lastTask,int distRange) {
 
+		List<Site> nearSites = null;
+		
+		if (distRange>3) {
+			return createWaitTask(dispatcher);
+		}
+		// 通过距离要素过滤一部分站点
+		nearSites = findNearSitesByPos(dispatcher.getLng(), dispatcher.getLat(),distRange);
+
+//		nearSites = filterSites(nearSites, State.MOUNTAIN);
+
+		// 根据调度车目前的装载情况得到装车的比例
+		double loadRatio = decideTrend(dispatcher);
+
+		// 根据一些限制条件，来获取参与评分的站点
+		Map<Integer, SitePlan> siteNeeds = collectSites(nearSites, ests, siteInfos, nowHour, pastHourSeconds,
+				dispatcher);
+
+		// 根据计算的条件综合对站点进行评分，选取最高分的站点id
+		int siteID = -1;
+		if (lastTask == null) {
+			siteID = scoreSitesByDispatcher(siteNeeds, dispatcher, loadRatio);
+		} else if (lastTask.getTaskType() == State.LOAD_TASK) {
+			LoadTask lastLoad = (LoadTask) lastTask;
+			Site fromSite = lastLoad.getTargetSite();
+			siteID = scoreSitesBySite(siteNeeds, fromSite, loadRatio);
+		}
+		if (siteNeeds.containsKey(siteID)) {
+			Set<Integer> visits = visitedSites.get(dispatcher.getId());
+
+			if (!visits.contains(siteID)) {
+				visits.add(siteID);
+			}
+			// 得到要去的那个站点，然后安排任务
+			SitePlan needPlan = siteNeeds.get(siteID);
+			Site site = (Site) siteInfos.get(siteID).get("site");
+			LoadTask task = null;
+			if (lastTask == null) {
+				task = arrangeLoadTask(site, dispatcher, needPlan);
+			} else if (lastTask.getTaskType() == State.LOAD_TASK) {
+				LoadTask lastLoad = (LoadTask) lastTask;
+				task = arrangeLoadTaskBySite(site, lastLoad.getTargetSite(), dispatcher, needPlan);
+			}
+			return task;
+		} else {
+			return assignTask(nowHour, pastHourSeconds, dispatcher, lastTask, distRange+1);
+		}
+
+	}
+
+	private double decideTrend(Dispatcher dispatcher) {
+		int storage = dispatcher.getStorage();
+		// 调度车可以装的数量
+		int loadLimit = 0;
+		if (dispatcher.getType() == State.TRUCK_TYPE) {
+			loadLimit = State.TRUCK_CAPACITY;
+		} else if (dispatcher.getType() == State.TRICYCLE_TYPE) {
+			loadLimit = State.TRICYCLE_CAPACITY;
+		}
+		double loadRatio = 1 - (double) storage / loadLimit;
+		return loadRatio;
+	}
+
+	/**
+	 * 根据调度者类型，计算还能拉多少货
+	 * 
+	 * @param dispatcher
+	 * @param nowHold
+	 * @return
+	 */
+	private int calcuCanLoad(Dispatcher dispatcher, int nowHold) {
+		int result = 0;
+		if (dispatcher.getType() == State.TRUCK_TYPE) {
+			result = State.TRUCK_CAPACITY - nowHold;
+		} else if (dispatcher.getType() == State.TRICYCLE_TYPE) {
+			result = State.TRICYCLE_CAPACITY - nowHold;
+		} else {
+			result = State.MAN_CAPACITY - nowHold;
+		}
+		return result;
+	}
+
+	/**
+	 * 从所有站点中找到距离某一站点一定距离要求下的站点
+	 * 
+	 * @param from
+	 * @param nowHour
+	 * @param needType
+	 * @return
+	 */
+	private List<Site> findNearSitesBySite(Site from) {
+		List<Site> nearSites = new ArrayList<>();
+		for (Site site : sites) {
+			if (site.getId() == from.getId()) {
+				continue;
+			}
+			Route route = routeServ.getRoute(from.getId(), site.getId());
+			if (route == null) {
+				continue;
+			}
+			List<Lnglat> path = siteHelper.readRoute(route);
+			if (path == null) {
+				continue;
+			}
+			int distance = route.getDistance();
+			if (distance > State.NEAR_SITE_DIST) {
+				continue;
+			}
+			nearSites.add(site);
+
+		}
+		return nearSites;
+	}
+
+	/**
+	 * 找到离某一坐标点直线距离最短的站点
+	 * 
+	 * @param lng
+	 * @param lat
+	 * @return
+	 */
+	private Site findDirectNearSites(double lng, double lat) {
+		int directDist = 0;
+		int dist = 0;
+		Site temp = null;
+		Site nearSite = null;
+		for (int i = 0; i < sites.size(); i++) {
+			temp = sites.get(i);
+			if (i == 0) {
+				directDist = CoordsUtil.calcuDist(lng, lat, temp.getLng(), temp.getLat());
+				nearSite = temp;
+			} else {
+				dist = CoordsUtil.calcuDist(lng, lat, temp.getLng(), temp.getLat());
+				if (dist < directDist) {
+					directDist = dist;
+					nearSite = temp;
+				}
+			}
+		}
+		return nearSite;
+
+	}
+
+	/**
+	 * 根据调度车找到距离该车最近的一个站点
+	 * 
+	 * @param dispatcher
+	 * @return
+	 */
+	private Site findSiteByDispatcher(Dispatcher dispatcher) {
+		double lng = dispatcher.getLng();
+		double lat = dispatcher.getLat();
+		return findDirectNearSites(lng, lat);
+
+	}
+
+	private List<Site> filterSites(List<Site> sites, int mountType) {
+		List<Site> result = new ArrayList<>();
+		for (Site site : sites) {
+			Map<String, Object> siteInfo = siteInfos.get(site.getId());
+			// double[] changes =(double[]) siteInfo.get("changes");
+			int type = (int) siteInfo.get("type");
+			if (type == mountType) {
+				result.add(site);
+			}
+		}
+
+		return result;
+	}
+
+	/**
+	 * 通过坐标找到附近的点
+	 * 
+	 * @param lng
+	 * @param lat
+	 * @return
+	 */
+	private List<Site> findNearSitesByPos(double lng, double lat,int distRange) {
+		Site nearMe = findDirectNearSites(lng, lat);
+		List<Site> nearSites = new ArrayList<>();
+		for (Site site : sites) {
+			Route route = routeServ.getRoute(nearMe.getId(), site.getId());
+			if (route == null) {
+				continue;
+			}
+			List<Lnglat> path = siteHelper.readRoute(route);
+			if (path == null) {
+				continue;
+			}
+			int distance = route.getDistance();
+			if (distance > State.NEAR_SITE_DIST*distRange) {
+				continue;
+			}
+			nearSites.add(site);
+
+		}
+		return nearSites;
+	}
+
+	private List<Site> findNearSites(SimuTask task) {
+		List<Site> nearSites = null;
+		if (task.getTaskType() == State.LOAD_TASK) {
+			LoadTask loadTask = (LoadTask) task;
+			Site site = loadTask.getTargetSite();
+			nearSites = findNearSitesBySite(site);
+		}
+		return nearSites;
+	}
+
+	/**
+	 * 将按小时的参数更新一个小时
+	 * 
+	 * @param theHour
+	 */
+	public void changeNextHour(int theHour) {
+		ests = estimate.estimateAllSites(theHour);
+	}
 }

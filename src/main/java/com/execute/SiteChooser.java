@@ -14,6 +14,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.init.State;
 import com.poi.ConnectManager;
 import com.pojo.AreaScore;
 import com.pojo.BikeArea;
@@ -90,7 +91,7 @@ public class SiteChooser {
 	 */
 	public void produceScoreFile(int dist) {
 		MapHelper helper= new MapHelper();
-		BikeArea area=State.getArea();
+		BikeArea area=State.AREA;
 		MapSize size= new MapSize();
 		Heater heater=new Heater();
 		
@@ -303,7 +304,7 @@ public class SiteChooser {
 		int divideDist=50;
 		
 		MapHelper helper=new MapHelper();
-		BikeArea area=State.getArea();
+		BikeArea area=State.AREA;
 		List<BikePos> list= new ArrayList<>();
 		int count=0;
 		for(Double d:sites.keySet()) {

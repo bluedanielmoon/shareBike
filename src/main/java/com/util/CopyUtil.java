@@ -72,8 +72,8 @@ public class CopyUtil {
 		
 		List<Map<String, BikePos>> ls2=(List<Map<String, BikePos>>) deepCopy(ls);
 		ls2.get(0).get("1").setBikeID("7");
-		System.out.println(ls);
-		System.out.println(ls2);
+//		System.out.println(ls);
+//		System.out.println(ls2);
 	}
 
 }

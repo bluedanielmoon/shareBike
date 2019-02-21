@@ -33,6 +33,12 @@ public class MapController {
 	public Map<String, Object> getOrignialBike(@RequestParam String time) {
 		return mapServ.getBikeData(time);
 	}
+	
+	@GetMapping(value = "/bikePosInact")
+	@ResponseBody
+	public Map<String, Object> getOrignialBikeWithInact(@RequestParam String time,@RequestParam int inAct) {
+		return mapServ.getBikeData(time,inAct);
+	}
 
 	@GetMapping(value = "/rangebikePos")
 	@ResponseBody
@@ -99,6 +105,12 @@ public class MapController {
 		FilesUtil.writeObjectToFile(fileName, line, GaodeLine.class);
 		return true;
 
+	}
+	
+	@GetMapping(value = "/avtive")
+	@ResponseBody
+	public Map<String, Object> getActive(@RequestParam String date,@RequestParam int days) {
+		return mapServ.getDateActive(date,days);
 	}
 
 }

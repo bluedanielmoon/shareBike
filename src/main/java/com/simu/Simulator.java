@@ -1,5 +1,6 @@
 package com.simu;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -44,17 +45,15 @@ public class Simulator implements Runnable{
 		inited = true;
 
 		secondStep = 1;		
-		Date oneDay=DateUtil.parseToDay("2018_11_1");
+		Date oneDay=DateUtil.parseToDay("2018_11_3");
 		int startHour=7;
 		int endHour=20;
 		
-		
-		
-		tasker.init(oneDay);
-		
-		List<SimuTask> startJobs=tasker.produceStartJobs(startHour,dispatchers);
-		
-		return runner.init(startJobs,tasker,startHour,endHour);
+		tasker.init(oneDay,startHour,endHour);
+		List<SimuTask> startJobs=tasker.getStartJobs(dispatchers, startHour);
+		runner.init(startJobs,tasker,dispatchers,startHour,endHour);
+	
+		return startJobs;
 	}
 	
 	

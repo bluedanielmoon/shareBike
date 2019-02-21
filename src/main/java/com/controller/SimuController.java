@@ -27,12 +27,6 @@ public class SimuController {
 		return simuServ.initAndStart(carPos);
 	}
 	
-//	@GetMapping(value = "/tasks")
-//	@ResponseBody
-//	public List<SimuTask> getTasks(@RequestParam String simuID) {
-//		return simuServ.getTasks(simuID);
-//	}
-	
 	@GetMapping(value = "/next")
 	@ResponseBody
 	public SimuTask getNextJob(@RequestParam int dispID,@RequestParam String simuID) {

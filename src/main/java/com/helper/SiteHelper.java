@@ -43,7 +43,6 @@ public class SiteHelper {
 		ObjectWriter writer=mapper.writer();
 		try {
 			String s=mapper.writeValueAsString(ls);
-			System.out.println(s);
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -63,9 +62,7 @@ public class SiteHelper {
 			if(paths!=null) {
 				return paths;
 			}
-			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
@@ -75,7 +72,8 @@ public class SiteHelper {
 	 * 读取站点通勤路径信息，并写入数据库
 	 */
 	public void readRouteFileAddToBase(){
-		Map<Integer, Map<Integer, Object>> maps=MapperUtil.readIntMapIntMapData("./siteMap.txt");
+		routeServ.clearTable();
+		Map<Integer, Map<Integer, Object>> maps=MapperUtil.readIntMapIntMapData("/Users/daniel/projects/siteMap.txt");
 		
 		ObjectMapper mapper=new ObjectMapper();
 		//不写这一句由于双引号，数据库插不进去
@@ -109,8 +107,8 @@ public class SiteHelper {
 					e.printStackTrace();
 				}
 			}
-			routeServ.clearTable();
-			boolean flag=routeServ.patchAddPoi(list);
+			
+			boolean flag=routeServ.patchAddRoute(list);
 			if(flag) {
 				list.clear();
 			}
@@ -134,9 +132,9 @@ public class SiteHelper {
 		SiteUtil siteUtil=new SiteUtil();
 		Map<Integer, Map<Integer, GaodePath>> maps=new HashMap<>();
 		double i=0;
-		System.out.println("共有站点"+sites.size());
+//		System.out.println("共有站点"+sites.size());
 		for(Site site:sites) {
-			System.out.println("准备采集"+site.getId());
+//			System.out.println("准备采集"+site.getId());
 			Map<Integer, GaodePath> map=new HashMap<>();
 			for(Site siteTo:sites) {
 				GaodePath path=siteUtil.getPath(site, siteTo, client);
@@ -144,15 +142,14 @@ public class SiteHelper {
 				map.put(siteTo.getId(), path);
 			}
 			maps.put(site.getId(), map);
-			System.out.println("完毕"+site.getId()+",采集"+map.size()+",完成了"+(i/sites.size()));
+//			System.out.println("完毕"+site.getId()+",采集"+map.size()+",完成了"+(i/sites.size()));
 			i++;
 		}
-		MapperUtil.writeIntMapIntMapData("./siteMap.txt",maps,GaodePath.class);
+		MapperUtil.writeIntMapIntMapData("/Users/daniel/projects/siteMap.txt",maps,GaodePath.class);
 		
 		try {
 			client.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

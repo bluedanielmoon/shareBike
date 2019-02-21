@@ -19,5 +19,7 @@ public interface UserServ {
 	boolean deleteUser(int id);
 	
 	boolean patchDeleteUser(List<String> names);
+
+	boolean checkLogin(String userName,String passWord);
 	
 }

@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.pojo.User;
 import com.service.UserServ;
 
-import net.bytebuddy.asm.Advice.Return;
-
 /**
  * 列举所有的controller的标准形式
  * 
@@ -28,10 +26,15 @@ import net.bytebuddy.asm.Advice.Return;
 @RestController
 @RequestMapping(value = "/user")
 public class UserController {
-	
+
 	@Autowired
 	private UserServ userServ;
-	
+
+	@PostMapping(value = "/login")
+	public String userLogin(@RequestParam String loginName, @RequestParam String loginPass) {
+		return loginName;
+	}
+
 	@GetMapping(value = "/all")
 	@ResponseBody
 	public List<User> getAll() {
@@ -40,14 +43,13 @@ public class UserController {
 
 	@GetMapping(value = "/add")
 	@ResponseBody
-	public boolean getUser(@RequestParam String userName,@RequestParam String password) {
+	public boolean getUser(@RequestParam String userName, @RequestParam String password) {
 		return userServ.addUser(userName, password);
 	}
 
 	@PostMapping(value = "/delete")
 	@ResponseBody
 	public boolean postUser(@RequestParam List<String> names) {
-		System.out.println(names);
 		return userServ.patchDeleteUser(names);
 	}
 
@@ -77,14 +79,12 @@ public class UserController {
 
 	@PostMapping(path = "/po", consumes = "application/json")
 	public String postUser(@RequestBody User user) {
-		System.out.println(user);
 		return user + " json class is posted";
 	}
 
 	// 默认去往text/plain,即时是json格式字符串，如果不指明，也用text处理
 	@PostMapping(path = "/po", consumes = "text/plain")
 	public String postUser(@RequestBody String user) {
-		System.out.println(user);
 		return user + " text string is posted";
 	}
 

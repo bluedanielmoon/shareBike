@@ -142,6 +142,11 @@ public class FilesUtil {
 		dates[1] = calendar.getTime();
 
 		List<Path> files = listFilesInDuration(dates[0], dates[1],check24);
+		
+		return files;
+	}
+	
+	public static void sortFiles(List<Path> files) {
 		files.sort(new Comparator<Path>() {
 
 			@Override
@@ -161,7 +166,28 @@ public class FilesUtil {
 				}
 			}
 		});
-		return files;
+	}
+	
+	public static void deSortFiles(List<Path> files) {
+		files.sort(new Comparator<Path>() {
+
+			@Override
+			public int compare(Path o1, Path o2) {
+				String p1=o1.getParent().getFileName().toString();
+				String s1=o1.getFileName().toString();
+				String p2=o2.getParent().getFileName().toString();
+				String s2=o2.getFileName().toString();
+				if(p1.equals(p2)) {
+					int x1=Integer.parseInt(s1.substring(0,s1.length()-4));
+					int x2=Integer.parseInt(s2.substring(0,s2.length()-4));
+					return Integer.compare(x2, x1);
+				}else {
+					Date d1=DateUtil.parseToDay(p1);
+					Date d2=DateUtil.parseToDay(p2);
+					return d2.compareTo(d1);
+				}
+			}
+		});
 	}
 
 	public static List<BikeHeader> readFileHeaders(Date st_time, Date end_time,boolean check24) {

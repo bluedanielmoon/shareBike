@@ -11,10 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pojo.ForbidArea;
-import com.pojo.Lnglat;
-import com.pojo.Site;
 import com.service.ForbidAreaServ;
-import com.service.SiteServ;
 
 @RestController
 @RequestMapping(value = "/forbid")
@@ -38,8 +35,6 @@ public class ForbidController {
 	@PostMapping(value = "/add")
 	@ResponseBody
 	public boolean getSite(@RequestParam String name,@RequestParam List<String> paths) {
-		System.out.println(name);
-		System.out.println(paths);
 		return forbidServ.addArea(name, paths);
 	}
 

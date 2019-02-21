@@ -35,6 +35,10 @@
 		SELECT * FROM users WHERE id = #{id}
 	</select>
 	
+	<select id="getUserByName" parameterType="string" resultMap="UserMap">
+		SELECT * FROM users WHERE username = #{userName}
+	</select>
+	
 	<select id="getAll" resultMap="UserMap">
 		SELECT * FROM users
 	</select>

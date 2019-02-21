@@ -20,9 +20,19 @@ public class State {
 		public static int MAN_SPEED;
 		public static int MAN_CAPACITY=1;
 		
+		//从某个站点到另一个站点，路径时间乘以浪费系数来模拟实际的消耗时间
+		public static double WASTETIME_MOVE_RATIO=1.5;
+		public static int WASTETIME_LOAD=120;
+		
+		
 		//任务类型，移动任务，搬运任务
-		public static int MOVE_TASK=1;
-		public static int LOAD_TASK=2;
+		public static int LOAD_TASK=1;
+		public static int WAIT_TASK=2;
+		
+
+		public static int NEAR_SITE_DIST = 3000;
+		
+		public static int WAIT_TIME=600;
 		
 		//对某一站点搬运的策略，load--搬走，unload--往下搬,ignore--不管
 		public static int LOAD=1;
@@ -39,9 +49,28 @@ public class State {
 		public static int GROW_TREND=1;
 		public static int REDUCE_TREND=2;
 		
+		//SiteTypeJudger里面的父类型
+		public static final int MOUNTAIN = 1;// 山峰类型
+		public static final int VALLY = 2;// 山谷类型
+		public static final int FLAT = 3;// 平原
+		
+		//SiteTypeJudger里面的淤积类型
+		public static final int BUMP_BIG = 1;// 强淤积
+		public static final int BUMP_MIDDLE = 2;// 中淤积
+		public static final int BUMP_SMALL = 3;// 弱淤积
+		public static final int BUMP_NONE = 4;// 无淤积
+		
+		
+		public static final int FLOW_IN = 1;// 从某个站点流入
+		public static final int FLOW_OUT = 2;// 从某个站点流出
+		
+		public static final double FLOW_RATIO = 0.1;
+		
+		//选择站点的时候距离和数量评比所占的比例
+		public static final double SITE_CHOOSE_RATIO = 0.5;
 
+		public static BikeArea AREA=new BikeArea(108.891913, 34.286154, 108.996753, 34.240899);
 	    
-		public static BikeArea AREA;
 		
 		public State() {}
 
@@ -155,14 +184,6 @@ public class State {
 
 		public static void setMAN_CAPACITY(int mAN_CAPACITY) {
 			MAN_CAPACITY = mAN_CAPACITY;
-		}
-
-		public static int getMOVE_TASK() {
-			return MOVE_TASK;
-		}
-
-		public static void setMOVE_TASK(int mOVE_TASK) {
-			MOVE_TASK = mOVE_TASK;
 		}
 
 		public static int getLOAD_TASK() {

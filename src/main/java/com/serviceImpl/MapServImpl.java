@@ -2,16 +2,20 @@ package com.serviceImpl;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.execute.LazyAnalyze;
+import com.execute.LazyChecker;
 import com.execute.MapHelper;
-import com.execute.State;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.init.State;
 import com.pojo.BikeArea;
+import com.pojo.BikeHeader;
 import com.pojo.BikePos;
 import com.pojo.Point;
 import com.service.MapServ;
@@ -25,6 +29,14 @@ public class MapServImpl implements MapServ {
 
 	@Autowired
 	private MapHelper maphelper;
+	
+	@Autowired
+	private LazyChecker lazychecker;
+	
+	@Autowired
+	private LazyAnalyze lazyAna;
+	
+	
 
 	@Override
 	public Map<String, Object> getHeatMap(String time)
@@ -45,8 +57,35 @@ public class MapServImpl implements MapServ {
 
 
 	public Map<String, Object> getBikeData(String time) {
-		String ss = PathUtil.getFileByTime(time);
-		return FilesUtil.readFileToPoint(ss);
+		
+		
+		
+		String fileName=null;
+		if (time.equals("latest")) {
+			fileName = FilesUtil.checkLastestFile();
+		} else {
+
+			String timePath = DateUtil.parseTimeToFile(time);
+			fileName = FilesUtil.DEFAULT_BIKE_FILE + timePath + ".txt";
+		}
+		Map<String, Object> points=FilesUtil.readFileToPoint(fileName);
+		List<Point> bikes =(List<Point>) points.get("bikes");
+		Date time2=null;
+		if(time.equals("latest")) {
+			BikeHeader header=(BikeHeader) points.get("header");
+			time2= header.getStartTime();
+		}else {
+			time2=DateUtil.pareToHour(time);
+		}
+		List<String> inacts=lazyAna.getInactiveBikes(time2, 3);
+		for(Point bike:bikes) {
+			if(inacts.contains(bike.getName())) {
+				bike.setStyle(1);
+			}else {
+				bike.setStyle(0);
+			}
+		}
+		return points;
 	}
 
 	public Map<String, Map<String, Object>> getDurationBikeData(
@@ -55,7 +94,7 @@ public class MapServImpl implements MapServ {
 		Date st = DateUtil.parseToMinute(startTime);
 		Date en = DateUtil.parseToMinute(endTime);
 		List<Map<String, Object>> maps = FilesUtil.readFilesToBikeMap(st, en,false);
-		BikeArea area = State.getArea();
+		BikeArea area = State.AREA;
 
 		Map<String, Map<String, Object>> result = maphelper
 				.getDurationBikesInMultiAreas(maps, area, rows, cols);
@@ -107,12 +146,46 @@ public class MapServImpl implements MapServ {
 		
 	}
 
-	public static void main(String[] args) {
-		int i=0;
-		while(i<10) {
-			System.out.println(new String(""+i));
-			i++;
-				
+	public Map<String, Object> getDateActive(String time, int days) {
+		Date date=DateUtil.pareToHour(time);
+		Map<String, Integer> actives=lazychecker.checkActiveBefore(date, 3);
+		List<Integer> divides =new ArrayList<>();
+		divides.add(0);
+		divides.add(3);
+		divides.add(6);
+		divides.add(10);
+		Map<String, Object> result=new HashMap<>();
+		result.put("pies", lazychecker.countActive(actives, divides));
+		result.put("names", divides);
+		return result;
+	}
+
+	public Map<String, Object> getBikeData(String time, int inAct) {
+		String fileName=null;
+		if (time.equals("latest")) {
+			fileName = FilesUtil.checkLastestFile();
+		} else {
+
+			String timePath = DateUtil.parseTimeToFile(time);
+			fileName = FilesUtil.DEFAULT_BIKE_FILE + timePath + ".txt";
 		}
+		Map<String, Object> points=FilesUtil.readFileToPoint(fileName);
+		List<Point> bikes =(List<Point>) points.get("bikes");
+		Date time2=null;
+		if(time.equals("latest")) {
+			BikeHeader header=(BikeHeader) points.get("header");
+			time2= header.getStartTime();
+		}else {
+			time2=DateUtil.pareToHour(time);
+		}
+		List<String> inacts=lazyAna.getInactiveBikes(time2, inAct);
+		for(Point bike:bikes) {
+			if(inacts.contains(bike.getName())) {
+				bike.setStyle(1);
+			}else {
+				bike.setStyle(0);
+			}
+		}
+		return points;
 	}
 }

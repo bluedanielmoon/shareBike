@@ -2,11 +2,14 @@ package com.execute;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.init.State;
 import com.pojo.Site;
 import com.service.SiteServ;
 import com.util.MathUtil;
@@ -39,63 +42,141 @@ public class SiteTypeJudger {
 
 	public int MOUNTAIN_VALLLY_DIVIDE = 4;
 
-	public final int MOUNTAIN = 1;// 山峰类型
-	public final int VALLY = 2;// 山谷类型
-	public final int FLAT = 3;// 平原
+	
+	public static final int MOUNTAIN_ONE_TOP = 11;// 山峰类型,单峰
+	public static final int MOUNTAIN_TWO_TOP = 12;// 山峰类型，双峰
+	public static final int MOUNTAIN_THREE_TOP = 13;// 山峰类型，三峰及以上
 
-	public final int MOUNTAIN_ONE_TOP = 11;// 山峰类型,单峰
-	public final int MOUNTAIN_TWO_TOP = 12;// 山峰类型，双峰
-	public final int MOUNTAIN_THREE_TOP = 13;// 山峰类型，三峰及以上
+	public static final int ERASE_LEFT = 41;// 山峰类型，三峰及以上
+	public static final int ERASE_RIGHT = 42;// 山峰类型，三峰及以上
+	public static final int ERASE_NONE = 43;// 山峰类型，三峰及以上
 
-	public final int ERASE_LEFT = 41;// 山峰类型，三峰及以上
-	public final int ERASE_RIGHT = 42;// 山峰类型，三峰及以上
-	public final int ERASE_NONE = 43;// 山峰类型，三峰及以上
-
-	public final double ONE_TOP_SECOND_RATIO = 0.5;// 判断单峰是否有大于这个比例的亚峰存在
-	public final double ERASE_RATIO = 0.4;// 比较两个山峰时，用来抹除一个山峰的比例
-	public final double MERGE_RATIO_HIGH = 0.96;// 对于两个离的很近，把很近的一个占比很大的峰合并掉
-	public final double MERGE_RATIO_LOW = 0.9;// 对于两个离的很近，把很近的一个占比很大的峰合并掉
-	public final int MAX_ITER_ERASE = 5;// 比较两个山峰时，用来抹除一个山峰的比例
+	public static final double ONE_TOP_SECOND_RATIO = 0.5;// 判断单峰是否有大于这个比例的亚峰存在
+	public static final double ERASE_RATIO = 0.4;// 比较两个山峰时，用来抹除一个山峰的比例
+	public static final double MERGE_RATIO_HIGH = 0.96;// 对于两个离的很近，把很近的一个占比很大的峰合并掉
+	public static final double MERGE_RATIO_LOW = 0.9;// 对于两个离的很近，把很近的一个占比很大的峰合并掉
+	public static final int MAX_ITER_ERASE = 5;// 比较两个山峰时，用来抹除一个山峰的比例
 
 	public final int VALLY_STANDARD = 21;// 山谷类型
+	
+	public static final double BUMP_LIMIT_RATE = 0.5;// 计算7-19时隆起率超过这个比例算作隆起块
 
 	public static void main(String[] args) {
 		SiteTypeJudger judger = new SiteTypeJudger();
 		double[] list = new double[] { 1.6, 1.7, 0.8, 1.2, 0.0, 1.6, 1.7, 2.1, 1.7, 0.8, 1.5, 2.1, 1.3, 2.8, 6.2, 4.8,
 				6.5, 5.5, 4.5, 3.5, 3.1, 2.3, 1.7, 0.6 };
-		judger.filterData(list);
-		int firstType = judger.mountainOrVally(list);
-		judger.mountainTops(list, firstType);
-
-		int[] tops = judger.getTops(list);
-		System.out.println(Arrays.toString(tops));
-
-		judger.eraseTops(list, tops);
-		System.out.println(Arrays.toString(tops));
+		judger.getBump(list);
+//		judger.filterData(list);
+//		int firstType = judger.mountainOrVally(list);
+//		judger.mountainTops(list, firstType);
+//
+//		int[] tops = judger.getTops(list);
+//		System.out.println(Arrays.toString(tops));
+//
+//		judger.eraseTops(list, tops);
+//		System.out.println(Arrays.toString(tops));
 	}
 	
-	public void anayAllSites() {
-		List<Site> sites=siteServ.getAllSites();
+	public List<Integer> anayAllSites(List<Site> sites) {
+		List<Integer> siteTypes=new ArrayList<>();
 		int count=0;
 		for(Site s:sites) {
-			
 			double[] list= analyze.analyzeSiteChange(s.getId());
-			
 			int type=judger.getSiteType(list);
-			if(type==judger.MOUNTAIN) {
+			siteTypes.add(type);
+			if(type==State.MOUNTAIN) {
 				count++;
 			}
 		}
-		System.out.println("共有站点"+sites.size());
-		System.out.println("峰站点"+count);
+//		System.out.println("共有站点"+sites.size());
+//		System.out.println("峰站点"+count);
+		return siteTypes;
 	}
-
+	
+	/**
+	 * 获取7-20点的数据，然后对其淤积程度进行计算
+	 * @param list
+	 * @return bumpRate--double 时间跨度淤积率
+	 * 		   bumpDegree--int(State.BUMP)根据时间跨度淤积率得出的淤积类型
+	 * 		   maxBumpSpan--int[] 最大淤积的时间段
+	 * 		   bumpDegree--淤积的程度
+	 */
+	public Map<String, Object> getBump(double[] list) {
+		if(list.length!=24) {
+			return null;
+		}
+		double[] dayList=Arrays.copyOfRange(list, 7,20);
+		double max=dayList[0];
+		double min=dayList[0];
+		
+		Map<String, Object> bumpMap=new HashMap<>();
+		for(int i=0;i<dayList.length;i++) {
+			if(dayList[i]>max) {
+				max=dayList[i];
+			}
+			if(dayList[i]<min) {
+				min=dayList[i];
+			}
+		}
+		double maxMinLag=max-min;
+		int maxBumpBegin=-1;
+		int maxBumpEnd=-1;
+		int bumpBegin=-1;
+		int bumpEnd=-1;
+		for(int i=0;i<dayList.length;i++) {
+			if(((dayList[i]-min)/maxMinLag-BUMP_LIMIT_RATE)>0.0001) {
+				if(bumpBegin==-1) {
+					bumpBegin=i;
+					bumpEnd=i;
+				}else {
+					bumpEnd++;
+					if((i==dayList.length-1)&&(bumpEnd-bumpBegin)>(maxBumpEnd-maxBumpBegin)) {
+						maxBumpBegin=bumpBegin;
+						maxBumpEnd=bumpEnd;
+					}
+				}
+			}else {
+				if(maxBumpBegin==-1||(bumpEnd-bumpBegin)>(maxBumpEnd-maxBumpBegin)) {
+					maxBumpBegin=bumpBegin;
+					maxBumpEnd=bumpEnd;
+					bumpBegin=-1;
+					bumpEnd=-1;
+				}
+			}
+		}
+		int bumpSpan=maxBumpEnd-maxBumpBegin;
+		double bumpRate=(double)bumpSpan/dayList.length;
+		
+		bumpMap.put("bumpRate", bumpRate);
+		bumpMap.put("bumpDegree", maxMinLag);
+		bumpMap.put("maxBumpSpan", new int[] {maxBumpBegin,maxBumpEnd});
+	
+		if(bumpSpan>0&&bumpSpan<=12) {
+			//System.out.println(bumpRate+"--- "+maxBumpBegin+"---"+maxBumpEnd);
+			if(bumpRate>=0.6) {
+				bumpMap.put("bumpType", State.BUMP_BIG);
+				//System.out.println("淤积类型---强");
+			}else if(bumpRate>=0.2&&bumpRate<0.6){
+				bumpMap.put("bumpType", State.BUMP_MIDDLE);
+				//System.out.println("淤积类型---中");
+			}else {
+				bumpMap.put("bumpType", State.BUMP_SMALL);
+				//System.out.println("淤积类型---弱");
+			}
+		}else {
+			bumpMap.put("bumpType", State.BUMP_NONE);
+			//System.out.println("非淤积类型");
+		}
+		
+		return bumpMap;
+	}
+ 
 	public int getSiteType(double[] list) {
 		int firstType = mountainOrVally(list);
 
 		int secondtype = 0;
-		if (firstType == VALLY) {
-			System.out.println("类型：谷");
+		if (firstType == State.VALLY) {
+			//System.out.println("类型：谷");
 			double[] turnTop = Arrays.copyOf(list, list.length);
 			turnDownTops(turnTop);
 			mountainTops(turnTop, firstType);
@@ -108,7 +189,7 @@ public class SiteTypeJudger {
 			getVallyFeatures(downs);
 			return firstType;
 		} else {
-			System.out.println("类型：峰");
+			//System.out.println("类型：峰");
 			mountainTops(list, firstType);
 
 			int[] tops = getTops(list);
@@ -121,17 +202,17 @@ public class SiteTypeJudger {
 				secondtype = MOUNTAIN_ONE_TOP;
 				int second = getSecondSingle(beforeErase, tops, list);
 				if (second != -1) {
-					System.out.println("存在亚峰" + second);
+					//System.out.println("存在亚峰" + second);
 				}
-				System.out.println("单峰");
+				//System.out.println("单峰");
 			} else if (topCount == 2) {
 				secondtype = MOUNTAIN_TWO_TOP;
-				System.out.println("双峰");
+				//System.out.println("双峰");
 			} else {
 				secondtype = MOUNTAIN_THREE_TOP;
-				System.out.println("多峰");
+				//System.out.println("多峰");
 			}
-			System.out.println(Arrays.toString(tops));
+			//System.out.println(Arrays.toString(tops));
 			return firstType;
 
 		}
@@ -213,15 +294,15 @@ public class SiteTypeJudger {
 				rightCount++;
 			}
 		}
-		System.out.println(leftCount + "---" + rightCount);
+		//System.out.println(leftCount + "---" + rightCount);
 		if (leftCount == 1 && rightCount == 1) {
-			System.out.println("标准谷");
+			//System.out.println("标准谷");
 		}
 
 	}
 
 	public int mountainTops(double[] list, int type) {
-		if (type != MOUNTAIN) {
+		if (type != State.MOUNTAIN) {
 			return -1;
 		}
 
@@ -365,7 +446,7 @@ public class SiteTypeJudger {
 			temp = temp / step;
 			divide[count++] = ((int) (temp * 100)) / 100.0;
 		}
-		System.out.println(Arrays.toString(divide));
+		//System.out.println(Arrays.toString(divide));
 		double side = 0;
 		double middle = 0;
 		for (int i = 0; i < MOUNTAIN_VALLLY_DIVIDE; i++) {
@@ -378,11 +459,11 @@ public class SiteTypeJudger {
 		side = side / 2;
 		middle = middle / (MOUNTAIN_VALLLY_DIVIDE - 2);
 		if (middle > side) {
-			return MOUNTAIN;
+			return State.MOUNTAIN;
 		} else if (middle < side) {
-			return VALLY;
+			return State.VALLY;
 		} else {
-			return FLAT;
+			return State.FLAT;
 		}
 	}
 
@@ -399,14 +480,14 @@ public class SiteTypeJudger {
 		int count = list.length;
 		double[] sorted = Arrays.copyOf(list, count);
 
-		System.out.println(Arrays.toString(list));
+		//System.out.println(Arrays.toString(list));
 		Arrays.sort(sorted);
-		System.out.println(Arrays.toString(sorted));
+		//System.out.println(Arrays.toString(sorted));
 
 		double firstMax = sorted[count - 1];
 		double secondMax = sorted[count - 2];
-		System.out.println(firstMax);
-		System.out.println(secondMax);
+		//System.out.println(firstMax);
+		//System.out.println(secondMax);
 
 		return 0;
 

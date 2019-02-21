@@ -29,21 +29,14 @@ public class SiteEstimaterTest {
 	@Test
 	public void testEstimate() {
 		CircumState cm=new CircumState();
-		int hour=7;
+		int hour=17;
 		cm.setHour(hour);
-//		// 1-work ,0-notWork
-//		private int workDay;
-//		// 1-canGo,0-cannot Go
-//		private int weather;
-//		// 1-[10,25],2-[5-10,25-30],3-[<5,>30]
 		cm.setTemp(1);
 		cm.setWeather(1);
-		cm.setWorkDay(1);
-		
-		//19-7
-		Site site=siteServ.getSiteById(275);	
-		Date date=DateUtil.pareToHour("2018_11_13 9");
-    	//estim.estimateByHistory(site, hour,date,null);
+		cm.setWorkDay(0);
+		Site site=siteServ.getSiteById(1);	
+		Date date=DateUtil.parseToDay("2018_11_29");
+    	estim.estimateByHistory(site, hour,date,null);
 	}
 
 }
