@@ -17,6 +17,27 @@ public class LoadTask extends SimuTask{
 	private GaodePath path;
 	
 	private int moveTime;
+	
+
+	public LoadTask() {
+		super();
+	}
+	
+
+	public LoadTask(Site targetSite, int loadType, int loadNum, int loadTime, Lnglat start, Lnglat end, GaodePath path,
+			int moveTime) {
+		super();
+		this.targetSite = targetSite;
+		this.loadType = loadType;
+		this.loadNum = loadNum;
+		this.loadTime = loadTime;
+		this.start = start;
+		this.end = end;
+		this.path = path;
+		this.moveTime = moveTime;
+	}
+
+
 
 	public Site getTargetSite() {
 		return targetSite;

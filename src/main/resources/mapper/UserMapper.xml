@@ -16,6 +16,8 @@
 			jdbcType="VARCHAR" />
 		<result column="password" property="password"
 			jdbcType="VARCHAR" />
+		<result column="user_type" property="type"
+			jdbcType="INTEGER" />
 		<result column="create_time" property="createTime"
 			jdbcType="TIMESTAMP"/>
 		<result column="update_time" property="updateTime"
@@ -45,8 +47,8 @@
 	
 	<!-- 因为ID是自增长的，在插入中可以省略ID，通过useGenerated keyProperty来指定id 使用自增长策略 -->
 	<insert id="addUser" useGeneratedKeys="true" keyProperty="id" parameterType="com.pojo.User">
-		insert into users (username,password)
-		values (#{userName},#{password})
+		insert into users (username,password,user_type)
+		values (#{userName},#{password},#{type})
 	</insert>
 
 	<update id="updateUser" parameterType="com.pojo.User">

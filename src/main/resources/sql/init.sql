@@ -8,12 +8,13 @@ CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `username` varchar(20) DEFAULT NULL COMMENT '用户名',
   `password` varchar(20) DEFAULT NULL COMMENT '密码',
+  `user_type` int(2) DEFAULT NULL COMMENT '用户类型（0-管理员，1-平民）',
   `create_time` datetime DEFAULT NOW() COMMENT '注册时间',
   `update_time` datetime DEFAULT NOW() ON UPDATE NOW() COMMENT '最后登陆时间',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='登陆系统的用户列表';
 
-INSERT INTO users(id,username,password) VALUES(1,'daniel','123');
+INSERT INTO users(id,username,password,user_type) VALUES(1,'daniel','123',0);
 
 CREATE TABLE IF NOT EXISTS `dispatcher` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键ID',

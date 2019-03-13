@@ -40,7 +40,7 @@ public class FlowCheckerTest {
 	@Test
 	public void testProduceAllSiteFlows() {
 		
-		checker.produceAllSiteFlows(State.FLOW_OUT);
+		checker.produceAllSiteFlows(State.FLOW_IN);
 	}
 	
 }

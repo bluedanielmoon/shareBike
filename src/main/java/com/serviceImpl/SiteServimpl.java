@@ -9,13 +9,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dao.SiteDao;
+import com.execute.BikeTracker;
 import com.execute.FlowChecker;
 import com.execute.LazyAnalyze;
 import com.execute.SiteAnalyze;
 import com.execute.SiteChooser;
-import com.execute.SiteTypeJudger;
 import com.execute.SiteChooser.MaxScore;
+import com.execute.SiteCircum;
+import com.execute.SiteStorage;
+import com.execute.SiteTypeJudger;
 import com.helper.SiteHelper;
+import com.init.State;
 import com.pojo.BikeHeader;
 import com.pojo.CircumState;
 import com.pojo.Lnglat;
@@ -26,7 +30,6 @@ import com.service.SiteServ;
 import com.util.CoordsUtil;
 import com.util.DateUtil;
 import com.util.FilesUtil;
-import com.util.PathUtil;
 
 @Service
 public class SiteServimpl implements SiteServ {
@@ -51,6 +54,14 @@ public class SiteServimpl implements SiteServ {
 	
 	@Autowired
 	private LazyAnalyze lazyChecker;
+	@Autowired
+	private SiteStorage siteStorage;
+	
+	@Autowired
+	private SiteCircum siteCircum;
+	
+	@Autowired
+	private BikeTracker bikeTracker;
 
 	public SiteServimpl(SiteDao userDao) {
 		this.siteDao = userDao;
@@ -147,25 +158,38 @@ public class SiteServimpl implements SiteServ {
 	}
 
 	@Override
-	public boolean writeBase(int rate, double flucSca, double countSca, double poiSca, int clusterDist) {
-		List<Point> points = mergeSites(rate, flucSca, countSca, poiSca, clusterDist);
+	public boolean writeBase(int rate, double flucSca, double countSca, double poiSca, int clusterDist,int maxPack,int minPack) {
+		List<Point> points = mergeSites(rate, flucSca, countSca, poiSca, clusterDist,maxPack,minPack);
 
 		List<Site> lSites = SiteChooser.writeToDatabase(points);
+		System.out.println("站点更新结束");
 		if (lSites.size() > 0) {
 			Helper.getPath(lSites);
 			Helper.readRouteFileAddToBase();
 		}
+		System.out.println("路线更新结束");
 		analyze.produceSiteBikes();
+		
+		//在上面的工作结束后，分析历史数据，然后得到每个站点的推荐容量
+		siteStorage.changeSiteStorage();
+
+		System.out.println("容量分析结束");
+		bikeTracker.produceBikeTackFile();
+
+		System.out.println("生产追踪文件结束");
+		
+		flowChecker.produceAllSiteFlows(State.FLOW_OUT);
+		flowChecker.produceAllSiteFlows(State.FLOW_IN);
 		return false;
 	}
 
 	@Override
-	public List<Point> mergeSites(int rate, double flucSca, double countSca, double poiSca, int clusterDist) {
+	public List<Point> mergeSites(int rate, double flucSca, double countSca, double poiSca, int clusterDist,int maxPack,int minPack) {
 		MaxScore maxScore = SiteChooser.new MaxScore();
 		Map<String, Map<String, Object>> totalScore = SiteChooser.judgeScore(maxScore, flucSca, countSca, poiSca);
 
 		Map<Double, Lnglat> choosed = SiteChooser.chooseSite(totalScore, maxScore, rate, false);
-		List<Point> sites = SiteChooser.mergeSites(choosed, clusterDist);
+		List<Point> sites = SiteChooser.mergeSites(choosed, clusterDist,maxPack,minPack);
 
 		return sites;
 	}
@@ -175,16 +199,16 @@ public class SiteServimpl implements SiteServ {
 		MaxScore maxScore = SiteChooser.new MaxScore();
 		Map<String, Map<String, Object>> totalScore = SiteChooser.judgeScore(maxScore, flucSca, countSca, poiSca);
 
-		Map<Double, Lnglat> choosed = SiteChooser.chooseSite(totalScore, maxScore, rate, false);
+		Map<Double, Lnglat> choosed = SiteChooser.chooseSite(totalScore, maxScore, rate, true);
 
 		return choosed;
 	}
 
 	@Override
-	public Map<String, Object> getSiteChange(String date, int siteID) {
+	public Map<String, Object> getSiteChange(String date,String choose, int siteID) {
 		Map<String, Object> result = new HashMap<>();
 		analyze.analyzeSiteSimilar(siteID);
-		if (date.equals("all")) {
+		if (choose.equals("all")) {
 			double[] list = analyze.analyzeSiteChange(siteID);
 			Map<String, Object> bump = judger.getBump(list);
 			int type = judger.getSiteType(list);
@@ -192,16 +216,31 @@ public class SiteServimpl implements SiteServ {
 			result.put("bump", bump);
 			result.put("type", type);
 
-		}else if(date.equals("predict")){
-			PredictResult sitePredict=analyze.getSitePredict(siteID);
-			result.put("list", sitePredict.getResults());
+		}else if(choose.equals("predict")){
+			PredictResult sitePredict=analyze.getSitePredict(siteID,date);
+			if (sitePredict!=null) {
+				result.put("list", sitePredict.getResults());
+			}else {
+				result.put("list", null);
+			}
+			
+		}else if(choose.equals("workDayAvg")){
+			int[] list=siteCircum.getAvgWorkData(siteID,1);
+			result.put("list", list);
+			
+		}else if(choose.equals("noWorkDayAvg")){
+			int[] list=siteCircum.getAvgWorkData(siteID,0);
+			result.put("list", list);
 		}else {
 			Date askDate = DateUtil.parseToDay(date);
 			List<Integer> list = analyze.estimate(askDate, siteID);
 			List<CircumState> dayCircums = analyze.getDayCircums(askDate);
 			result.put("list", list);
 			result.put("circum", dayCircums);
+			System.out.println(dayCircums);
 		}
+		
+		
 		return result;
 
 	}
@@ -222,9 +261,21 @@ public class SiteServimpl implements SiteServ {
 		result.put("types", scores);
 		return result;
 	}
+	
+	@Override
+	public Map<String, Object> getAllSitesWithWorks() {
+		List<Site> sites = getAllSites();
+
+		List<Integer> scores=siteCircum.analyzeWorkForAllSites();
+		Map<String, Object> result = new HashMap<>();
+		result.put("sites", sites);
+		result.put("works", scores);
+		return result;
+	}
 
 	@Override
-	public Map<String, Object> getSitesFlow(int flowType) {
+	public Map<String, Object> getSitesFlow(double flowRatio,int flowType) {
+		State.FLOW_RATIO=flowRatio;
 		Map<Integer, List<Integer>> flowData = flowChecker.getAllSitesFlow(flowType);
 		List<Site> sites = siteDao.getAll();
 		for(Site site:sites) {
@@ -272,6 +323,8 @@ public class SiteServimpl implements SiteServ {
 		}
 		return lazyChecker.getInactiveBikes(time, checkDays);
 	}
+
+
 	
 
 }

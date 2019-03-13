@@ -186,7 +186,6 @@ public class MapHelper {
 		int idCount = 0;
 		for (Map<String, BikePos> pack : packs) {
 			Set<String> keys = pack.keySet();
-
 			List<BikePos> ls = new ArrayList<BikePos>();
 			for (String key : keys) {
 				BikePos bike = pack.get(key);
@@ -232,7 +231,7 @@ public class MapHelper {
 	 * @param distance
 	 * @return
 	 */
-	public List<Map<String, BikePos>> neighborCluster(List<BikePos> bikes, int distance,int divideDist,BikeArea... area) {
+	public List<Map<String, BikePos>> neighborCluster(List<BikePos> bikes, int distance,int divideDist,int maxPack,int minPack,BikeArea... area) {
 
 		Map<String, BikePos> pool = new HashMap<String, BikePos>();
 		BikePos bp = null;
@@ -264,8 +263,8 @@ public class MapHelper {
 
 		// 开始聚类s
 		List<Map<String, BikePos>> result = new ArrayList<Map<String, BikePos>>();
+		
 		while (pool.size() > 0) {
-
 			Iterator<String> iter = pool.keySet().iterator();
 			BikePos source = pool.get(iter.next());
 			Map<String, BikePos> pack = new HashMap<String, BikePos>();
@@ -274,22 +273,28 @@ public class MapHelper {
 
 			nextLook.add(source);
 
+			List<BikePos> nearBks =new ArrayList<>();
 			while (nextLook.size() != 0) {
-				List<BikePos> nearBks = new ArrayList<BikePos>();
+				nearBks.clear();
 				for (BikePos bk : nextLook) {
 					nearBks.addAll(getNearBikes(bk, maps, size));
 				}
 				nextLook.clear();
 				for (BikePos bk : nearBks) {
-					if (!pack.containsKey(bk.getBikeID())) {
+					if (!pack.containsKey(bk.getBikeID())&&pool.containsKey(bk.getBikeID())) {
+						if(pack.size()>maxPack) {
+							nextLook.clear();
+							break;
+						}
 						pack.put(bk.getBikeID(), bk);
 						nextLook.add(bk);
 					}
 				}
 
 			}
-
-			result.add(pack);
+			if (pack.size()>=minPack) {
+				result.add(pack);
+			}
 
 			for (String s : pack.keySet()) {
 				pool.remove(s);

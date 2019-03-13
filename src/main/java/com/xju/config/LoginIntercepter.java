@@ -26,9 +26,26 @@ public class LoginIntercepter implements HandlerInterceptor {
 			String name=request.getParameter("loginName");
 			String pass=request.getParameter("loginPass");
 			
-			if (name!=null&&pass!=null&&checkUser(name,pass)) {
-				session.setAttribute(session.getId(), true);
-				return true;
+			if (name!=null&&pass!=null) {
+				int result=checkUser(name,pass);
+				if(result>=0) {
+					session.setAttribute(session.getId(), true);
+					if(result==0) {
+						session.setAttribute("addUser", true);
+					}else {
+						session.setAttribute("addUser", false);
+					}
+					return true;
+				}
+				return false;
+			}
+		}else if(request.getRequestURI().equals("/user/add")||request.getRequestURI().equals("/user/delete")) {
+			Object check=session.getAttribute(session.getId());
+			Object canAdd=session.getAttribute("addUser");
+			if(check!=null&&canAdd!=null) {
+				if ((boolean) check==true&&(boolean)canAdd==true) {
+					return true;
+				}
 			}
 		}else {
 			Object check=session.getAttribute(session.getId());
@@ -42,12 +59,9 @@ public class LoginIntercepter implements HandlerInterceptor {
 		return false;
 	}
 	
-	private boolean checkUser(String loginName,String loginPass) {
-		boolean flag=userServ.checkLogin(loginName, loginPass);
-		if (flag) {
-			System.out.println("用户名密码验证通过");
-			return true;
-		}
-		return false;
+	private int checkUser(String loginName,String loginPass) {
+
+		return userServ.checkLogin(loginName, loginPass);
 	}
+
 }

@@ -44,7 +44,7 @@ public class SimulatorTest {
 		Date startTime = new Date();
 		Date endTime = new Date();
 		int timeSpeed = 1;
-		simulator.init(sites, dispatchers, startTime, endTime, timeSpeed);
+//		simulator.init(sites, dispatchers, startTime, endTime, timeSpeed);
 		
 		new Thread(simulator).start();
 		

@@ -25,10 +25,7 @@ public class BikeTrackerTest {
 
 	@Test
 	public void testProduceBikeTackFile() {
-		String latest=FilesUtil.checkLastestFile();
-		Map<String, Object> latestBikes=FilesUtil.readFileToBikeMap(latest);
-		List<BikePos> bikes=(List<BikePos>) latestBikes.get("bikes");
-		tracker.trackBikesInSite(3, bikes);
+		tracker.produceBikeTackFile();
 	}
 
 	@Test

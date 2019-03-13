@@ -24,13 +24,15 @@ public class SimuController {
 	@PostMapping(value = "/start",consumes = "application/json")
 	@ResponseBody
 	public Map<String, Object> startSimu(@RequestBody String carPos) {
+		
+		
 		return simuServ.initAndStart(carPos);
 	}
 	
 	@GetMapping(value = "/next")
 	@ResponseBody
-	public SimuTask getNextJob(@RequestParam int dispID,@RequestParam String simuID) {
-		return simuServ.getNextJob(dispID,simuID);
+	public SimuTask getNextJob(@RequestParam int dispID,@RequestParam String manageID,@RequestParam String simuID) {
+		return simuServ.getNextJob(dispID,manageID,simuID);
 	}
 	
 	@GetMapping(value = "/config")
@@ -39,23 +41,5 @@ public class SimuController {
 		return simuServ.getConfigs();
 	}
 	
-
-	@GetMapping(value = "/pause")
-	@ResponseBody
-	public boolean pauseSimu(@RequestParam String simuID) {
-		return simuServ.pause(simuID);
-	}
-
-	@GetMapping(value = "/resume")
-	@ResponseBody
-	public boolean resumeSimu(@RequestParam String simuID) {
-		return simuServ.resume(simuID);
-	}
-
-	@GetMapping(value = "/stop")
-	@ResponseBody
-	public boolean stopSimu(@RequestParam String simuID) {
-		return simuServ.stop(simuID);
-	}
 
 }

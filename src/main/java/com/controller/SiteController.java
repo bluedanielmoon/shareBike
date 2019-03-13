@@ -43,6 +43,13 @@ public class SiteController {
 		return siteServ.getAllSitesWithTypes();
 	}
 	
+	@GetMapping(value = "/allWorks")
+	@ResponseBody
+	public Map<String, Object> getAllWithWorkAna() {
+		
+		return siteServ.getAllSitesWithWorks();
+	}
+	
 	
 	@GetMapping(value = "/score")
 	@ResponseBody
@@ -55,23 +62,23 @@ public class SiteController {
 	@GetMapping(value = "/cluster")
 	@ResponseBody
 	public List<Point> getClusterScore(@RequestParam int rate,@RequestParam double flucSca,@RequestParam double countSca,
-			@RequestParam double poiSca,@RequestParam int clusterDist) {
-		return siteServ.mergeSites(rate, flucSca, countSca, poiSca, clusterDist);
+			@RequestParam double poiSca,@RequestParam int clusterDist,@RequestParam int maxPack,@RequestParam int minPack) {
+		return siteServ.mergeSites(rate, flucSca, countSca, poiSca, clusterDist,maxPack,minPack);
 	}
 	
 	@GetMapping(value = "/submit")
 	@ResponseBody
 	public boolean submitSites(@RequestParam int rate,@RequestParam double flucSca,@RequestParam double countSca,
-			@RequestParam double poiSca,@RequestParam int clusterDist) {
-		return siteServ.writeBase(rate, flucSca, countSca, poiSca, clusterDist);
+			@RequestParam double poiSca,@RequestParam int clusterDist,@RequestParam int maxPack,@RequestParam int minPack) {
+		return siteServ.writeBase(rate, flucSca, countSca, poiSca, clusterDist,maxPack,minPack);
 		
 	}
 	
 	@GetMapping(value = "/change")
 	@ResponseBody
-	public Map<String, Object> getSite(@RequestParam String date,@RequestParam int siteID) {
+	public Map<String, Object> getSite(@RequestParam String date,@RequestParam String choose,@RequestParam int siteID) {
 		
-		return siteServ.getSiteChange(date,siteID);
+		return siteServ.getSiteChange(date,choose,siteID);
 		
 	}
 	
@@ -103,8 +110,9 @@ public class SiteController {
 	
 	@GetMapping(value = "/flow")
 	@ResponseBody
-	public Map<String, Object> getSiteFlow(@RequestParam int flowType) {
-		return siteServ.getSitesFlow(flowType);
+	public Map<String, Object> getSiteFlow(@RequestParam double flowRatio,@RequestParam int flowType) {
+		
+		return siteServ.getSitesFlow(flowRatio,flowType);
 	}
 	
 	@GetMapping(value = "/inactiveDays")

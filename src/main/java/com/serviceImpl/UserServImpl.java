@@ -31,8 +31,8 @@ public class UserServImpl implements UserServ {
 	}
 
 	@Override
-	public boolean addUser(String userName, String password) {
-		User user = new User(userName, password);
+	public boolean addUser(String userName, String password,int type) {
+		User user = new User(userName, password,type);
 		int change = userDao.addUser(user);
 		if (change == 1) {
 			return true;
@@ -76,14 +76,17 @@ public class UserServImpl implements UserServ {
 	}
 
 	@Override
-	public boolean checkLogin(String userName,String passWord) {
+	public int checkLogin(String userName,String passWord) {
 		User user=userDao.getUserByName(userName);
 		String rightPass=user.getPassword();
 		if (rightPass.equals(passWord)) {
-			return true;
+			if(user.getType()==0) {
+				return 0;
+			}
+			return 1;
 		}
 		
-		return false;
+		return -1;
 	}
 
 }

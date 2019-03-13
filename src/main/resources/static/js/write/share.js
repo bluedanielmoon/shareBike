@@ -157,6 +157,8 @@ share.params = {
     init: function() {
         $("#clusterDist").val(mapLayer.config.clusterDist);
         $("#inActiveHours").val(mapLayer.config.inactHours);
+        $("#clusterMaxPack").val(mapLayer.config.maxPack);
+        $("#clusterMinPack").val(mapLayer.config.minPack);
         mapUtil.link.getData("/map/daterange", "true", {}, function(timerange) {
             var start = mapUtil.utils.parser(timerange[0]);
             var end = mapUtil.utils.parser(timerange[1], 23);

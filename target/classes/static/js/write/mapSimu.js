@@ -98,12 +98,36 @@
                         lat: ele.lat,
                     });
                 });
+                var simuDate=$("#simu-init-date").val();
+                
+                var formedDate = moment(simuDate, "YYYY-MM-DD").format("YYYY_MM_DD");
+                simuDate = formedDate;
+                
+                var simuhourSpan=$("#simu-init-hourSpan").val();
+                var startHour=simuhourSpan.split("-")[0];
+                var endHour=simuhourSpan.split("-")[1];
+                
+                var simuTimes=$("#simu-init-simuTimes").val();
+                configs.speedRatio=$("#simu-init-moveRatio").val();
+                configs.loadRatio=$("#simu-init-loadRatio").val();
+                
+                var siteChooseRatio=$("#simu-init-siteChooseRatio").val();
+                var siteChooseBest=$("#simu-init-siteChooseBest").val();
+
                 mapUtil.link.postJson("/simu/start", true, {
-                    carPos: carPos
+                	date:simuDate,
+                	startHour:startHour,
+                	endHour:endHour,
+                    carPos: carPos,
+                    simuTimes:simuTimes,
+                    chooseRatio:siteChooseRatio,
+                    chooseBest:siteChooseBest
                 }, function(data) {
                     if (data) {
                     	console.log(data);
-                        simuID = data.uuid;
+                		markerOps.manageID=data.manage;
+                		markerOps.simuIDs=data.uuid;
+                		markerOps.nowSimu=data.uuid[0];
                         markerOps.initJobs(data.list);
                     }
                 });
@@ -128,17 +152,11 @@
             if (simuState == 1 || simuState == 2) {
 
                 markerOps.stopMove();
-                mapUtil.link.getData("/simu/stop", false, {
-                    simuID: simuID
-                }, function(data) {
-                    if (data) {
-                        simuState = 0;
-                        btnOps.togglePause(true);
-                        btnOps.toggleBtn(startBtn);
+                markerOps.endSimu();
 
-                    }
-                });
-
+                simuState = 0;
+                btnOps.togglePause(true);
+                btnOps.toggleBtn(startBtn);
             }
         },
 
@@ -160,9 +178,9 @@
                 var timeSet = $("#simu-init-date").val(function() {
                     return moment("2018-11-01", "YYYY_MM_DD").format("YYYY-MM-DD");
                 }).datetimepicker({
-                    format: "yyyy-mm-dd hh:00",
+                    format: "yyyy-mm-dd",
                     autoclose: true,
-                    minView: 1,
+                    minView: 2,
                     todayBtn: true,
                     initialDate: "2018-11-01"
                 });
@@ -170,10 +188,17 @@
                 timeSet.on('changeDate', function(ev) {
                 	
                     var input = ev.date;
-                    console.log(input)
                     var formed = moment(input, "dddd MMMM DD YYYY").format("YYYY_MM_DD");
                     simuSet.date = formed;
                 });
+                
+                // 初始化值
+                var hourSpan=$("#simu-init-hourSpan").val("7-20");
+                var moveRatio=$("#simu-init-moveRatio").val(10);
+                var loadRatio=$("#simu-init-loadRatio").val(200);
+                var simuTimes=$("#simu-init-simuTimes").val(1);
+                var siteChooseRatio=$("#simu-init-siteChooseRatio").val(0.5);
+                var siteChooseBest=$("#simu-init-siteChooseBest").val(1);
 
                 startBtn.click(btnOps.startOp);
                 pauseBtn.click(btnOps.pauseSim);
@@ -181,7 +206,6 @@
 
                 console.log("初始化模拟");
                 this.initDispPos();
-
                 this.inited = true;
             }
 
@@ -228,6 +252,12 @@
         },
         unbindMapEvent: function(func) {
             simuMap.off('click', func);
+        },
+        resetBtn:function(){
+        	$('#simu-disp-pos .simu-startPos-set').each(function(index,ele){
+        		$(this).removeClass("btn-success");
+        		
+        	});
         },
         initDispPos: function() {
             var dispTable = $('#simu-disp-pos');
@@ -305,7 +335,7 @@
 
         },
         initMapMark: function() {
-            mapUtil.link.getData("/site/allTypes", true, {}, function(data) {
+            mapUtil.link.getData("/site/all", true, {}, function(data) {
                 if (data) {
                     markerOps.addMarkers(data);
                 }
@@ -366,9 +396,35 @@
 
     var markerOps = {
         dispats: [],
+        manageID:null,
+        simuIDs:[],
+        nowSimu:null,
+        simuCount:0,
+        finishCount:0,
+        endSimu:function(){
+        	this.dispats.forEach(function(ele, index) {
+        		if(ele&&ele.marker){
+        			ele.marker.setMap(null);
+        		}
+        		if(ele&&ele.moveLine){
+        			ele.moveLine.setMap(null);
+        		}
+        		ele.marker=null;
+        		ele.moveLine=null;
+        		
+            });
+        	this.dispats.length = 0;
+        	this.manageID=null;
+        	this.simuIDs=[];
+        	this.nowSimu=null;
+        	this.simuCount=0;
+        	this.finishCount=0;
+        	init.resetBtn();
+        },
         getNextTask: function(carID) {
             mapUtil.link.getData("/simu/next", true, {
-                simuID: simuID,
+            	manageID:markerOps.manageID,
+                simuID: markerOps.nowSimu,
                 dispID: carID
             }, function(data) {
                 if (data) {
@@ -378,7 +434,33 @@
                     } else if (data.taskType == 2) { // 其他任务
                         
                     }
-                }
+                }else {
+                	console.log(carID+" 任务结束");
+                	markerOps.finishCount++;
+                	if(markerOps.finishCount==markerOps.dispats.length){
+                		console.log("一轮任务结束");
+                		markerOps.finishCount=0;
+                		markerOps.simuCount++;
+                		if(markerOps.simuCount<markerOps.simuIDs.length){
+                			console.log("开启下一轮");
+                			markerOps.nowSimu=markerOps.simuIDs[markerOps.simuCount];
+                			var cars=markerOps.dispats;
+                			cars.forEach(function(ele, index) {
+                                var carID = ele.id;
+                                markerOps.getNextTask(carID);
+                            });
+                		}else {
+                			markerOps.endSimu();
+                			
+                			 simuState = 0;
+                             btnOps.togglePause(true);
+                             btnOps.toggleBtn(startBtn);
+							console.log("****模拟全部结束****");
+						}
+                	}
+                	
+				}
+                
             });
         },
         setLoadTask: function(carID, carPath) {
@@ -515,18 +597,10 @@
         },
 
         addMarkers: function(data) {
-        	var list=data.sites;
-        	var types=data.types;
-        	console.log(data);
-        	var icon;
+        	var list=data;
         	list.forEach(function(ele,index) {
-        		if(types[index]==1){
-        			icon=markerOps.siteIcon;
-        		}else{
-        			icon=markerOps.redSiteIcon;
-        		}
         		ele.marker = new AMap.Marker({
-                    icon: new AMap.Icon(icon),
+                    icon: new AMap.Icon(markerOps.siteIcon),
                     position: [ele.lng, ele.lat],
                     map: simuMap,
                 });

@@ -52,6 +52,9 @@
                 }, {
                     field: 'updateTime',
                     title: '最后登陆时间'
+                }, {
+                    field: 'type',
+                    title: '身份'
                 }],
             });
         },
@@ -61,10 +64,17 @@
                 var list = [];
                 if (data) {
                     data.forEach(function(element, index) {
+                    	var type=null;
+                    	if(element.type==0){
+                    		type="管理员";
+                    	}else {
+                    		type="普通用户";
+						}
                         list.push({
                             "name": element.userName,
                             "createTime": element.createTime,
-                            "updateTime": element.updateTime
+                            "updateTime": element.updateTime,
+                            "type": type,
                         });
 
                     });
@@ -83,12 +93,16 @@
 
                 var username = addUser.find("#modal-userName").val();
                 var password = addUser.find("#modal-userPass").val();
-                
-                console.log(username);
-                console.log(password);
+                var userType = addUser.find("#modal-userType").val();
+                if(userType=='管理员'){
+                	userType=0;
+                }else{
+                	userType=1;
+                }
                 mapUtil.link.getData("/user/add", true, {
                     userName: username,
-                    password: password
+                    password: password,
+                    type:userType,
                 }, function(data) {
                     if (data && data == true) {
                         userOps.loadData();
@@ -188,7 +202,17 @@
 		sitemap:null,
     	inited:false,
     	siteIcon: {
-            image: "image/simu/house.ico",
+            image: "image/simu/house.png",
+            imageSize: new AMap.Size(24, 24),
+            offset: new AMap.Pixel(-12, -24)
+        },
+        underWorkIcon:{
+        	 image: "image/simu/houseGreen.png",
+             imageSize: new AMap.Size(24, 24),
+             offset: new AMap.Pixel(-12, -24)
+        },
+        bumpSiteIcon:{
+       	 image: "image/simu/houseRed.png",
             imageSize: new AMap.Size(24, 24),
             offset: new AMap.Pixel(-12, -24)
         },
@@ -337,14 +361,16 @@
             	
                 var list = [];
                 if (data) {
+                	
                 	siteOps.siteList=data;
                 	var count=0;
-                     data.forEach(function(element, index) {
+                	siteOps.siteList.forEach(function(element, index) {
                     	 element.marker = new AMap.Marker({
                              icon: new AMap.Icon(siteOps.siteIcon),
                              position: [element.lng, element.lat],
                              map: siteOps.sitemap,
                          });
+                    	
                     	 element.marker.on('click', function (ev) {
                     		 siteOps.lightTableRow(element.id,element.tableIndex);
  						 });
@@ -455,6 +481,88 @@
 
                 }
             });
+            var circumWork=null;
+            var siteTypes=null;
+            $("#btn-site-circum a").click(function(e){
+            	e.preventDefault();
+            	var item=$(this).attr("data-circum");
+            	if(item=="origin"){
+                 	var sites=siteOps.siteList;
+                	sites.forEach(function(element, index) {
+						element.marker.setIcon(new AMap.Icon(siteOps.siteIcon));
+                    });
+            	}else if(item=="workDay"){
+            		if(circumWork==null){
+                		//msg代表这个提示框的编号，下面在通过layer.close(编号)关闭
+               		 var msg=layer.msg('正在计算中。。。(绿色结果代表该站点在节假日更容易堆积)', {
+               			    time: 0,//0 代表一直开着
+               		});
+               		mapUtil.link.getData("/site/allWorks", true, {}, function(data) {
+                       	if (data) {
+                       		layer.close(msg);
+                           	// 工作指数低于0
+                       		circumWork=data.works;
+                           	
+                           	var sites=siteOps.siteList;
+                           	sites.forEach(function(element, index) {
+       	                       	 var under=circumWork.find(function(current, index, arr) {
+       	                       		 return current==this;
+       	                            }, element.id);
+                              	 if (under) {
+                              		element.marker.setIcon(new AMap.Icon(siteOps.underWorkIcon));
+          						}else {
+          							element.marker.setIcon(new AMap.Icon(siteOps.siteIcon));
+          						}});
+                       	}
+                       });
+            		}else{
+                    	var sites=siteOps.siteList;
+                    	sites.forEach(function(element, index) {
+	                       	 var under=circumWork.find(function(current, index, arr) {
+	                       		 return current==this;
+	                            }, element.id);
+                       	 if (under) {
+                       		element.marker.setIcon(new AMap.Icon(siteOps.underWorkIcon));
+   						}else {
+   							element.marker.setIcon(new AMap.Icon(siteOps.siteIcon));
+   						}});
+            		}
+
+            	}else if (item=="siteType") {
+            		if(siteTypes==null){
+                		//msg代表这个提示框的编号，下面在通过layer.close(编号)关闭
+               		 var msg=layer.msg('正在计算中。。。(红色结果代表该站点更容易在中午产生堆积)', {
+               			    time: 0,//0 代表一直开着
+               		});
+               		mapUtil.link.getData("/site/allTypes", true, {}, function(data) {
+                       	if (data) {
+                       		layer.close(msg);
+                           	// 工作指数低于0
+                       		siteTypes=data.types;
+                           	var sites=siteOps.siteList;
+                           	sites.forEach(function(element, index) {
+                              	 if (siteTypes[index]==2) {
+                              		element.marker.setIcon(new AMap.Icon(siteOps.bumpSiteIcon));
+          						}else {
+          							element.marker.setIcon(new AMap.Icon(siteOps.siteIcon));
+          						}
+                            });
+                       	}
+                       });
+            		}else{
+                    	var sites=siteOps.siteList;
+                    	sites.forEach(function(element, index) {
+	                       	 if (siteTypes[index]==2) {
+	                       		element.marker.setIcon(new AMap.Icon(siteOps.bumpSiteIcon));
+	   						}else {
+	   							element.marker.setIcon(new AMap.Icon(siteOps.siteIcon));
+	   						}
+                       });
+            		}
+				}
+            	//btn-site-circum---end
+            	
+            });
         },
     }
 
@@ -514,20 +622,20 @@
 					// [target.path[0].lng, target.path[0].lat]);
                     
                     
-//                    target.marker.setDraggable(true);
-//                    target.marker.on('dragend',function(ev){
-//                        console.log(ev.lnglat);
-//                        target.marker.setDraggable(false);
-//                        mapUtil.link.getData("/site/update", true, {
-//                            id:row.id,
-//                            lng:ev.lnglat.lng,
-//                            lat:ev.lnglat.lat,
-//                        }, function(data) {
-//                            if (data) {
-//                                siteOps.loadData();
-//                            }
-//                        });
-//                    });
+// target.marker.setDraggable(true);
+// target.marker.on('dragend',function(ev){
+// console.log(ev.lnglat);
+// target.marker.setDraggable(false);
+// mapUtil.link.getData("/site/update", true, {
+// id:row.id,
+// lng:ev.lnglat.lng,
+// lat:ev.lnglat.lat,
+// }, function(data) {
+// if (data) {
+// siteOps.loadData();
+// }
+// });
+// });
                 },
                 'click .siteMan-change': function(e, value, row, index) {
                     siteOps.updateSite=row;
@@ -896,7 +1004,6 @@
             userOps.bindControl();
             poiOps.init();
             siteOps.init();
-            siteOps.loadData();
             siteOps.bindControl();
             
             dispOps.init();

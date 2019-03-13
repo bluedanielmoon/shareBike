@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.init.FileName;
 import com.init.State;
 import com.pojo.BikeArea;
 import com.pojo.GaodeLine;
@@ -12,25 +13,22 @@ import com.pojo.GaodeStop;
 
 public class BusUtil {
 	//stopsfilter15Circle2.txt
-	public static String BUS_STOP_FILE = "/Users/daniel/projects/busLine/poi_busStop.txt";
-	public static String SUBWAY_FILE = "/Users/daniel/projects/busLine/poi_subway.txt";
-	
-	public static String BASE_DIR ="/Users/daniel/projects/busLine/";
+
 	
 	public static List<GaodeStop> readBusStops() {
-		List<GaodeStop> stops=FilesUtil.readFromFile(BUS_STOP_FILE, GaodeStop.class);
+		List<GaodeStop> stops=FilesUtil.readFromFile(FileName.BUS_STOP_FILE, GaodeStop.class);
 		return stops;
 	}
 	
 	public static List<GaodeStop> readSubStations() {
-		List<GaodeStop> stops=FilesUtil.readFromFile(SUBWAY_FILE, GaodeStop.class);
+		List<GaodeStop> stops=FilesUtil.readFromFile(FileName.SUBWAY_FILE, GaodeStop.class);
 		return stops;
 	}
 	
 	//提取二环内的公交站
 	public static void writeStopsInCircle2(){
 		BikeArea area=State.AREA;
-		String file=BASE_DIR+"stopsfilter15.txt";
+		String file=FileName.BASE_DIR+"stopsfilter15.txt";
 		List<GaodeStop> lgs=FilesUtil.readFromFile(file, GaodeStop.class);
 		List<GaodeStop> result=new ArrayList<GaodeStop>();
 		for(GaodeStop s:lgs){
@@ -40,7 +38,7 @@ public class BusUtil {
 		}
 //		System.out.println("all stops"+lgs.size());
 //		System.out.println("in circle"+result.size());
-		String outFile=BASE_DIR+"stopsfilter15Circle2.txt";
+		String outFile=FileName.BASE_DIR+"stopsfilter15Circle2.txt";
 		FilesUtil.writeListToFile(outFile, result, GaodeStop.class);
 		
 		
@@ -75,7 +73,7 @@ public class BusUtil {
 		int size=15;
 		
 		Map<String, List<GaodeStop>> mp=new HashMap<String, List<GaodeStop>>();
-		String file = BASE_DIR + "allLines.txt";
+		String file = FileName.BASE_DIR + "allLines.txt";
 		List<GaodeLine> lb = FilesUtil.readFromFile(file, GaodeLine.class);
 		for (GaodeLine line : lb) {
 			if(line.getCompany().equals("西安市地下铁道有限责任公司")) {
@@ -107,7 +105,7 @@ public class BusUtil {
 			filterStops.addAll(lp);
 		}
 //		System.err.println("sites: "+mp.size());
-		String fileOut=BASE_DIR+ "stopsfilter"+size+".txt";
+		String fileOut=FileName.BASE_DIR+ "stopsfilter"+size+".txt";
 		FilesUtil.writeListToFile(fileOut, filterStops, GaodeStop.class);
 
 	}

@@ -102,19 +102,19 @@ public class MapServImpl implements MapServ {
 		return result;
 	}
 
-	public List<Point> getClusterMap(String time, int distance) {
+	public List<Point> getClusterMap(String time, int distance,int maxPac,int minPac) {
 		String fileName = PathUtil.getFileByTime(time);
 		Map<String, Object> mp = FilesUtil.readFileToBikeMap(fileName);
 
 		List<BikePos> bikes = (List<BikePos>) mp.get("bikes");
 
 		List<Map<String, BikePos>> packs = maphelper.neighborCluster(bikes,
-				distance,0);
+				distance,0,maxPac,minPac);
 		List<Point> result = maphelper.calcuClusterCenter(packs);
 		return result;
 	}
 	
-	public List<Point>  getDurationClusterMap(String start,String end, int distance) {
+	public List<Point>  getDurationClusterMap(String start,String end, int distance,int maxPac,int minPac) {
 		
 		Date st = DateUtil.parseToMinute(start);
 		Date en = DateUtil.parseToMinute(end);
@@ -134,7 +134,7 @@ public class MapServImpl implements MapServ {
 
 
 		List<Map<String, BikePos>> packs = maphelper.neighborCluster(allBikes,
-				distance,0);
+				distance,0,maxPac,minPac);
 		List<Point> result = maphelper.calcuClusterCenter(packs);
 		return result;
 	}
@@ -149,6 +149,7 @@ public class MapServImpl implements MapServ {
 	public Map<String, Object> getDateActive(String time, int days) {
 		Date date=DateUtil.pareToHour(time);
 		Map<String, Integer> actives=lazychecker.checkActiveBefore(date, 3);
+		
 		List<Integer> divides =new ArrayList<>();
 		divides.add(0);
 		divides.add(3);

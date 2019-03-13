@@ -39,6 +39,8 @@ public class State {
 		public static int UNLOAD=2;
 		public static int IGNORE=3;
 		
+		public static final int SITE_STORAGE_NUM=20;
+		
 		//某个地点单车小于等于这个数，不搬走
 		public static int MIN_SITE_BIKE_COUNT=3;
 		
@@ -64,10 +66,14 @@ public class State {
 		public static final int FLOW_IN = 1;// 从某个站点流入
 		public static final int FLOW_OUT = 2;// 从某个站点流出
 		
-		public static final double FLOW_RATIO = 0.1;
+		//流动占所有站点流动的比例，大于这个比例就会被选中
+		public static double FLOW_RATIO = 0.08;
 		
 		//选择站点的时候距离和数量评比所占的比例
-		public static final double SITE_CHOOSE_RATIO = 0.5;
+		public static double SITE_CHOOSE_RATIO = 0.5;
+		public static double SITE_CHOOSE_BEST = 0.6;
+		
+		public static int DIVIDE_DIST=50;
 
 		public static BikeArea AREA=new BikeArea(108.891913, 34.286154, 108.996753, 34.240899);
 	    

@@ -14,6 +14,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.init.FileName;
 import com.init.State;
 import com.poi.ConnectManager;
 import com.pojo.AreaScore;
@@ -39,6 +40,13 @@ public class SiteChooser {
 	
 	@Autowired
 	private SiteServ siteServ;
+	@Autowired
+	private MapHelper helper;
+	@Autowired
+	private PoiServ poiServ;
+	@Autowired
+	private Heater heater;
+	
 
 	private Integer getListMax(List<Integer> ls) {
 		Integer max=0;
@@ -87,18 +95,13 @@ public class SiteChooser {
 	}
 	
 	/**
-	 * 进行分数基础的采集，并生成文件
+	 * 进行分数基础的采集，并生成文件,dist默认50
 	 */
 	public void produceScoreFile(int dist) {
-		MapHelper helper= new MapHelper();
 		BikeArea area=State.AREA;
 		MapSize size= new MapSize();
-		Heater heater=new Heater();
 		
 		Calendar calendar=Calendar.getInstance();
-		
-		PoiServ poiServ=new PoiLocal();
-		
 		
 		Map<String, Map<String, Object>> maps=helper.divideMapToGrid(area, dist, size);
 		List<Poi> poiList=poiServ.getAllPois();
@@ -114,6 +117,7 @@ public class SiteChooser {
 		Map<String, AreaScore> scores=new TreeMap<>();
 		List<Double> bkCounts = new ArrayList<>();
 		while(temp.compareTo(endDate)<=0) {
+			System.out.println(temp);
 			List<Map<String, Object>> dayBikes=FilesUtil.ListFilesInDay(temp);
 			
 			for (Map<String, Object> b : dayBikes) {
@@ -136,8 +140,6 @@ public class SiteChooser {
 
 		for(String s:dayVaria.keySet()) {
 			Varia varia=dayVaria.get(s);
-			
-			
 			AreaScore score=new AreaScore();
 			score.setFluc(varia.getFluc());
 			List<Integer> nums=varia.getNumList();
@@ -159,7 +161,7 @@ public class SiteChooser {
 			
 		}
 	
-		MapperUtil.writeMapData("/Users/daniel/projects/score.txt", scores, AreaScore.class);
+		MapperUtil.writeMapData(FileName.SCORE_FILE, scores, AreaScore.class);
 
 
 	}
@@ -182,12 +184,11 @@ public class SiteChooser {
 	 * @return
 	 */
 	public Map<String, Map<String, Object>> judgeScore(MaxScore max,double flucSca,double parkSca,double poiSca) {
-		Map<String, AreaScore> scores=MapperUtil.readMapData("/Users/daniel/projects/score.txt", AreaScore.class);
+		Map<String, AreaScore> scores=MapperUtil.readMapData(FileName.SCORE_FILE, AreaScore.class);
 		
 		if(scores.size()==0) {
 			return null;
 		}
-		
 		double minFluc=1.0;
 		double maxFluc=scores.get("0_0").getFluc();
 		int maxCount=0;
@@ -300,8 +301,8 @@ public class SiteChooser {
 	 * 对根据分数阈值选取的若干个点进行组合，形成分散分布的点
 	 * @param sites
 	 */
-	public List<Point> mergeSites(Map<Double, Lnglat> sites,int compareDist) {
-		int divideDist=50;
+	public List<Point> mergeSites(Map<Double, Lnglat> sites,int compareDist,int maxPack,int minPack) {
+		int divideDist=State.DIVIDE_DIST;
 		
 		MapHelper helper=new MapHelper();
 		BikeArea area=State.AREA;
@@ -313,7 +314,7 @@ public class SiteChooser {
 			list.add(nPos);
 			count++;
 		}
-		List<Map<String, BikePos>> clusterResult=helper.neighborCluster(list, compareDist, divideDist, area);
+		List<Map<String, BikePos>> clusterResult=helper.neighborCluster(list, compareDist, divideDist,maxPack,minPack,area);
 		
 
 		List<Point> centers=helper.calcuClusterCenter(clusterResult);
@@ -343,6 +344,7 @@ public class SiteChooser {
 			if(siteName==null) {
 				siteName="未知";
 			}
+			System.out.println(siteName);
 			Site site=new Site(siteName, 20, 1, lnglat[0], lnglat[1]);
 			
 			lSites.add(site);
@@ -354,9 +356,4 @@ public class SiteChooser {
 		
 	}
 
-	public static void main(String[] args) {
-		
-
-		
-	}
 }

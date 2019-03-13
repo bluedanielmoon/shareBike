@@ -25,19 +25,19 @@
         }
     ];
     var chancePiece = [{
-            min: 1.005
+            min: 1.1
         }, // 不指定 max，表示 max 为无限大（Infinity）。
         {
-            min: 1.004,
-            max: 1.005
+            min: 1.08,
+            max: 1.1
         }, {
-            min: 1.002,
-            max: 1.003
+            min: 1.05,
+            max: 1.1
         }, {
-            min: 1.001,
-            max: 1.002
+            min: 1.01,
+            max: 1.05
         }, {
-            max: 1.0001
+            max: 1.01
         }
     ];
     var renderItem = function(params, api) {
@@ -660,8 +660,6 @@
                     };
                     if (option && typeof option === "object") {
                         console.log("开始渲染数据");
-
-
                         myChart.setOption(option, {
                             notMerge: true
                         });
@@ -734,7 +732,7 @@
             }
         },
         legend: {
-            data: ['单车总数']
+            data: ['单车总数','温度']
         },
         toolbox: {
             feature: {
@@ -777,7 +775,17 @@
             data: []
         }],
         yAxis: [{
-            type: 'value'
+            type: 'value',
+            name: '单车总数',
+            scale: true,
+            max: 35000,
+            min: 5000,
+        },{
+            type: 'value',
+            name: '温度',
+            scale: true,
+            max: 50,
+            min: -30,
         }],
         series: [{
             name: '单车总数',
@@ -785,6 +793,12 @@
             stack: '总量',
             areaStyle: {},
             data: []
+        },{
+            name: '温度',
+            type: 'line',
+            data: [],
+            xAxisIndex: 0,
+            yAxisIndex: 1,
         }]
     };
 
@@ -798,12 +812,15 @@
                 stackChart.setOption(stackOption);
 
                 mapUtil.link.getData("/anay/stack", true, {}, function(data) {
-                    var timeBar = [];
+                    console.log(data);
+                	var timeBar = [];
                     var countList = [];
+                    var tempList=[];
                     data.forEach(function(element, index) {
 
                         timeBar.push(element.startTime);
                         countList.push(element.bikeCount);
+                        tempList.push(element.weather.tempature);
                     });
 
                     stackChart.setOption({
@@ -814,6 +831,10 @@
                             // 根据名字对应到相应的系列
                             name: '单车总数',
                             data: countList
+                        },{
+                            // 根据名字对应到相应的系列
+                            name: '温度',
+                            data: tempList,
                         }]
                     });
 
@@ -834,6 +855,15 @@
         },
         yAxis: {
             type: 'value'
+        },
+        toolbox: {
+            feature: {
+                dataZoom: {
+                    yAxisIndex: 'none'
+                },
+                restore: {},
+                saveAsImage: {}
+            }
         },
         visualMap: {
             show: false,
@@ -875,16 +905,18 @@
         },
         loadData: function(id) {
         	var date=$("#site-change-Date").val();
-        	if(date!='all'&&date!='predict'){
+
+        	var chosed=$('#site-change-modal option:selected').val();
+        	 
+        	if(chosed!='all'&&chosed!='predict'){
         		date=moment(date, "YYYY-MM-DD").format("YYYY_MM_DD");
         	}
-        	console.log(date);
             mapUtil.link.getData("/site/change", true, {
             	date:date,
+            	choose:chosed,
                 siteID: id
             }, function(data) {
                 if (data) {
-                	console.log(data);
                 	/**
 					 * private int hour; // 1-work ,0-notWork private int
 					 * workDay; // 1-canGo,0-cannot Go private int weather; //
@@ -899,17 +931,19 @@
 							workDay="非工作日";
 						}
                 		var canGO=0;
+                		var totalTemp=0;
                 		circumList.forEach(function(ele,index) {
-                			console.log(index);
-                			console.log(ele);
+                			totalTemp+=ele.temp;
                 			if(index>=6&&index<=23){
                 				if(ele.weather==1){
                     				canGO++;
                     			}
                 			}
 						});
+                		totalTemp=Math.round(totalTemp/24);
                 		$("#site-change-workDay").val(workDay);
                 		$("#site-change-weather").val(canGO);
+                		$("#site-change-temp").val(totalTemp);
                 		
                 	}
                 	var mountType=data.type;
@@ -933,16 +967,21 @@
                             }];
                     	}
                 	}
+                	if(data.list!=null){
+                		 siteChangeChart.setOption({
+                         	visualMap: {
+                                 pieces: visualStyle
+                             },
+                             series: [{
+                                 name: '单车总数',
+                                 data: data.list
+                             }]
+                         });
+                	}else {
+                		layer.msg('Sorry,暂时没有该日的预测数据');
+					}
                 	
-                    siteChangeChart.setOption({
-                    	visualMap: {
-                            pieces: visualStyle
-                        },
-                        series: [{
-                            name: '单车总数',
-                            data: data.list
-                        }]
-                    });
+                   
                 }
             });
         },
@@ -954,6 +993,17 @@
                 console.log('加载折线图');
                 siteChangeChart = echarts.init($("#chart-siteChange")[0]);
                 siteChangeChart.setOption(siteChangeOption);
+                
+                var startDate="2018-12-01";
+                var timeSet = $("#site-change-Date").val(startDate)
+                .datetimepicker({
+                    format: "yyyy-mm-dd",
+                    autoclose: true,
+                    minView: 2,
+                    todayBtn: true,
+                    initialDate:startDate
+                });
+                
                 if (id) {
                     this.loadData(id);
                 }
@@ -999,27 +1049,6 @@
                         siteChangeTable.bootstrapTable('load', list);
                     }
                 });
-
-
-                // $("#submit-site-change").click(function(){
-                // var siteID=$("#site-change-id").val();
-                // console.log(siteID);
-                // mapUtil.link.getData("/site/change", true, {
-                // siteID:siteID
-                // }, function(data) {
-                // console.log(data);
-                //
-                // siteChangeChart.setOption({
-                // series: [{
-                // // 根据名字对应到相应的系列
-                // name: '单车总数',
-                // data: data
-                // }]
-                // });
-                //
-                //
-                // });
-                // });
                 this.inited = true;
             }
 
@@ -1165,16 +1194,19 @@
 
             siteChart = echarts.init(siteDom);
             var siteInit = {
-                rate: 1,
+                rate: 5,
                 flucSca: 60,
                 countSca: 30,
                 poiSca: 10,
-                clusterDist: 200,
+                clusterDist: 100,
+                maxPack: 50,
+                minPack: 2,
             }
             loadSiteScoreData(siteInit);
             loadSiteClusterData(siteInit, setSiteShow);
             siteInited = true;
             siteSlider = $('#site-rate').slider({
+            	value: siteInit.rate,
                 formatter: function(value) {
                     return 'Current value: ' + value;
                 }
@@ -1207,6 +1239,8 @@
             });
 
             $("#site-cluster-Dist").val(siteInit.clusterDist);
+            $("#site-cluster-Maxpack").val(siteInit.maxPack);
+            $("#site-cluster-Minpack").val(siteInit.minPack);
 
             $("#submit-site").click(function() {
                 var slidVal = $(siteSlider).val();
@@ -1216,12 +1250,17 @@
                 var scale3 = 100 - scaleVal[1];
 
                 var clusterDist = $("#site-cluster-Dist").val();
+                var maxPack = $("#site-cluster-Maxpack").val();
+                var minPack = $("#site-cluster-Minpack").val();
+               
                 var params = {
                     rate: slidVal,
                     flucSca: scale1,
                     countSca: scale2,
                     poiSca: scale3,
-                    clusterDist: clusterDist
+                    clusterDist: clusterDist,
+                    maxPack: maxPack,
+                    minPack: minPack,
                 }
                 if (swit.element.checked) {
                     loadSiteScoreData(params, setSiteShow);
@@ -1239,13 +1278,18 @@
                 var scale2 = scaleVal[1] - scale1;
                 var scale3 = 100 - scaleVal[1];
                 var clusterDist = $("#site-cluster-Dist").val();
+                var maxPack = $("#site-cluster-Maxpack").val();
+                var minPack = $("#site-cluster-Minpack").val();
+               
 
                 var params = {
                     rate: slidVal,
                     flucSca: scale1,
                     countSca: scale2,
                     poiSca: scale3,
-                    clusterDist: clusterDist
+                    clusterDist: clusterDist,
+                    maxPack: maxPack,
+                    minPack: minPack,
                 }
                 mapUtil.link.getData("/site/submit", true, params, function(data) {
                     if (data) {
@@ -1345,6 +1389,7 @@
 
         mapUtil.link.getData("/site/cluster", true, param, function(data) {
             if (data) {
+            	console.log(data);
                 var list = [];
                 data.forEach(function(ele, index) {
                     var item = {
@@ -1366,6 +1411,7 @@
     var siteFlowChart;
     var flowOps={
     	inited: false,
+    	startRatio:0.1,
     	flowData:{
     		citys:[],
     		lines:[]
@@ -1376,6 +1422,17 @@
                    siteFlowChart.setOption(siteFlowOption);
                    //1--flowin to site,2--flowout from site
                    this.loadFlowData(1);
+                   
+                  
+                   $('#site-flow-ratio').val(flowOps.startRatio).change(function() {
+                	   $('#flow-type .checkbox input').each(function(index,ele) {
+                		   if(ele.id=='flow-in'){
+                			   flowOps.loadFlowData(1);
+                		   }else {
+                			   flowOps.loadFlowData(2);
+                		   }
+                	   });
+                   });
                    
                    var typeSet = $('#flow-type .checkbox input').iCheck({
                        checkboxClass: 'icheckbox_square-red',
@@ -1397,8 +1454,14 @@
            },
           
            loadFlowData:function(flag){
+        	   $('#site-flow-ratio')
+        	   var ratio=$('#site-flow-ratio').val();
+        	   if(!ratio||ratio>=1||ratio<0){
+        		   ratio=flowOps.startRatio;
+        	   }
         	   mapUtil.link.getData("/site/flow", true, {
         		   //1--flowin to site,2--flowout from site
+        		   flowRatio:ratio,
         		   flowType:flag
         	   }, function(data) {
                    if (data) {
@@ -1528,6 +1591,7 @@
     var activeOption = {
         title: {
             text: '单车活跃度',
+            subtext:'各个整数代表在某日期前的若干天内，单车位置变动的次数',
             x: 'center'
         },
         tooltip: {

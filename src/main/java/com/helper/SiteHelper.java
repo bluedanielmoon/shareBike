@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.init.FileName;
 import com.poi.ConnectManager;
 import com.pojo.GaodePath;
 import com.pojo.Lnglat;
@@ -73,7 +74,7 @@ public class SiteHelper {
 	 */
 	public void readRouteFileAddToBase(){
 		routeServ.clearTable();
-		Map<Integer, Map<Integer, Object>> maps=MapperUtil.readIntMapIntMapData("/Users/daniel/projects/siteMap.txt");
+		Map<Integer, Map<Integer, Object>> maps=MapperUtil.readIntMapIntMapData(FileName.SITE_MAP);
 		
 		ObjectMapper mapper=new ObjectMapper();
 		//不写这一句由于双引号，数据库插不进去
@@ -86,6 +87,7 @@ public class SiteHelper {
 		int count=0;
 		while(iterator.hasNext()) {
 			Integer i=iterator.next();
+			System.out.println(i);
 			Map<Integer, Object> map=maps.get(i);
 			for(Integer j:map.keySet()) {	
 				try {
@@ -132,9 +134,9 @@ public class SiteHelper {
 		SiteUtil siteUtil=new SiteUtil();
 		Map<Integer, Map<Integer, GaodePath>> maps=new HashMap<>();
 		double i=0;
-//		System.out.println("共有站点"+sites.size());
+		System.out.println("共有站点"+sites.size());
 		for(Site site:sites) {
-//			System.out.println("准备采集"+site.getId());
+			System.out.println("准备采集"+site.getId());
 			Map<Integer, GaodePath> map=new HashMap<>();
 			for(Site siteTo:sites) {
 				GaodePath path=siteUtil.getPath(site, siteTo, client);
@@ -142,10 +144,10 @@ public class SiteHelper {
 				map.put(siteTo.getId(), path);
 			}
 			maps.put(site.getId(), map);
-//			System.out.println("完毕"+site.getId()+",采集"+map.size()+",完成了"+(i/sites.size()));
+			System.out.println("完毕"+site.getId()+",采集"+map.size()+",完成了"+(i/sites.size()));
 			i++;
 		}
-		MapperUtil.writeIntMapIntMapData("/Users/daniel/projects/siteMap.txt",maps,GaodePath.class);
+		MapperUtil.writeIntMapIntMapData(FileName.SITE_MAP,maps,GaodePath.class);
 		
 		try {
 			client.close();

@@ -32,19 +32,21 @@ public interface SiteServ {
 	
 	boolean clearTable();
 	
-	boolean writeBase(int rate,double flucSca,double countSca,double poiSca,int clusterDist);
+	boolean writeBase(int rate,double flucSca,double countSca,double poiSca,int clusterDist,int maxPack,int minPack);
 
-	List<Point> mergeSites(int rate, double flucSca, double countSca, double poiSca, int clusterDist);
+	List<Point> mergeSites(int rate, double flucSca, double countSca, double poiSca, int clusterDist,int maxPack,int minPack);
 
 	Map<Double, Lnglat> getScores(int rate, double flucSca, double countSca, double poiSca);
 
-	Map<String, Object> getSiteChange(String date,int siteID);
+	Map<String, Object> getSiteChange(String date,String choose,int siteID);
 
 	boolean produceSiteBikeData();
 
 	Map<String, Object> getAllSitesWithTypes();
 
-	Map<String, Object> getSitesFlow(int flowType);
+	Map<String, Object> getAllSitesWithWorks();
+
+	Map<String, Object> getSitesFlow(double flowRatio,int flowType);
 	
 	Map<Date,Integer> getDurationInactive(String startTime,int daysBefore,int checkDay);
 	

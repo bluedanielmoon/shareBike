@@ -1,6 +1,7 @@
 package com.serviceImpl;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,21 +15,23 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.init.State;
-import com.init.Storage;
 import com.pojo.Dispatcher;
 import com.pojo.SimuTask;
-import com.pojo.Site;
 import com.service.DispatcherServ;
+import com.simu.SimuManager;
+import com.simu.SimuRecorder;
 import com.simu.Simulator;
+import com.simu.Storage;
+import com.util.DateUtil;
 
 @Service
 public class SimuServImpl {
 
 	@Autowired
 	private DispatcherServ dispatcherServ;
-	
+
 	public Map<String, Integer> getConfigs() {
-		Map<String, Integer> configs=new HashMap<>();
+		Map<String, Integer> configs = new HashMap<>();
 		configs.put("truckType", State.TRUCK_TYPE);
 		configs.put("truckSpeed", State.TRUCK_SPEED);
 		configs.put("truckCapacity", State.TRUCK_CAPACITY);
@@ -42,114 +45,115 @@ public class SimuServImpl {
 		return configs;
 	}
 
-	public Map<String, Object> initAndStart(String carPos) {
+	public Map<String, Object> initAndStart(String initData) {
 
-		Simulator simulator = new Simulator();
-		UUID sId = UUID.randomUUID();
-
-		List<Site> sites = new ArrayList<>();
 		
-		List<Dispatcher> dispatchers=setDispatPos(carPos);
 		
-		Date startTime = new Date();
-		Date endTime = new Date();
-		int timeSpeed = 1;
-		List<SimuTask>  initTasks=simulator.init(sites, dispatchers, startTime, endTime, timeSpeed);
-
-		new Thread(simulator).start();
-		
-		Storage.simulers.put(sId.toString(), simulator);
-		Map<String, Object> result=new HashMap<>();
-		result.put("uuid", sId);
-		result.put("list", initTasks);
-		return result;
-	}
-	
-	public SimuTask getNextJob(int dispID,String simuID) {
-		
-		if (Storage.simulers.containsKey(simuID)) {
-			Simulator sim = Storage.simulers.get(simuID);
-			SimuTask task=sim.getTask(dispID);
-			System.out.println("取一个工作");
-			System.out.println(task);
-			return task;
-		}
-		return null;
-	}
-
-
-	public boolean pause(String id) {
-		if (Storage.simulers.containsKey(id)) {
-			Simulator sim = Storage.simulers.get(id);
-			//sim.pause();
-			return true;
-		}
-		return false;
-	}
-
-	public boolean resume(String id) {
-		if (Storage.simulers.containsKey(id)) {
-			Simulator sim = Storage.simulers.get(id);
-			//sim.resume();
-			return true;
-		}
-		return false;
-	}
-
-	public boolean stop(String id) {
-		if (Storage.simulers.containsKey(id)) {
-			Simulator sim = Storage.simulers.get(id);
-			//sim.stop();
-			Storage.simulers.remove(id);
-			return true;
-		}
-		return false;
-	}
-
-	
-	private List<Dispatcher> setDispatPos(String data) {
-		
-		List<Dispatcher> dispatchers=dispatcherServ.getAllDispatchers();
-		ObjectMapper mapper=new ObjectMapper();
-		List<Dispatcher> checked=new ArrayList<>();
+		// 提取信息
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode root = null;
 		try {
-			JsonNode root=mapper.readTree(data);
-			if(root==null) {
-				return checked;
-			}
-			JsonNode cars=root.get("carPos");
-			if(cars==null) {
-				return checked;
-			}
-			
-			for(int i=0;i<cars.size();i++) {
-				JsonNode carInfo=cars.get(i);
-				int id=carInfo.get("id").asInt();
-				double lng=carInfo.get("lng").asDouble();
-				double lat=carInfo.get("lat").asDouble();
-				for(Dispatcher dispatcher:dispatchers) {
-					if(dispatcher.getId()==id) {
-						dispatcher.setLng(lng);
-						dispatcher.setLat(lat);
-						dispatcher.setStorage(0);
-						checked.add(dispatcher);
-						break;
-					}
-				}
-			}
-			return checked;
-		
+			root = mapper.readTree(initData);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return null;
+		int simuTimes = root.get("simuTimes").asInt();
+		List<Dispatcher> dispatchers = setDispatPos(root.get("carPos"));
+
+		String s_date = root.get("date").asText();
+		Date date = DateUtil.parseToDay(s_date);
+		int startHour = root.get("startHour").asInt();
+		int endHour = root.get("endHour").asInt();
 		
+		State.SITE_CHOOSE_RATIO=root.get("chooseRatio").asInt();
+		State.SITE_CHOOSE_BEST=root.get("chooseBest").asInt();
+		
+		List<String> simuIDs=new ArrayList<>();
+		String mangeID = UUID.randomUUID().toString();
+		
+		SimuRecorder recorder=new SimuRecorder();
+		Path filePath=recorder.buildFile(date, startHour, endHour, simuTimes);
+		if (filePath==null) {
+			return null;
+		}
+		
+		SimuManager simuManager=new SimuManager(dispatchers,date,startHour,endHour,filePath);
+		for (int i = 0; i < simuTimes; i++) {
+
+			UUID sId = UUID.randomUUID();
+			String simuID = sId.toString();
+			Simulator simulator = new Simulator(simuID,simuManager);
+			simuIDs.add(simuID);
+			
+			simuManager.simulers.put(simuID, simulator);
+			try {
+				simuManager.waitQueue.put(simulator);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		Simulator firstSimuLator=simuManager.waitQueue.poll();
+		try {
+			simuManager.runQueue.put(firstSimuLator);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		// 初始化模拟
+		List<SimuTask> initTasks = firstSimuLator.init(dispatchers, date, startHour, 
+				endHour,true,filePath,1);
+		System.out.println("初始化结束------");
+		// 开启线程
+		new Thread(firstSimuLator).start();
+		
+		new Thread(simuManager).start();
+		
+		// 把线程模拟放入模拟池，并返回结果
+		Storage.simulers.put(mangeID, simuManager);
+		Map<String, Object> result = new HashMap<>();
+		result.put("manage", mangeID);
+		result.put("uuid", simuIDs);
+		result.put("list", initTasks);
+		return result;
 	}
 
-	
+	public SimuTask getNextJob(int dispID, String manageID, String simuID) {
 
+		if (Storage.simulers.containsKey(manageID)) {
+			SimuManager manager = Storage.simulers.get(manageID);
+			if (manager.simulers.containsKey(simuID)) {
+				Simulator sim=manager.simulers.get(simuID);
+				SimuTask task = sim.getTask(dispID);
+				return task;
+			}
+			
+		}
+		return null;
+	}
 
+	private List<Dispatcher> setDispatPos(JsonNode cars) {
 
+		List<Dispatcher> dispatchers = dispatcherServ.getAllDispatchers();
+		List<Dispatcher> checked = new ArrayList<>();
+		if (cars == null) {
+			return checked;
+		}
+		for (int i = 0; i < cars.size(); i++) {
+			JsonNode carInfo = cars.get(i);
+			int id = carInfo.get("id").asInt();
+			double lng = carInfo.get("lng").asDouble();
+			double lat = carInfo.get("lat").asDouble();
+			for (Dispatcher dispatcher : dispatchers) {
+				if (dispatcher.getId() == id) {
+					dispatcher.setLng(lng);
+					dispatcher.setLat(lat);
+					dispatcher.setStorage(0);
+					checked.add(dispatcher);
+					break;
+				}
+			}
+		}
+		return checked;
 
-	
+	}
+
 }

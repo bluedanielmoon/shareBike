@@ -43,8 +43,8 @@ public class UserController {
 
 	@GetMapping(value = "/add")
 	@ResponseBody
-	public boolean getUser(@RequestParam String userName, @RequestParam String password) {
-		return userServ.addUser(userName, password);
+	public boolean getUser(@RequestParam String userName, @RequestParam String password,@RequestParam int type) {
+		return userServ.addUser(userName, password,type);
 	}
 
 	@PostMapping(value = "/delete")

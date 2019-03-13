@@ -1,6 +1,8 @@
 package com.simu;
 
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -16,8 +18,10 @@ import com.pojo.SimuTask;
 import com.pojo.WaitTask;
 
 public class TaskRunner {
+	private SimuRecorder simuRecorder;
 	private LinkedList<SimuTask> states = new LinkedList<>();
-	private Map<Integer, LinkedList<SimuTask>> recorder = new HashMap<>();
+	private Map<Integer, List<SimuTask>> recorder = new HashMap<>();
+	private Map<Integer, Integer> counter = new HashMap<>();
 	private int nowSeconds = 0;
 	private int pastHourSeconds = 0;
 	private int startHour = 0;
@@ -25,9 +29,16 @@ public class TaskRunner {
 	private int endSeconds = 0;
 	private TaskProducer tasker;
 	private List<Dispatcher> dispatchers;
+	private int finishCount=0;
+	private Simulator simulator;
+	
+	private Path filePath;
+	private int simuID;
 
-	public List<SimuTask> init(List<SimuTask> tasks, TaskProducer tasker, List<Dispatcher> dispatchers, int startHour,
-			int endHour) {
+	public List<SimuTask> init(Simulator simulator,List<SimuTask> tasks, TaskProducer tasker, List<Dispatcher> dispatchers, int startHour,
+			int endHour,boolean needStart,Path filePath,int simuID) {
+		this.simulator=simulator;
+		simuRecorder=new SimuRecorder();
 		tasks.sort(new Comparator<SimuTask>() {
 			@Override
 			public int compare(SimuTask o1, SimuTask o2) {
@@ -36,9 +47,16 @@ public class TaskRunner {
 		});
 		for (SimuTask task : tasks) {
 			states.push(task);
-			LinkedList<SimuTask> dispTask = new LinkedList<>();
+			List<SimuTask> dispTask = new ArrayList<>();
 			dispTask.add(task);
 			recorder.put(task.getDispatcher().getId(), dispTask);
+			//counter使用来从recorder取任务的指针，0号任务在初始化时已经返回，此处从1开始
+			if (needStart) {
+				counter.put(task.getDispatcher().getId(), 1);
+			}else {
+				counter.put(task.getDispatcher().getId(), 0);
+			}
+			
 		}
 		for (Dispatcher disp : dispatchers) {
 			disp.setStorage(0);
@@ -48,6 +66,8 @@ public class TaskRunner {
 		this.startHour = startHour;
 		nowHour = startHour;
 		endSeconds = (endHour - startHour) * 3600;
+		this.filePath=filePath;
+		this.simuID=simuID;
 		return states;
 	}
 
@@ -63,20 +83,32 @@ public class TaskRunner {
 			SimuTask assignTask = tasker.assignTask(nowHour, pastHourSeconds, dispatcher, task,1);
 			pushTaskByWorkTime(assignTask);
 		}
+		
 	}
+	
+	
 
 	public SimuTask getTask(int dispID) {
 		System.out.println("调度车id:" + dispID + ",任务列表" + recorder.get(dispID).size());
 
-		LinkedList<SimuTask> list = recorder.get(dispID);
-		for (SimuTask t : list) {
-			System.out.print(t.getTaskType() + "---" + t.getWorkTime() + "   \n");
-		}
+		List<SimuTask> list = recorder.get(dispID);
+		int taskNum=counter.get(dispID);
 		SimuTask task = null;
-		if (list.size() > 0) {
-			task = list.poll();
+		if (list.size() > 0&&taskNum<list.size()) {
+			task = list.get(taskNum);
+			counter.put(dispID, ++taskNum);
+			System.out.println("取了"+taskNum+"个工作，共有"+list.size()+"个工作");
+			return task;
+		}else {
+			System.out.println(dispID+"工作结束");
+			finishCount++;
+			//当所有的车辆任务结束，本次模拟正式结束
+//			if (finishCount==counter.size()) {
+//				simulator.callEnd();
+//			}
+			return null;
 		}
-		return task;
+		
 	}
 
 	private boolean refreshTime(int secondsPast) {
@@ -106,6 +138,8 @@ public class TaskRunner {
 		while (states.size() > 0) {
 			moveNext();
 		}
+		simuRecorder.writeResult(recorder,filePath,simuID);
+		simulator.callEnd();
 	}
 
 	public void finshTask(SimuTask task) {
@@ -168,7 +202,7 @@ public class TaskRunner {
 
 	private void pushTaskByWorkTime(SimuTask task) {
 		int dispId = task.getDispatcher().getId();
-		LinkedList<SimuTask> lists = recorder.get(dispId);
+		List<SimuTask> lists = recorder.get(dispId);
 		lists.add(task);
 		int time = task.getWorkTime();
 

@@ -37,6 +37,13 @@ public class LazyChecker {
 		checker.countActive(actives, divides);
 	}
 
+	/**
+	 * data代表单车ID加变动次数，divides是变动的范围，将所有的单车的变动次数归入范围内
+	 * 对应于0即代表几天内单车位置一次都没动的数量
+	 * @param data
+	 * @param divides
+	 * @return
+	 */
 	public int[] countActive(Map<String, Integer> data, List<Integer> divides) {
 		int[] counts = new int[divides.size() + 1];
 		int temp = 0;
@@ -56,6 +63,12 @@ public class LazyChecker {
 		return counts;
 	}
 
+	/**
+	 * 返回某个日期之前若干天，单车的ID+该单车位置变动的次数
+	 * @param day
+	 * @param checkDays
+	 * @return
+	 */
 	public Map<String, Integer> checkActiveBefore(Date day, int checkDays) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(day);
@@ -99,7 +112,6 @@ public class LazyChecker {
 							checkMap.put(temp, coords);
 							countMap.put(temp, countMap.get(temp) + 1);
 
-							// checkMap.remove(temp);
 						}
 					}
 				}

@@ -71,142 +71,6 @@ desired effect
 					role="button"> <span class="sr-only">Toggle navigation</span>
 				</a>
 				<!-- Navbar Right Menu -->
-				<!-- <div class="navbar-custom-menu">
-					<ul class="nav navbar-nav">
-						Messages: style can be found in dropdown.less
-						<li class="dropdown messages-menu">
-							Menu toggle button <a href="#" class="dropdown-toggle"
-							data-toggle="dropdown"> <i class="fa fa-envelope-o"></i> <span
-								class="label label-success">4</span>
-						</a>
-							<ul class="dropdown-menu">
-								<li class="header">You have 4 messages</li>
-								<li>
-									inner menu: contains the messages
-									<ul class="menu">
-										<li>
-											start message <a href="#">
-												<div class="pull-left">
-													User Image
-													<img src="image/user4-128x128.jpg" class="img-circle"
-														alt="User Image">
-												</div> Message title and timestamp
-												<h4>
-													Support Team <small><i class="fa fa-clock-o"></i> 5
-														mins</small>
-												</h4> The message
-												<p>Why not buy a new awesome theme?</p>
-										</a>
-										</li>
-										end message
-									</ul> /.menu
-								</li>
-								<li class="footer"><a href="#">See All Messages</a></li>
-							</ul>
-						</li>
-						/.messages-menu
-						Notifications Menu
-						<li class="dropdown notifications-menu">
-							Menu toggle button <a href="#" class="dropdown-toggle"
-							data-toggle="dropdown"> <i class="fa fa-bell-o"></i> <span
-								class="label label-warning">10</span>
-						</a>
-							<ul class="dropdown-menu">
-								<li class="header">You have 10 notifications</li>
-								<li>
-									Inner Menu: contains the notifications
-									<ul class="menu">
-										<li>
-											start notification <a href="#"> <i
-												class="fa fa-users text-aqua"></i> 5 new members joined
-												today
-										</a>
-										</li>
-										end notification
-									</ul>
-								</li>
-								<li class="footer"><a href="#">View all</a></li>
-							</ul>
-						</li>
-						Tasks Menu
-						<li class="dropdown tasks-menu">
-							Menu Toggle Button <a href="#" class="dropdown-toggle"
-							data-toggle="dropdown"> <i class="fa fa-flag-o"></i> <span
-								class="label label-danger">9</span>
-						</a>
-							<ul class="dropdown-menu">
-								<li class="header">You have 9 tasks</li>
-								<li>
-									Inner menu: contains the tasks
-									<ul class="menu">
-										<li>
-											Task item <a href="#"> Task title and progress text
-												<h3>
-													Design some buttons <small class="pull-right">20%</small>
-												</h3> The progress bar
-												<div class="progress xs">
-													Change the css width attribute to simulate progress
-													<div class="progress-bar progress-bar-aqua"
-														style="width: 20%" role="progressbar" aria-valuenow="20"
-														aria-valuemin="0" aria-valuemax="100">
-														<span class="sr-only">20% Complete</span>
-													</div>
-												</div>
-										</a>
-										</li>
-										end task item
-									</ul>
-								</li>
-								<li class="footer"><a href="#">View all tasks</a></li>
-							</ul>
-						</li>
-						User Account Menu
-						<li class="dropdown user user-menu">
-							Menu Toggle Button <a href="#" class="dropdown-toggle"
-							data-toggle="dropdown"> The user image in the navbar
-								<img src="image/user4-128x128.jpg" class="user-image"
-								alt="User Image"> hidden-xs hides the username on small devices so only the image appears.
-								<span class="hidden-xs">Alexander Pierce</span>
-						</a>
-							<ul class="dropdown-menu">
-								The user image in the menu
-								<li class="user-header"><img src="image/user4-128x128.jpg"
-									class="img-circle" alt="User Image">
-									<p>
-										Alexander Pierce - Web Developer <small>Member since
-											Nov. 2012</small>
-									</p></li>
-								Menu Body
-								<li class="user-body">
-									<div class="row">
-										<div class="col-xs-4 text-center">
-											<a href="#">Followers</a>
-										</div>
-										<div class="col-xs-4 text-center">
-											<a href="#">Sales</a>
-										</div>
-										<div class="col-xs-4 text-center">
-											<a href="#">Friends</a>
-										</div>
-									</div> /.row
-								</li>
-								Menu Footer
-								<li class="user-footer">
-									<div class="pull-left">
-										<a href="#" class="btn btn-default btn-flat">Profile</a>
-									</div>
-									<div class="pull-right">
-										<a href="#" class="btn btn-default btn-flat">Sign out</a>
-									</div>
-								</li>
-							</ul>
-						</li>
-						Control Sidebar Toggle Button
-						<li><a href="#" data-toggle="control-sidebar"><i
-								class="fa fa-gears"></i></a></li>
-					</ul>
-				</div>
-				 -->
 			</nav>
 
 		</header>
@@ -266,8 +130,7 @@ desired effect
 			<!-- Content Header (Page header) -->
 			<section class="content-header">
 				<h1>
-					<span id="modelTitle">控制台</span>
-					<small>单车当前数据基于中心城区（大兴立交（二环西北角）-延兴门（二环东南角））</small>
+					<span id="modelTitle">控制台</span> <small>单车当前数据基于中心城区（大兴立交（二环西北角）-延兴门（二环东南角））</small>
 				</h1>
 				<ol class="breadcrumb">
 					<li><a href="#"><i class="fa fa-dashboard"></i> Level</a></li>
@@ -542,7 +405,27 @@ desired effect
 																	id="site-cluster-Dist">
 															</div>
 														</div>
-
+														<div class="form-group">
+															<label>聚类集合最大限制</label>
+															<div class="input-group">
+																<div class="input-group-addon">
+																	<i class="fa fa-clock-o"></i>
+																</div>
+																<input type="text" class="form-control pull-right"
+																	id="site-cluster-Maxpack">
+															</div>
+														</div>
+														<div class="form-group">
+															<label>聚类集合最小限制</label>
+															<div class="input-group">
+																<div class="input-group-addon">
+																	<i class="fa fa-clock-o"></i>
+																</div>
+																<input type="text" class="form-control pull-right"
+																	id="site-cluster-Minpack">
+															</div>
+														</div>
+														
 														<div class="form-group">
 															<button id="submit-site" type="button"
 																class="btn btn-block btn-primary btn-lg">提交设置</button>
@@ -568,15 +451,21 @@ desired effect
 												style="width: 850px; height: 500px;"></div>
 										</div>
 										<div class="col-md-3">
-											<div class="box box-primary">
-												<div class="box-header with-border">
-													<h3 class="box-title">参数设置</h3>
-												</div>
-												<form role="form">
+										
+										<div class="nav-tabs-custom ">
+											<ul class="nav nav-tabs">
+												<li class="active"><a href="#tab-changeSet" data-toggle="tab">设置</a></li>
+												<li><a href="#tab-changeTable" id="siteChange-Tab"
+													data-toggle="tab">站点</a></li>
+											</ul>
+											<div class="tab-content">
+				
+												<div class="tab-pane active" id="tab-changeSet">
+													<form role="form">
 													<div class="box-body">
 														<div class="form-group">
 															<label>日期</label>
-															<p class="help-block">日期(格式：2018-11-01,all(全部),predict(预测))</p>
+															<p class="help-block">日期(格式：2018-11-01)</p>
 															<div class="input-group">
 																<div class="input-group-addon">
 																	<i class="fa fa-clock-o"></i>
@@ -586,13 +475,24 @@ desired effect
 															</div>
 														</div>
 														<div class="form-group">
+															<label>模式</label> <select id="site-change-modal"
+																class="form-control" style="width: 100%;">
+																<option selected="selected" value="date">特定日期</option>
+																<option value="all">历史平均</option>
+																<option value="predict">预测</option>
+																<option value="workDayAvg">工作日平均</option>
+																<option value="noWorkDayAvg">非工作日平均</option>
+															</select>
+														</div>
+														<div class="form-group">
 															<label>工作日</label>
 															<p class="help-block">(非工作日包括周末和节假日)</p>
 															<div class="input-group">
 																<div class="input-group-addon">
 																	<i class="fa fa-clock-o"></i>
 																</div>
-																<input type="text" class="form-control pull-right"
+																<input type="text" readonly="readonly"
+																	class="form-control pull-right"
 																	id="site-change-workDay">
 															</div>
 														</div>
@@ -604,32 +504,41 @@ desired effect
 																<div class="input-group-addon">
 																	<i class="fa fa-clock-o"></i>
 																</div>
-																<input type="text" class="form-control pull-right"
+																<input type="text" readonly="readonly"
+																	class="form-control pull-right"
 																	id="site-change-weather">
 															</div>
 														</div>
 														<div class="form-group">
-															<label>站点id</label>
+															<label>平均温度</label>
+															<p class="help-block">(该日平均温度)</p>
+															<div class="input-group">
+																<div class="input-group-addon">
+																	<i class="fa fa-clock-o"></i>
+																</div>
+																<input type="text" readonly="readonly"
+																	class="form-control pull-right"
+																	id="site-change-temp">
+															</div>
+														</div>
+
+													<!-- 	<div class="form-group">
+															<button id="submit-site-change" type="button"
+																class="btn btn-block btn-primary btn-lg">确认</button>
+														</div> -->
+													</div>
+												</form>
+												</div>
+												<div class="tab-pane" id="tab-changeTable">
+													<div class="form-group">
 															<table id="siteChange-list">
 															</table>
 														</div>
-
-
-														<div class="form-group">
-															<button id="submit-site-change" type="button"
-																class="btn btn-block btn-primary btn-lg">确认</button>
-														</div>
-
-
-													</div>
-												</form>
+												</div>
 											</div>
+								
 										</div>
-
-
-
-
-
+										</div>
 									</div>
 
 								</div>
@@ -660,7 +569,18 @@ desired effect
 																</div>
 															</div>
 														</div>
-
+														<div class="form-group">
+															<label>显示比例</label>
+															<p class="help-block">(小于1的浮点数)</p>
+															<div class="input-group">
+																<div class="input-group-addon">
+																	<i class="fa fa-clock-o"></i>
+																</div>
+																<input type="text" 
+																	class="form-control pull-right"
+																	id="site-flow-ratio">
+															</div>
+														</div>
 													</div>
 												</form>
 											</div>
@@ -775,6 +695,26 @@ desired effect
 															</div>
 														</div>
 														<div class="form-group">
+															<label>聚类集合最大限制</label>
+															<div class="input-group">
+																<div class="input-group-addon">
+																	<i class="fa fa-clock-o"></i>
+																</div>
+																<input type="text" class="form-control pull-right"
+																	id="clusterMaxPack">
+															</div>
+														</div>
+														<div class="form-group">
+															<label>聚类集合最小限制</label>
+															<div class="input-group">
+																<div class="input-group-addon">
+																	<i class="fa fa-clock-o"></i>
+																</div>
+																<input type="text" class="form-control pull-right"
+																	id="clusterMinPack">
+															</div>
+														</div>
+														<div class="form-group">
 															<label>不活跃小时数</label>
 															<div class="input-group">
 																<div class="input-group-addon">
@@ -833,10 +773,10 @@ desired effect
 																<li><a href="#"><i
 																		class="fa fa-circle-o text-green"></i> 天气情况<span
 																		data-weather class="label label-primary pull-right"></span></a></li>
-																<li><a href="#"><i
+															<!-- 	<li><a href="#"><i
 																		class="fa fa-circle-o text-purple"></i> 温度<span
 																		data-temperature
-																		class="label label-primary pull-right"></span></a></li>
+																		class="label label-primary pull-right"></span></a></li> -->
 															</ul>
 														</div>
 													</form>
@@ -920,6 +860,13 @@ desired effect
 																		class="form-control" id="modal-userPass"
 																		placeholder="密码">
 																</div>
+																<div class="form-group">
+																	<label for="modal-userType">类型</label> <select
+																		id="modal-userType" class="form-control">
+																		<option>管理员</option>
+																		<option>普通用户</option>
+																	</select>
+																</div>
 															</div>
 
 														</form>
@@ -969,8 +916,9 @@ desired effect
 												<div id="toolbar-site" class="btn-group">
 													<button id="btn-add-site" type="button" data-toggle="modal"
 														data-target="#modal-add-site" class="btn btn-default">
-														<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>新增
+														<span aria-hidden="true"></span>新增
 													</button>
+
 													<div class="modal modal-info fade" id="modal-add-site">
 														<div class="modal-dialog">
 															<div class="modal-content">
@@ -1068,9 +1016,26 @@ desired effect
 													</div>
 													<button id="btn-delete-site" type="button"
 														class="btn btn-default">
-														<span class="glyphicon glyphicon-minus" aria-hidden="true"></span>删除
+														<span aria-hidden="true"></span>删除
 													</button>
-
+													<div class="btn-group" id="btn-site-circum">
+														<button type="button" class="btn btn-default">查看</button>
+														<button type="button"
+															class="btn btn-default dropdown-toggle"
+															data-toggle="dropdown">
+															<span class="caret"></span> <span class="sr-only">Toggle
+																Dropdown</span>
+														</button>
+														<ul class="dropdown-menu" role="menu">
+															<li><a href="#workDay" data-circum="workDay">节假日影响</a></li>
+															<li class="divider"></li>
+															<!-- <li><a href="#weather" data-circum="weather">天气影响</a></li>
+															<li class="divider"></li> -->
+															<li><a href="#siteType" data-circum="siteType">站点类型</a></li>
+															<li class="divider"></li>
+															<li><a href="#origin" data-circum="origin">还原</a></li>
+														</ul>
+													</div>
 												</div>
 												<table id="table-site">
 
@@ -1298,7 +1263,76 @@ desired effect
 													</div>
 													<div class="form-group">
 
+														<label>时间跨度</label>
+														<p class="help-block">单位为小时，一天内从早到晚</p>
+														<div class="input-group">
+															<div class="input-group-addon">
+																<i class="fa fa-hourglass-start"></i>
+															</div>
+															<input type="text" class="form-control pull-right"
+																id="simu-init-hourSpan">
+														</div>
+													</div>
+													<div class="form-group">
+
+														<label>移动显示倍率</label>
+														<p class="help-block">实际的行驶速度乘以此倍率作为显示移动速度</p>
+														<div class="input-group">
+															<div class="input-group-addon">
+																<i class="fa fa-rocket"></i>
+															</div>
+															<input type="text" class="form-control pull-right"
+																id="simu-init-moveRatio">
+														</div>
+													</div>
+													<div class="form-group">
+														<label>装卸显示倍率</label>
+														<p class="help-block">实际的装卸时间除以此倍率作为显示装卸速度</p>
+														<div class="input-group">
+															<div class="input-group-addon">
+																<i class="fa fa-rocket"></i>
+															</div>
+															<input type="text" class="form-control pull-right"
+																id="simu-init-loadRatio">
+														</div>
+													</div>
+													<div class="form-group">
+														<label>站点选取搬运量评分占比</label>
+														<p class="help-block">在选取站点时搬运数量占(搬运量+移动距离)的比例</p>
+														<div class="input-group">
+															<div class="input-group-addon">
+																<i class="fa fa-battery-half"></i>
+															</div>
+															<input type="text" class="form-control pull-right"
+																id="simu-init-siteChooseRatio">
+														</div>
+													</div>
+													<div class="form-group">
+														<label>站点选取次选概率</label>
+														<p class="help-block">在选取站点时选取最优的初始概率</p>
+														<div class="input-group">
+															<div class="input-group-addon">
+																<i class="fa fa-battery-half"></i>
+															</div>
+															<input type="text" class="form-control pull-right"
+																id="simu-init-siteChooseBest">
+														</div>
+													</div>
+													<div class="form-group">
+														<label>模拟次数</label>
+														<p class="help-block">重覆模拟的次数(>=1)</p>
+														<div class="input-group">
+															<div class="input-group-addon">
+																<i class="fa fa-hand-peace-o"></i>
+															</div>
+															<input type="text" class="form-control pull-right"
+																id="simu-init-simuTimes">
+														</div>
+													</div>
+													<div class="form-group">
+
 														<label>初始位置</label>
+														<p class="help-block">点击设置后点击地图以确定位置</p>
 														<table id="simu-disp-pos">
 
 														</table>
@@ -1317,7 +1351,7 @@ desired effect
 										<div class="panel-heading">
 											<h4 class="panel-title">
 												<a data-toggle="collapse" data-parent="#simu-accordion"
-													href="#simu-control">模拟控制</a>
+													href="#simu-control">模拟显示控制</a>
 											</h4>
 										</div>
 										<div id="simu-control" class="panel-collapse collapse">
@@ -1338,7 +1372,11 @@ desired effect
 															<span class="glyphicon glyphicon-off" aria-hidden="true"></span>终止
 														</button>
 													</div>
-													<div class="form-group"></div>
+													<div class="form-group">
+														<p class="help-block">点击开始后，后台的模拟计算和结果生成不会被“暂停”和“终止”打断，
+															“暂停”和“终止”只对本界面的演示起作用。</p>
+
+													</div>
 													<div class="form-group"></div>
 												</form>
 											</div>
@@ -1365,74 +1403,7 @@ desired effect
 			<strong>Copyright &copy; 2018 <a href="#">Daniel</a>.
 			</strong> All rights not reserved.
 		</footer>
-		<!-- Control Sidebar -->
-		<aside class="control-sidebar control-sidebar-dark">
-			<!-- Create the tabs -->
-			<ul class="nav nav-tabs nav-justified control-sidebar-tabs">
-				<li class="active"><a href="#control-sidebar-home-tab"
-					data-toggle="tab"><i class="fa fa-home"></i></a></li>
-				<li><a href="#control-sidebar-settings-tab" data-toggle="tab"><i
-						class="fa fa-gears"></i></a></li>
-			</ul>
-			<!-- Tab panes -->
-			<div class="tab-content">
-				<!-- Home tab content -->
-				<div class="tab-pane active" id="control-sidebar-home-tab">
-					<h3 class="control-sidebar-heading">Recent Activity</h3>
-					<ul class="control-sidebar-menu">
-						<li><a href="javascript:;"> <i
-								class="menu-icon fa fa-birthday-cake bg-red"></i>
 
-								<div class="menu-info">
-									<h4 class="control-sidebar-subheading">Langdon's Birthday</h4>
-
-									<p>Will be 23 on April 24th</p>
-								</div>
-						</a></li>
-					</ul>
-					<!-- /.control-sidebar-menu -->
-					<h3 class="control-sidebar-heading">Tasks Progress</h3>
-					<ul class="control-sidebar-menu">
-						<li><a href="javascript:;">
-								<h4 class="control-sidebar-subheading">
-									Custom Template Design <span class="pull-right-container">
-										<span class="label label-danger pull-right">70%</span>
-									</span>
-								</h4>
-
-								<div class="progress progress-xxs">
-									<div class="progress-bar progress-bar-danger"
-										style="width: 70%"></div>
-								</div>
-						</a></li>
-					</ul>
-					<!-- /.control-sidebar-menu -->
-				</div>
-				<!-- /.tab-pane -->
-				<!-- Stats tab content -->
-				<div class="tab-pane" id="control-sidebar-stats-tab">Stats Tab
-					Content</div>
-				<!-- /.tab-pane -->
-				<!-- Settings tab content -->
-				<div class="tab-pane" id="control-sidebar-settings-tab">
-					<form method="post">
-						<h3 class="control-sidebar-heading">General Settings</h3>
-						<div class="form-group">
-							<label class="control-sidebar-subheading"> Report panel
-								usage <input type="checkbox" class="pull-right" checked>
-							</label>
-							<p>Some information about this general settings option</p>
-						</div>
-						<!-- /.form-group -->
-					</form>
-				</div>
-				<!-- /.tab-pane -->
-			</div>
-		</aside>
-		<!-- /.control-sidebar -->
-		<!-- Add the sidebar's background. This div must be placed
-  immediately after the control sidebar -->
-		<div class="control-sidebar-bg"></div>
 	</div>
 	<!-- ./wrapper -->
 	<!-- OFFICIAL JS START -->
@@ -1464,14 +1435,13 @@ desired effect
 	<script src="js/sockjs.min.js"></script>
 	<!-- gaode link -->
 	<!-- OFFICIAL JS END -->
-	<script src="js/mapUtil.js"></script>
-	<script src="js/mapLayer.js"></script>
-	<script src="js/mapVisual.js"></script>
-	<script src="js/mapChart.js"></script>
-	<script src="js/mapSimu.js"></script>
-	<script src="js/mapPlan.js"></script>
-	<script src="js/manage.js"></script>
-	<script src="js/share.js"></script>
+	<script src="js/write/mapUtil.js"></script>
+	<script src="js/write/mapLayer.js"></script>
+	<script src="js/write/mapVisual.js"></script>
+	<script src="js/write/mapChart.js"></script>
+	<script src="js/write/mapSimu.js"></script>
+	<script src="js/write/manage.js"></script>
+	<script src="js/write/share.js"></script>
 	<!-- SELF JS END -->
 </body>
 

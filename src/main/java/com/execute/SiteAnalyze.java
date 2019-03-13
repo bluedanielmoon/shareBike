@@ -1,5 +1,6 @@
 package com.execute;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.helper.HoliDayHelper;
+import com.init.FileName;
 import com.pojo.BikeArea;
 import com.pojo.BikeHeader;
 import com.pojo.BikePos;
@@ -61,15 +63,15 @@ public class SiteAnalyze {
 		return -1;
 	}
 
-	private int judgeTemperature(int temparature) {
-		if (temparature >= 10 && temparature <= 25) {
-			return 1;
-		} else if ((temparature >= 5 && temparature < 10) || (temparature > 25 && temparature < 30)) {
-			return 2;
-		} else {
-			return 3;
-		}
-	}
+//	private int judgeTemperature(int temparature) {
+//		if (temparature >= 10 && temparature <= 25) {
+//			return 1;
+//		} else if ((temparature >= 5 && temparature < 10) || (temparature > 25 && temparature < 30)) {
+//			return 2;
+//		} else {
+//			return 3;
+//		}
+//	}
 
 	private CircumState analyzeHeader(BikeHeader header) {
 		Date date = header.getStartTime();
@@ -85,7 +87,7 @@ public class SiteAnalyze {
 		}
 		String weather = header.getWeather().getWeather();
 		cState.setWeather(judgeWeather(weather));
-		cState.setTemp(judgeTemperature(header.getWeather().getTempature()));
+		cState.setTemp(header.getWeather().getTempature());
 
 		return cState;
 	}
@@ -177,6 +179,7 @@ public class SiteAnalyze {
 			}
 		});
 		for (int i = 0; i < paths.size(); i++) {
+			System.out.println(paths.get(i).toString());
 			Map<String, Object> bikeFile = FilesUtil.readFileInfo(paths.get(i).toString());
 
 			BikeHeader header = (BikeHeader) bikeFile.get("header");
@@ -189,9 +192,9 @@ public class SiteAnalyze {
 
 		}
 
-		MapperUtil.writeIntMapMapData("./siteBikes.txt", sitesInfos);
+		MapperUtil.writeIntMapMapData(FileName.SITE_BIKES, sitesInfos);
 
-		MapperUtil.writeMapData("./circumList.txt", circums, Date.class, CircumState.class);
+		MapperUtil.writeMapData(FileName.CIRCUMS_BY_DATE, circums, Date.class, CircumState.class);
 
 		return dateFiles;
 	}
@@ -411,9 +414,9 @@ public class SiteAnalyze {
 
 	public List<Integer> getSitesCircums(CircumState circumState, int id) {
 
-		Map<Integer, Map<String, Object>> sitesInfo = MapperUtil.readIntMapMapData("./siteBikes.txt");
+		Map<Integer, Map<String, Object>> sitesInfo = MapperUtil.readIntMapMapData(FileName.SITE_BIKES);
 
-		Map<Date, CircumState> list = (Map<Date, CircumState>) MapperUtil.readMapData("./circumList.txt", Date.class,
+		Map<Date, CircumState> list = (Map<Date, CircumState>) MapperUtil.readMapData(FileName.CIRCUMS_BY_DATE, Date.class,
 				CircumState.class);
 
 		Map<String, Object> site = sitesInfo.get(id);
@@ -455,7 +458,7 @@ public class SiteAnalyze {
 	}
 
 	public Map<Integer, Map<String, Object>> getSiteBikes() {
-		return MapperUtil.readIntMapMapData("./siteBikes.txt");
+		return MapperUtil.readIntMapMapData(FileName.SITE_BIKES);
 	}
 
 	/**
@@ -464,7 +467,7 @@ public class SiteAnalyze {
 	 * @return
 	 */
 	public Map<Date, CircumState> getCircums() {
-		return MapperUtil.readMapData("./circumList.txt", Date.class, CircumState.class);
+		return MapperUtil.readMapData(FileName.CIRCUMS_BY_DATE, Date.class, CircumState.class);
 	}
 
 	public List<Date> getDates() {
@@ -489,7 +492,7 @@ public class SiteAnalyze {
 
 	public List<Integer> getEveryDaySitesCircums(int id, int hour) {
 
-		Map<Integer, Map<String, Object>> sitesInfo = MapperUtil.readIntMapMapData("./siteBikes.txt");
+		Map<Integer, Map<String, Object>> sitesInfo = MapperUtil.readIntMapMapData(FileName.SITE_BIKES);
 
 		Map<String, Object> site = sitesInfo.get(id);
 
@@ -528,19 +531,24 @@ public class SiteAnalyze {
 		MapperUtil.writeMapListData("./defaultCircums.txt", allCircums, Integer.class, CircumState.class);
 	}
 	
-	public PredictResult getSitePredict(int siteID) {
-		List<PredictResult> results=readPredict();
-		for(PredictResult pre:results) {
-			if (pre.getId()==siteID) {
-				return pre;
-			}
+	public PredictResult getSitePredict(int siteID,String askDate) {
+		List<PredictResult> results=readPredict(askDate);
+		if (results!=null) {
+			for(PredictResult pre:results) {
+				if (pre.getId()==siteID) {
+					return pre;
+				}
+			} 
 		}
 		return null;
 	}
 	
-	public List<PredictResult> readPredict() {
-
-		String fileName = "/Users/daniel/softs/pythonWorks/predict.json";
+	public List<PredictResult> readPredict(String askDate) {
+		
+		
+//		String fileName = "/Users/daniel/softs/pythonWorks/predict.json";
+		String fileName = "/Users/daniel/softs/pythonWorks/predict("+askDate+").json";
+		
 		Path path = Paths.get(fileName);
 		if (Files.exists(path)) {
 			List<PredictResult> results=new ArrayList<>();
@@ -571,7 +579,6 @@ public class SiteAnalyze {
 	}
 
 	public static void main(String[] args) {
-		SiteAnalyze aSiteAnalyze = new SiteAnalyze();
-		aSiteAnalyze.readPredict();
+		
 	}
 }

@@ -1,6 +1,7 @@
 package com.simu;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,6 +17,7 @@ import com.execute.SiteEstimater;
 import com.execute.SiteTypeJudger;
 import com.helper.SiteHelper;
 import com.init.State;
+import com.mysql.fabric.xmlrpc.base.Array;
 import com.poi.ConnectManager;
 import com.pojo.BikeArea;
 import com.pojo.BikePos;
@@ -83,7 +85,8 @@ public class TaskProducer {
 	public List<SimuTask> getStartJobs(List<Dispatcher> dispatchers, int startHour) {
 		List<SimuTask> startJobs = new ArrayList<>();
 		for (Dispatcher dispatcher : dispatchers) {
-			SimuTask task = assignTask(startHour, 0, dispatcher, null,1);
+
+			SimuTask task = assignTask(startHour, 0, dispatcher, null, 1);
 			startJobs.add(task);
 		}
 		return startJobs;
@@ -186,32 +189,60 @@ public class TaskProducer {
 			Site site = (Site) siteInfos.get(i).get("site");
 			if (plan.getLoadType() == State.LOAD) {
 				int count = plan.getLoadCount();
+				if (count == 0) {
+					continue;
+				}
 				GaodePath gaodePath = sUtil.getPath(dispatcher, site, client);
+				if (gaodePath == null) {
+					continue;
+				}
 				int dist = gaodePath.getDistance();
 				loadCountList.add(count);
 				loadDistList.add(dist);
 				loadIDList.add(i);
 			} else if (plan.getLoadType() == State.UNLOAD) {
 				int count = plan.getLoadCount();
+				if (count == 0) {
+					continue;
+				}
 				GaodePath gaodePath = sUtil.getPath(dispatcher, site, client);
+				if (gaodePath == null) {
+					continue;
+				}
 				int dist = gaodePath.getDistance();
 				unloadCountList.add(count);
 				unloadDistList.add(dist);
 				unloadIDList.add(i);
 			}
 		}
-		double[] loadIndexScore = MathUtil.calcuMaxScore(loadCountList, loadDistList, true, false,
-				State.SITE_CHOOSE_RATIO);
-		double[] unloadIndexScore = MathUtil.calcuMaxScore(unloadCountList, unloadDistList, true, false,
-				State.SITE_CHOOSE_RATIO);
-		if (loadIndexScore[1] >= 0 && unloadIndexScore[1] >= 0) {
-			double loadScore = loadIndexScore[1] * loadRatio;
-			double unloadScore = unloadIndexScore[1] * (1 - loadRatio);
-			if (loadScore > unloadScore) {
-				return loadIDList.get((int) loadIndexScore[0]);
+		System.out.println("***********************");
+		if (loadCountList.size() > 0) {
+			double[] loadIndexScore = MathUtil.calcuMaxSco(loadCountList, loadDistList, true, false,
+					State.SITE_CHOOSE_RATIO, State.SITE_CHOOSE_BEST);
+			if (unloadCountList.size() > 0) {
+				double[] unloadIndexScore = MathUtil.calcuMaxSco(unloadCountList, unloadDistList, true, false,
+						State.SITE_CHOOSE_RATIO, State.SITE_CHOOSE_BEST);
+				System.out.println(Arrays.toString(loadIndexScore));
+				System.out.println(Arrays.toString(unloadIndexScore));
+				if (loadIndexScore[1] >= 0 && unloadIndexScore[1] >= 0) {
+
+					double loadScore = loadIndexScore[1] * loadRatio;
+					double unloadScore = unloadIndexScore[1] * (1 - loadRatio);
+					if (loadScore > unloadScore) {
+						return loadIDList.get((int) loadIndexScore[0]);
+					} else {
+						return unloadIDList.get((int) unloadIndexScore[0]);
+					}
+				}
 			} else {
-				return unloadIDList.get((int) unloadIndexScore[0]);
+				return loadIDList.get((int) loadIndexScore[0]);
 			}
+		} else if (unloadCountList.size() > 0) {
+			double[] unloadIndexScore = MathUtil.calcuMaxSco(unloadCountList, unloadDistList, true, false,
+					State.SITE_CHOOSE_RATIO, State.SITE_CHOOSE_BEST);
+			return unloadIDList.get((int) unloadIndexScore[0]);
+		} else {
+			return -1;
 		}
 		return -1;
 	}
@@ -228,8 +259,8 @@ public class TaskProducer {
 		for (Integer i : siteNeeds.keySet()) {
 			SitePlan plan = siteNeeds.get(i);
 			Site site = (Site) siteInfos.get(i).get("site");
-			
-			if (plan.getLoadCount()<=0) {
+
+			if (plan.getLoadCount() <= 0) {
 				continue;
 			}
 			if (plan.getLoadType() == State.LOAD) {
@@ -251,17 +282,17 @@ public class TaskProducer {
 			}
 		}
 		if (loadCountList.size() == 0 && unloadCountList.size() != 0) {
-			double[] unloadIndexScore = MathUtil.calcuMaxScore(unloadCountList, unloadDistList, true, false,
+			double[] unloadIndexScore = MathUtil.calcuxScore(unloadCountList, unloadDistList, true, false,
 					State.SITE_CHOOSE_RATIO);
 			return unloadIDList.get((int) unloadIndexScore[0]);
 		} else if (unloadCountList.size() == 0 && loadCountList.size() != 0) {
-			double[] loadIndexScore = MathUtil.calcuMaxScore(loadCountList, loadDistList, true, false,
+			double[] loadIndexScore = MathUtil.calcuxScore(loadCountList, loadDistList, true, false,
 					State.SITE_CHOOSE_RATIO);
 			return loadIDList.get((int) loadIndexScore[0]);
 		} else if (unloadCountList.size() != 0 && loadCountList.size() != 0) {
-			double[] loadIndexScore = MathUtil.calcuMaxScore(loadCountList, loadDistList, true, false,
+			double[] loadIndexScore = MathUtil.calcuxScore(loadCountList, loadDistList, true, false,
 					State.SITE_CHOOSE_RATIO);
-			double[] unloadIndexScore = MathUtil.calcuMaxScore(unloadCountList, unloadDistList, true, false,
+			double[] unloadIndexScore = MathUtil.calcuxScore(unloadCountList, unloadDistList, true, false,
 					State.SITE_CHOOSE_RATIO);
 
 			if (loadIndexScore[1] >= 0 && unloadIndexScore[1] >= 0) {
@@ -301,12 +332,10 @@ public class TaskProducer {
 		loadTask.setStart(paths.get(0));
 		loadTask.setEnd(new Lnglat(site.getLng(), site.getLat()));
 		int distace = path.getDistance();
-		int seconds = calcuTimeSpan(distace, dispatcher.getType());
-		loadTask.setMoveTime(seconds);
-		
-		
-		loadTask.setWorkTime(loadTask.getMoveTime() + loadTask.getLoadTime());
+		int moveTime = calcuTimeSpan(distace, dispatcher.getType());
+		loadTask.setMoveTime(moveTime);
 
+		loadTask.setWorkTime(moveTime + loadTime);
 		return loadTask;
 	}
 
@@ -320,7 +349,7 @@ public class TaskProducer {
 		loadTask.setDispatcher(dispatcher);
 
 		int loadTime = loadCount * State.LOAD_UNIT_TIME;
-		
+
 		loadTask.setTaskType(State.LOAD_TASK);
 		loadTask.setLoadTime(loadTime);
 
@@ -332,9 +361,12 @@ public class TaskProducer {
 		loadTask.setStart(paths.get(0));
 		loadTask.setEnd(new Lnglat(site.getLng(), site.getLat()));
 		int distace = path.getDistance();
-		int seconds = calcuTimeSpan(distace, dispatcher.getType());
-		loadTask.setMoveTime(seconds);
-		loadTask.setWorkTime(loadTask.getMoveTime() + loadTask.getLoadTime());
+		int moveTime = calcuTimeSpan(distace, dispatcher.getType());
+		loadTask.setMoveTime(moveTime);
+		System.out.println("load " + loadTime);
+		System.out.println("move " + moveTime);
+		loadTask.setWorkTime(loadTime + moveTime);
+		System.out.println("work " + loadTask.getWorkTime());
 
 		return loadTask;
 	}
@@ -396,7 +428,7 @@ public class TaskProducer {
 			secondSpeed = State.MAN_TYPE / 3.6;
 			seconds = (int) (distance / secondSpeed);
 		}
-		seconds=(int) (seconds*State.WASTETIME_MOVE_RATIO)+State.WASTETIME_LOAD;
+		seconds = (int) (seconds * State.WASTETIME_MOVE_RATIO) + State.WASTETIME_LOAD;
 		return seconds;
 	}
 
@@ -506,7 +538,7 @@ public class TaskProducer {
 			// 当预测的趋势和需要的趋势相同时，考虑该站点
 			SitePlan plan = analyzeSiteNeed(nowCount, nextEst, volume, trend, storage, canLoad);
 			plan.setNextEst(nextEst);
-			if(plan.getLoadCount()<0) {
+			if (plan.getLoadCount() < 0) {
 				System.out.println("----------------");
 				System.out.println(nowCount);
 				System.out.println(nextEst);
@@ -522,18 +554,18 @@ public class TaskProducer {
 		return siteScores;
 	}
 
-	
 	public static void main(String[] args) {
-		 TaskProducer taskProducer=new TaskProducer();
-		 int nowCount=12;
-		 int nextEst=15;
-		 int volume=20;
-		 int trend= 1;
-		 int carHave=10;
-		 int canLoad=10;
-		 SitePlan plan=taskProducer.analyzeSiteNeed(nowCount, nextEst, volume, trend, carHave, canLoad);
-		 System.out.println(plan.getLoadCount());
+		TaskProducer taskProducer = new TaskProducer();
+		int nowCount = 12;
+		int nextEst = 15;
+		int volume = 20;
+		int trend = 1;
+		int carHave = 10;
+		int canLoad = 10;
+		SitePlan plan = taskProducer.analyzeSiteNeed(nowCount, nextEst, volume, trend, carHave, canLoad);
+		System.out.println(plan.getLoadCount());
 	}
+
 	/**
 	 * 通过容量、预测、当前值来总结该站点的供需关系
 	 * 
@@ -725,22 +757,23 @@ public class TaskProducer {
 	}
 
 	private WaitTask createWaitTask(Dispatcher dispatcher) {
-		WaitTask task=new WaitTask();
+		WaitTask task = new WaitTask();
 		task.setDispatcher(dispatcher);
 		task.setTaskType(State.WAIT_TASK);
 		task.setWorkTime(State.WAIT_TIME);
 		return task;
 	}
-	
-	public SimuTask assignTask(int nowHour, int pastHourSeconds, Dispatcher dispatcher, SimuTask lastTask,int distRange) {
+
+	public SimuTask assignTask(int nowHour, int pastHourSeconds, Dispatcher dispatcher, SimuTask lastTask,
+			int distRange) {
 
 		List<Site> nearSites = null;
-		
-		if (distRange>3) {
+
+		if (distRange > 3) {
 			return createWaitTask(dispatcher);
 		}
 		// 通过距离要素过滤一部分站点
-		nearSites = findNearSitesByPos(dispatcher.getLng(), dispatcher.getLat(),distRange);
+		nearSites = findNearSitesByPos(dispatcher.getLng(), dispatcher.getLat(), distRange);
 
 //		nearSites = filterSites(nearSites, State.MOUNTAIN);
 
@@ -750,7 +783,6 @@ public class TaskProducer {
 		// 根据一些限制条件，来获取参与评分的站点
 		Map<Integer, SitePlan> siteNeeds = collectSites(nearSites, ests, siteInfos, nowHour, pastHourSeconds,
 				dispatcher);
-
 		// 根据计算的条件综合对站点进行评分，选取最高分的站点id
 		int siteID = -1;
 		if (lastTask == null) {
@@ -778,7 +810,7 @@ public class TaskProducer {
 			}
 			return task;
 		} else {
-			return assignTask(nowHour, pastHourSeconds, dispatcher, lastTask, distRange+1);
+			return assignTask(nowHour, pastHourSeconds, dispatcher, lastTask, distRange + 1);
 		}
 
 	}
@@ -910,7 +942,7 @@ public class TaskProducer {
 	 * @param lat
 	 * @return
 	 */
-	private List<Site> findNearSitesByPos(double lng, double lat,int distRange) {
+	private List<Site> findNearSitesByPos(double lng, double lat, int distRange) {
 		Site nearMe = findDirectNearSites(lng, lat);
 		List<Site> nearSites = new ArrayList<>();
 		for (Site site : sites) {
@@ -923,7 +955,7 @@ public class TaskProducer {
 				continue;
 			}
 			int distance = route.getDistance();
-			if (distance > State.NEAR_SITE_DIST*distRange) {
+			if (distance > State.NEAR_SITE_DIST * distRange) {
 				continue;
 			}
 			nearSites.add(site);

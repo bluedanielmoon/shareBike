@@ -43,7 +43,9 @@ public class SiteAnalyzeTest {
 	
 	@Test
 	public void testEstimate() {
-//		siteAna.estimate();
+		Date askDate=DateUtil.parseToDay("2018_12_21");
+		List<Integer> ls=siteAna.estimate(askDate, 1);
+		System.out.println(ls);
 	}
 	
 	@Test

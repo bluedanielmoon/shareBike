@@ -15,6 +15,7 @@ import java.util.TreeMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.init.FileName;
 import com.init.State;
 import com.pojo.BikeArea;
 import com.pojo.BikeHeader;
@@ -312,9 +313,9 @@ public class FlowChecker {
 
 		List<Site> sortCounts = sortAnalyzeResult(siteCounts);
 		if(flowType==State.FLOW_OUT) {
-			MapperUtil.writeListData("/Users/daniel/projects/bikeFlow/flowOut_" + targetID + ".txt", sortCounts, Site.class);
+			MapperUtil.writeListData(FileName.FLOW_DIR+"flowOut_" + targetID + ".txt", sortCounts, Site.class);
 		}else {
-			MapperUtil.writeListData("/Users/daniel/projects/bikeFlow/flowIn_" + targetID + ".txt", sortCounts, Site.class);
+			MapperUtil.writeListData(FileName.FLOW_DIR+"flowIn_" + targetID + ".txt", sortCounts, Site.class);
 		}
 
 		
@@ -323,9 +324,9 @@ public class FlowChecker {
 	private List<Site> readFlow(int targetID,int flowType) {
 		String fileName=null;
 		if(flowType==State.FLOW_OUT) {
-			fileName="/Users/daniel/projects/bikeFlow/flowOut_" + targetID + ".txt";
+			fileName=FileName.FLOW_DIR+"flowOut_" + targetID + ".txt";
 		}else {
-			fileName="/Users/daniel/projects/bikeFlow/flowIn_" + targetID + ".txt";
+			fileName=FileName.FLOW_DIR+"flowIn_" + targetID + ".txt";
 		}
 		Path path=Paths.get(fileName);
 		if(Files.exists(path)) {
@@ -381,6 +382,7 @@ public class FlowChecker {
 	public void produceAllSiteFlows(int flag) {
 		List<Site> sites=siteServ.getAllSites();
 		for(Site site:sites) {
+			System.out.println(site.getId());
 			calcuSortWrite(site.getId(), flag);
 			
 		}

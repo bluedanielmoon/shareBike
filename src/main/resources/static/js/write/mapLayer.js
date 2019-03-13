@@ -7,6 +7,8 @@
 
 	var config = {
 		clusterDist: 100,
+		maxPack:50,
+		minPack:10,
 		startTime: "latest",
 		endTime: "latest",
 		inactHours: 24,
@@ -459,6 +461,8 @@
 					mapUtil.link.getData("/map/cluster", true, {
 						time: start,
 						distance: config.clusterDist,
+						maxPack:config.maxPack,
+						minPack:config.minPack,
 					}, function(data) {
 						if (data) {
 							var cluster = getMod(modName);
@@ -474,6 +478,8 @@
 						start: start,
 						end: end,
 						distance: config.clusterDist,
+						maxPack:config.maxPack,
+						minPack:config.minPack,
 					}, function(data) {
 						if (data) {
 							console.log("加载区间聚类图");

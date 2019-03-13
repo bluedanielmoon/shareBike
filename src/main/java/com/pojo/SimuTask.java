@@ -7,6 +7,20 @@ public class SimuTask {
 	private int taskType;
 	
 
+	public SimuTask() {
+		super();
+	}
+
+	
+	public SimuTask(int id, Dispatcher dispatcher, int workTime, int taskType) {
+		super();
+		this.id = id;
+		this.dispatcher = dispatcher;
+		this.workTime = workTime;
+		this.taskType = taskType;
+	}
+
+
 	public Dispatcher getDispatcher() {
 		return dispatcher;
 	}

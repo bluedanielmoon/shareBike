@@ -17,10 +17,10 @@ public class SimuControllerTest {
 	@Autowired
 	private SimuServImpl simuServ;
 	
-	@Test
-	public void testStartSimu() {
-		simuServ.initAndStart();
-	}
+//	@Test
+//	public void testStartSimu() {
+//		simuServ.initAndStart();
+//	}
 
 //	@Test
 //	public void testGetTasks() {

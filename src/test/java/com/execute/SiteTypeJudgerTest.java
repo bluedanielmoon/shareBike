@@ -17,7 +17,7 @@ public class SiteTypeJudgerTest {
 
 	@Test
 	public void testanayAllSites() {
-		judger.anayAllSites();
+
 	}
 
 }

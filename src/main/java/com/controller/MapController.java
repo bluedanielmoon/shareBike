@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.init.FileName;
 import com.pojo.BusLine;
 import com.pojo.GaodeLine;
 import com.pojo.GaodeStop;
@@ -73,14 +74,14 @@ public class MapController {
 
 	@GetMapping(value = "/cluster")
 	@ResponseBody
-	public List<Point> getClusterData(@RequestParam String time, @RequestParam int distance) {
-		return mapServ.getClusterMap(time, distance);
+	public List<Point> getClusterData(@RequestParam String time, @RequestParam int distance, @RequestParam int maxPack, @RequestParam int minPack) {
+		return mapServ.getClusterMap(time, distance,maxPack,minPack);
 	}
 	
 	@GetMapping(value = "/rangecluster")
 	@ResponseBody
-	public List<Point>  getRangeClusterData(@RequestParam String start, @RequestParam String end, @RequestParam int distance) {
-		return mapServ.getDurationClusterMap(start,end, distance);
+	public List<Point>  getRangeClusterData(@RequestParam String start, @RequestParam String end, @RequestParam int distance, @RequestParam int maxPack, @RequestParam int minPack) {
+		return mapServ.getDurationClusterMap(start,end, distance,maxPack,minPack);
 	}
 
 	@GetMapping(value = "/lines")
@@ -94,7 +95,7 @@ public class MapController {
 	@GetMapping(value = "/busStop")
 	@ResponseBody
 	public List<GaodeStop> getBusStops() {
-		return FilesUtil.readFromFile(BusUtil.BUS_STOP_FILE, GaodeStop.class);
+		return FilesUtil.readFromFile(FileName.BUS_STOP_FILE, GaodeStop.class);
 
 	}
 

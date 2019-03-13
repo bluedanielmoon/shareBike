@@ -12,7 +12,7 @@ public interface UserServ {
 	
 	boolean addUser(User user);
 	
-	boolean addUser(String userName,String password);
+	boolean addUser(String userName,String password,int type);
 	
 	boolean updateUser(User user);
 	
@@ -20,6 +20,12 @@ public interface UserServ {
 	
 	boolean patchDeleteUser(List<String> names);
 
-	boolean checkLogin(String userName,String passWord);
+	/**
+	 * 
+	 * @param userName
+	 * @param passWord
+	 * @return 0-管理员，1-普通，-1-错误
+	 */
+	int checkLogin(String userName,String passWord);
 	
 }
